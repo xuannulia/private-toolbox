@@ -3,7 +3,7 @@
     "description": "Convert audio files between different formats.",
     "inputTitle": "Audio Input",
     "longDescription": "This tool allows you to convert audio files from one format to another, supporting a wide range of audio formats for seamless conversion.",
-    "outputFormat": "output Format",
+    "outputFormat": "Output format",
     "outputFormatDescription": "Select the desired output audio format",
     "outputTitle": "Converted Audio",
     "shortDescription": "Convert audio files to various formats.",
@@ -14,8 +14,9 @@
     "failedToConvert": "Conversion of image(s) to JPG failed. Please try again.",
     "inputTitle": "Input Images",
     "options": {
+      "backgroundColor": "Background color",
       "colorDescription": "Background color (for transparent images)",
-      "quality": "Conversion Quality:",
+      "quality": "Quality",
       "qualityDescription": "Higher values = better quality, larger file size",
       "title": "Conversion Settings"
     },
@@ -28,8 +29,9 @@
     "failedToConvert": "Conversion of image(s) to WebP failed. Please try again.",
     "inputTitle": "Input Images",
     "options": {
+      "backgroundColor": "Background color",
       "colorDescription": "Background color (for transparent images)",
-      "quality": "Conversion Quality:",
+      "quality": "Quality",
       "qualityDescription": "Higher values = better quality, larger file size",
       "title": "Conversion Settings"
     },

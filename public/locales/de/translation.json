@@ -22,6 +22,10 @@
       "description": "Tools für die Arbeit mit Audio – Audio aus Video extrahieren, Audiogeschwindigkeit anpassen, mehrere Audiodateien zusammenführen und vieles mehr.",
       "title": "Audio-Tools"
     },
+    "converters": {
+      "description": "Convert files and data between common formats.",
+      "title": "Converter Tools"
+    },
     "csv": {
       "description": "Tools zum Arbeiten mit CSV-Dateien – konvertieren Sie CSV in verschiedene Formate, bearbeiten Sie CSV-Daten, validieren Sie die CSV-Struktur und verarbeiten Sie CSV-Dateien effizient.",
       "title": "CSV-Tools"
@@ -45,6 +49,14 @@
     "number": {
       "description": "Tools für die Arbeit mit Zahlen – Zahlenfolgen generieren, Zahlen in Wörter und Wörter in Zahlen umwandeln, sortieren, runden, Zahlen faktorisieren und vieles mehr.",
       "title": "Zahlenwerkzeuge"
+    },
+    "network": {
+      "description": "RDAP, DNS, SSL, IP, CIDR, and local API request tools.",
+      "title": "Network Tools"
+    },
+    "ops": {
+      "description": "Docker and Nginx formatters, validators, and match testers.",
+      "title": "Ops Tools"
     },
     "pdf": {
       "description": "Tools zum Arbeiten mit PDF-Dateien – Text aus PDFs extrahieren, PDFs in andere Formate konvertieren, PDFs bearbeiten und vieles mehr.",
@@ -81,8 +93,8 @@
     }
   },
   "hero": {
-    "brand": "OmniTools",
-    "description": "Steigern Sie Ihre Produktivität mit OmniTools, dem ultimativen Toolkit für schnelles Arbeiten! Greifen Sie direkt von Ihrem Browser aus auf Tausende benutzerfreundliche Dienstprogramme zum Bearbeiten von Bildern, Texten, Listen und Daten zu.",
+    "brand": "Private Toolbox",
+    "description": "Local-first tools for text, files, media, data, and developer workflows.",
     "examples": {
       "calculateNumberSum": "Zahlensumme berechnen",
       "changeGifSpeed": "GIF-Geschwindigkeit ändern",
@@ -220,6 +232,9 @@
     "seeExamples": "Beispiele ansehen"
   },
   "toolLayout": {
+    "addBookmark": "Lesezeichen hinzufügen",
+    "allTools": "Alle Tools",
+    "removeBookmark": "Lesezeichen entfernen",
     "allToolsTitle": "Alle {{type}}"
   },
   "toolMultiFileResult": {

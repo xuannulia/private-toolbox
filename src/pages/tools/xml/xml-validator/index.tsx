@@ -1,66 +1,41 @@
 import { Box } from '@mui/material';
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { validateXml } from './service';
-import { InitialValuesType } from './types';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { validateXml } from './service';
 
-const initialValues: InitialValuesType = {};
-
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Validate XML',
-    description: 'Check if an XML string is well-formed.',
-    sampleText: '<root><item>1</item><item>2</item></root>',
-    sampleResult: 'Valid XML',
-    sampleOptions: {}
-  },
-  {
-    title: 'Invalid XML',
-    description: 'Example of malformed XML.',
-    sampleText: '<root><item>1</item><item>2</root>',
-    sampleResult: 'Invalid XML: ...',
-    sampleOptions: {}
-  }
-];
-
-export default function XmlValidator({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function XmlValidator() {
   const { t } = useTranslation('xml');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [result, setResult] = useState('');
 
-  const compute = (_values: InitialValuesType, input: string) => {
-    setResult(validateXml(input, {}));
-  };
+  useEffect(() => {
+    setResult(input.trim() ? validateXml(input, {}) : '');
+  }, [input]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolTextInput
-          value={input}
-          onChange={setInput}
-          placeholder={t('xmlValidator.placeholder')}
-        />
-      }
-      resultComponent={<ToolTextResult value={result} extension="txt" />}
-      initialValues={initialValues}
-      exampleCards={exampleCards}
-      getGroups={null}
-      setInput={setInput}
-      compute={compute}
-      toolInfo={{
-        title: t('xmlValidator.toolInfo.title'),
-        description: t('xmlValidator.toolInfo.description')
-      }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <ToolTextInput
+            title={t('xmlValidator.inputTitle')}
+            value={input}
+            onChange={setInput}
+            placeholder={t('xmlValidator.placeholder')}
+          />
+        }
+        result={
+          <ToolTextResult
+            disabled={!result}
+            keepSpecialCharacters
+            monospace
+            title={t('xmlValidator.resultTitle')}
+            value={result}
+          />
+        }
+      />
+    </Box>
   );
 }

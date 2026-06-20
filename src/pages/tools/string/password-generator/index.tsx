@@ -1,165 +1,158 @@
-import React, { useState } from 'react';
-import { Box, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
-import { generatePassword } from './service';
-import { initialValues, InitialValuesType } from './initialValues';
-import ToolContent from '@components/ToolContent';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import {
+  Box,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Stack,
+  TextField
+} from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextResult from '@components/result/ToolTextResult';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import { ToolComponentProps } from '@tools/defineTool';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import { CardExampleType } from '@components/examples/ToolExamples';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { initialValues, InitialValuesType } from './initialValues';
+import { generatePassword } from './service';
 
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Strong Password (12 characters)',
-    description:
-      'Generate a secure password with all character types including symbols.',
-    sampleText: '',
-    sampleResult: 'A7#mK9$pL2@x',
-    sampleOptions: {
-      length: '12',
-      includeLowercase: true,
-      includeUppercase: true,
-      includeNumbers: true,
-      includeSymbols: true,
-      avoidAmbiguous: false
-    }
-  },
-  {
-    title: 'Simple Password (8 characters)',
-    description: 'Generate a basic password with letters and numbers only.',
-    sampleText: '',
-    sampleResult: 'Ab3mK9pL',
-    sampleOptions: {
-      length: '8',
-      includeLowercase: true,
-      includeUppercase: true,
-      includeNumbers: true,
-      includeSymbols: false,
-      avoidAmbiguous: false
-    }
-  },
-  {
-    title: 'Clear Password (No ambiguous)',
-    description:
-      'Generate a password without ambiguous characters (i, I, l, 0, O).',
-    sampleText: '',
-    sampleResult: 'A7#mK9$pL2@x',
-    sampleOptions: {
-      length: '12',
-      includeLowercase: true,
-      includeUppercase: true,
-      includeNumbers: true,
-      includeSymbols: true,
-      avoidAmbiguous: true
-    }
-  }
-];
-
-export default function PasswordGenerator({ title }: ToolComponentProps) {
+export default function PasswordGenerator() {
   const { t } = useTranslation('string');
-  const [result, setResult] = useState<string>('');
+  const [length, setLength] = useState(initialValues.length);
+  const [includeLowercase, setIncludeLowercase] = useState(
+    initialValues.includeLowercase
+  );
+  const [includeUppercase, setIncludeUppercase] = useState(
+    initialValues.includeUppercase
+  );
+  const [includeNumbers, setIncludeNumbers] = useState(
+    initialValues.includeNumbers
+  );
+  const [includeSymbols, setIncludeSymbols] = useState(
+    initialValues.includeSymbols
+  );
+  const [avoidAmbiguous, setAvoidAmbiguous] = useState(
+    initialValues.avoidAmbiguous
+  );
+  const [generationCount, setGenerationCount] = useState(0);
+  const [result, setResult] = useState('');
 
-  function compute(values: InitialValuesType) {
-    setResult(generatePassword(values));
-  }
-
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('passwordGenerator.optionsTitle'),
-      component: (
-        <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
-          <TextFieldWithDesc
-            description={t('passwordGenerator.lengthDesc')}
-            placeholder={t('passwordGenerator.lengthPlaceholder')}
-            value={values.length}
-            onOwnChange={(val) => updateField('length', val)}
-            type="number"
-          />
-
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={values.includeLowercase}
-                  onChange={(e) =>
-                    updateField('includeLowercase', e.target.checked)
-                  }
-                />
-              }
-              label={t('passwordGenerator.includeLowercase')}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={values.includeUppercase}
-                  onChange={(e) =>
-                    updateField('includeUppercase', e.target.checked)
-                  }
-                />
-              }
-              label={t('passwordGenerator.includeUppercase')}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={values.includeNumbers}
-                  onChange={(e) =>
-                    updateField('includeNumbers', e.target.checked)
-                  }
-                />
-              }
-              label={t('passwordGenerator.includeNumbers')}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={values.includeSymbols}
-                  onChange={(e) =>
-                    updateField('includeSymbols', e.target.checked)
-                  }
-                />
-              }
-              label={t('passwordGenerator.includeSymbols')}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={values.avoidAmbiguous}
-                  onChange={(e) =>
-                    updateField('avoidAmbiguous', e.target.checked)
-                  }
-                />
-              }
-              label={t('passwordGenerator.avoidAmbiguous')}
-            />
-          </FormGroup>
-        </Box>
-      )
-    }
-  ];
+  useEffect(() => {
+    const options: InitialValuesType = {
+      length,
+      includeLowercase,
+      includeUppercase,
+      includeNumbers,
+      includeSymbols,
+      avoidAmbiguous
+    };
+    setResult(generatePassword(options));
+  }, [
+    avoidAmbiguous,
+    generationCount,
+    includeLowercase,
+    includeNumbers,
+    includeSymbols,
+    includeUppercase,
+    length
+  ]);
 
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={getGroups}
-      compute={compute}
-      resultComponent={
-        <ToolTextResult
-          title={t('passwordGenerator.resultTitle')}
-          value={result}
-        />
-      }
-      toolInfo={{
-        title: t('passwordGenerator.toolInfo.title'),
-        description: t('passwordGenerator.toolInfo.description')
-      }}
-      exampleCards={exampleCards}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <TextField
+              label={t('passwordGenerator.lengthDesc')}
+              size="small"
+              type="number"
+              value={length}
+              onChange={(event) => setLength(event.target.value)}
+            />
+            <Stack spacing={1}>
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={includeLowercase}
+                    onChange={(event) =>
+                      setIncludeLowercase(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t('passwordGenerator.includeLowercase')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={includeUppercase}
+                    onChange={(event) =>
+                      setIncludeUppercase(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t('passwordGenerator.includeUppercase')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={includeNumbers}
+                    onChange={(event) =>
+                      setIncludeNumbers(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t('passwordGenerator.includeNumbers')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={includeSymbols}
+                    onChange={(event) =>
+                      setIncludeSymbols(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t('passwordGenerator.includeSymbols')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={avoidAmbiguous}
+                    onChange={(event) =>
+                      setAvoidAmbiguous(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t('passwordGenerator.avoidAmbiguous')}
+              />
+            </Stack>
+            <Button
+              startIcon={<RefreshIcon />}
+              variant="contained"
+              onClick={() => setGenerationCount((count) => count + 1)}
+            >
+              {t('passwordGenerator.generate')}
+            </Button>
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            disabled={!result}
+            keepSpecialCharacters
+            monospace
+            title={t('passwordGenerator.resultTitle')}
+            value={result}
+          />
+        }
+      />
+    </Box>
   );
 }

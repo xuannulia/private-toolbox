@@ -3,6 +3,7 @@ import React, { JSXElementConstructor, LazyExoticComponent } from 'react';
 import { IconifyIcon } from '@iconify/react';
 import { FullI18nKey, validNamespaces } from '../i18n';
 import { useTranslation } from 'react-i18next';
+import { getDefaultToolProcessing, type ToolProcessing } from './processing';
 
 export type UserType = 'generalUsers' | 'developers';
 
@@ -11,6 +12,7 @@ export interface ToolMeta {
   component: LazyExoticComponent<JSXElementConstructor<ToolComponentProps>>;
   keywords: string[];
   icon: IconifyIcon | string;
+  processing?: ToolProcessing;
   i18n: {
     name: FullI18nKey;
     description: FullI18nKey;
@@ -34,7 +36,9 @@ export type ToolCategory =
   | 'pdf'
   | 'audio'
   | 'xml'
-  | 'converters';
+  | 'converters'
+  | 'network'
+  | 'ops';
 
 export interface DefinedTool {
   type: ToolCategory;
@@ -44,6 +48,7 @@ export interface DefinedTool {
   shortDescription: FullI18nKey;
   icon: IconifyIcon | string;
   keywords: string[];
+  processing: ToolProcessing;
   component: () => JSX.Element;
   userTypes?: UserType[];
 }
@@ -57,26 +62,28 @@ export const defineTool = (
   basePath: ToolCategory,
   options: ToolMeta
 ): DefinedTool => {
-  const { icon, path, keywords, component, i18n } = options;
+  const { icon, path, keywords, component, i18n, processing } = options;
   const Component = component;
+  const fullPath = `${basePath}/${path}`;
   return {
     type: basePath,
-    path: `${basePath}/${path}`,
+    path: fullPath,
     name: i18n.name,
     icon,
     description: i18n.description,
     shortDescription: i18n.shortDescription,
     keywords,
+    processing:
+      processing ??
+      getDefaultToolProcessing({
+        category: basePath,
+        path: fullPath
+      }),
     userTypes: i18n.userTypes,
     component: function ToolComponent() {
       const { t } = useTranslation(validNamespaces);
       return (
-        <ToolLayout
-          icon={icon}
-          type={basePath}
-          i18n={i18n}
-          fullPath={`${basePath}/${path}`}
-        >
+        <ToolLayout type={basePath} i18n={i18n} fullPath={fullPath}>
           <Component
             title={t(i18n.name)}
             longDescription={

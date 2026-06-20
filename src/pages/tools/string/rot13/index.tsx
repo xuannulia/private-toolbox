@@ -1,67 +1,40 @@
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
+import { Box } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { rot13 } from './service';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { rot13 } from './service';
 
-type InitialValuesType = Record<string, never>;
-
-const initialValues: InitialValuesType = {};
-
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Encode a message with ROT13',
-    description:
-      'This example shows how to encode a simple message using ROT13 cipher.',
-    sampleText: 'Hello, World!',
-    sampleResult: 'Uryyb, Jbeyq!',
-    sampleOptions: {}
-  },
-  {
-    title: 'Decode a ROT13 message',
-    description:
-      'This example shows how to decode a message that was encoded with ROT13.',
-    sampleText: 'Uryyb, Jbeyq!',
-    sampleResult: 'Hello, World!',
-    sampleOptions: {}
-  }
-];
-
-export default function Rot13({ title }: ToolComponentProps) {
+export default function Rot13() {
   const { t } = useTranslation('string');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [result, setResult] = useState('');
 
-  const compute = (_: InitialValuesType, input: string) => {
-    if (input) setResult(rot13(input));
-  };
+  useEffect(() => {
+    setResult(input ? rot13(input) : '');
+  }, [input]);
 
   return (
-    <ToolContent
-      title={title}
-      inputComponent={
-        <ToolTextInput
-          title={t('rot13.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult title={t('rot13.resultTitle')} value={result} />
-      }
-      initialValues={initialValues}
-      getGroups={null}
-      toolInfo={{
-        title: t('rot13.toolInfo.title'),
-        description: t('rot13.toolInfo.description')
-      }}
-      exampleCards={exampleCards}
-      input={input}
-      setInput={setInput}
-      compute={compute}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <ToolTextInput
+            title={t('rot13.inputTitle')}
+            value={input}
+            onChange={setInput}
+          />
+        }
+        result={
+          <ToolTextResult
+            disabled={!result}
+            keepSpecialCharacters
+            monospace
+            title={t('rot13.resultTitle')}
+            value={result}
+          />
+        }
+      />
+    </Box>
   );
 }

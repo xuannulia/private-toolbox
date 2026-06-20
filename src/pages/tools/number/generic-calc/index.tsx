@@ -1,33 +1,34 @@
 import {
+  Alert,
   Autocomplete,
   Box,
-  MenuItem,
-  Radio,
-  Select,
+  Grid,
   Stack,
-  TextField,
-  useTheme
+  TextField
 } from '@mui/material';
-import React, { useContext, useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import InputHeader from '@components/InputHeader';
 import NumericInputWithUnit from '@components/input/NumericInputWithUnit';
-import { UpdateField } from '@components/options/ToolOptions';
-import { InitialValuesType } from './types';
-import type { AlternativeVarInfo, GenericCalcType } from './data/types';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import ToolTextResult from '@components/result/ToolTextResult';
+import type { ToolComponentProps } from '@tools/defineTool';
 import { dataTableLookup } from 'datatables';
-
+import Qty from 'js-quantities';
 import nerdamer from 'nerdamer-prime';
 import 'nerdamer-prime/Algebra';
 import 'nerdamer-prime/Solve';
 import 'nerdamer-prime/Calculus';
-import Qty from 'js-quantities';
-import { CustomSnackBarContext } from 'contexts/CustomSnackBarContext';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { validNamespaces } from '../../../../i18n';
+import { CompactNumberSelect, NumberOptionStack } from '../NumberToolControls';
+import type { InitialValuesType } from './types';
+import type { AlternativeVarInfo, GenericCalcType } from './data/types';
+import type { JSXElementConstructor } from 'react';
+
+type VarValue = {
+  value: number;
+  unit: string;
+};
 
 function numericSolveEquationFor(
   equation: string,
@@ -42,7 +43,6 @@ function numericSolveEquationFor(
   let result: nerdamer.Expression | nerdamer.Expression[] =
     expr.solveFor(varName);
 
-  // Sometimes the result is an array, check for it while keeping linter happy
   if ((result as unknown as nerdamer.Expression).toDecimal === undefined) {
     result = (result as unknown as nerdamer.Expression[])[0];
   }
@@ -52,538 +52,417 @@ function numericSolveEquationFor(
   );
 }
 
-export default async function makeTool(
-  calcData: GenericCalcType
-): Promise<React.JSXElementConstructor<ToolComponentProps>> {
-  const initialValues: InitialValuesType = {
+function cloneValues(values: InitialValuesType): InitialValuesType {
+  return {
+    outputVariable: values.outputVariable,
+    presets: { ...values.presets },
+    vars: Object.fromEntries(
+      Object.entries(values.vars).map(([key, value]) => [key, { ...value }])
+    )
+  };
+}
+
+function createInitialValues(calcData: GenericCalcType): InitialValuesType {
+  const values: InitialValuesType = {
     outputVariable: '',
     vars: {},
     presets: {}
   };
 
-  return function GenericCalc({ title }: ToolComponentProps) {
-    const { showSnackBar } = useContext(CustomSnackBarContext);
-    const { t } = useTranslation(validNamespaces);
-    const theme = useTheme();
-    const lessThanSmall = useMediaQuery(theme.breakpoints.down('sm'));
-
-    // For UX purposes we need to track what vars are
-    const [valsBoundToPreset, setValsBoundToPreset] = useState<{
-      [key: string]: string;
-    }>({});
-
-    const [extraOutputs, setExtraOutputs] = useState<{
-      [key: string]: number;
-    }>({});
-
-    const updateVarField = (
-      name: string,
-      value: number,
-      unit: string,
-      values: InitialValuesType,
-      updateFieldFunc: UpdateField<InitialValuesType>
-    ) => {
-      // Make copy
-      const newVars = { ...values.vars };
-      newVars[name] = {
-        value,
-        unit: unit
+  calcData.variables.forEach((variable) => {
+    if (variable.default === undefined) {
+      values.vars[variable.name] = {
+        value: 0,
+        unit: variable.unit
       };
-      updateFieldFunc('vars', newVars);
+      values.outputVariable = variable.name;
+    } else {
+      values.vars[variable.name] = {
+        value: variable.default || 0,
+        unit: variable.unit
+      };
+    }
+  });
+
+  calcData.presets?.forEach((selection) => {
+    values.presets[selection.title] = selection.default;
+    if (selection.default === '<custom>') return;
+
+    for (const key in selection.bind) {
+      values.vars[key] = {
+        value: dataTableLookup(selection.source, selection.default)[
+          selection.bind[key]
+        ],
+        unit: selection.source.columns[selection.bind[key]]?.unit || ''
+      };
+    }
+  });
+
+  return values;
+}
+
+function formatNumber(value: number): string {
+  if (!Number.isFinite(value)) return '';
+  return Number.parseFloat(value.toPrecision(12)).toString();
+}
+
+function getAlternate(
+  alternateInfo: AlternativeVarInfo,
+  mainInfo: GenericCalcType['variables'][number],
+  mainValue: VarValue
+) {
+  if (Number.isNaN(mainValue.value)) return NaN;
+  const canonicalValue = Qty(mainValue.value, mainValue.unit).to(
+    mainInfo.unit
+  ).scalar;
+
+  return numericSolveEquationFor(alternateInfo.formula, 'x', {
+    v: canonicalValue
+  });
+}
+
+function getMainFromAlternate(
+  alternateInfo: AlternativeVarInfo,
+  mainInfo: GenericCalcType['variables'][number],
+  alternateValue: VarValue
+) {
+  if (Number.isNaN(alternateValue.value)) return NaN;
+  const canonicalValue = Qty(alternateValue.value, alternateValue.unit).to(
+    alternateInfo.unit
+  ).scalar;
+
+  return numericSolveEquationFor(alternateInfo.formula, 'v', {
+    x: canonicalValue
+  });
+}
+
+export default async function makeTool(
+  calcData: GenericCalcType
+): Promise<JSXElementConstructor<ToolComponentProps>> {
+  return function GenericCalc({ title }: ToolComponentProps) {
+    const { t } = useTranslation(validNamespaces);
+    const [values, setValues] = useState<InitialValuesType>(() =>
+      createInitialValues(calcData)
+    );
+    const [valsBoundToPreset, setValsBoundToPreset] = useState<
+      Record<string, string>
+    >({});
+    const [extraOutputs, setExtraOutputs] = useState<Record<string, number>>(
+      {}
+    );
+    const [error, setError] = useState('');
+
+    const solveOptions = useMemo(
+      () =>
+        calcData.variables
+          .filter(
+            (variable) =>
+              valsBoundToPreset[variable.name] === undefined &&
+              variable.solvable !== false
+          )
+          .map((variable) => ({
+            label: variable.title,
+            value: variable.name
+          })),
+      [valsBoundToPreset]
+    );
+
+    const updateValues = (
+      updater: (current: InitialValuesType) => InitialValuesType
+    ) => {
+      setValues((current) => updater(cloneValues(current)));
     };
 
-    const handleSelectedTargetChange = (
-      varName: string,
-      updateFieldFunc: UpdateField<InitialValuesType>
-    ) => {
-      updateFieldFunc('outputVariable', varName);
-    };
-
-    const handleSelectedPresetChange = (
-      selection: string,
-      preset: string,
-      currentValues: InitialValuesType,
-      updateFieldFunc: UpdateField<InitialValuesType>
-    ) => {
-      const newPresets = { ...currentValues.presets };
-      newPresets[selection] = preset;
-      updateFieldFunc('presets', newPresets);
-
-      // Clear old selection using setState callback pattern
-      setValsBoundToPreset((prevState) => {
-        const newState = { ...prevState };
-        // Remove all keys bound to this selection
-        Object.keys(newState).forEach((key) => {
-          if (newState[key] === selection) {
-            delete newState[key];
-          }
-        });
-        return newState;
+    const updateVarField = (name: string, value: number, unit: string) => {
+      updateValues((current) => {
+        current.vars[name] = { value, unit };
+        return current;
       });
+    };
 
+    const handleSelectedPresetChange = (selection: string, preset: string) => {
       const selectionData = calcData.presets?.find(
-        (sel) => sel.title === selection
+        (item) => item.title === selection
       );
 
-      if (preset && preset != '<custom>') {
-        if (selectionData) {
-          // Create an object with the new bindings
-          const newBindings: { [key: string]: string } = {};
+      setValsBoundToPreset((current) => {
+        const next = { ...current };
+        Object.keys(next).forEach((key) => {
+          if (next[key] === selection) delete next[key];
+        });
 
+        if (selectionData && preset && preset !== '<custom>') {
+          Object.keys(selectionData.bind).forEach((key) => {
+            next[key] = selection;
+          });
+        }
+
+        return next;
+      });
+
+      updateValues((current) => {
+        current.presets[selection] = preset;
+
+        if (selectionData && preset && preset !== '<custom>') {
           for (const key in selectionData.bind) {
-            // Add to newBindings for later state update
-            newBindings[key] = selection;
-
-            if (currentValues.outputVariable === key) {
-              handleSelectedTargetChange('', updateFieldFunc);
-            }
-
-            updateVarField(
-              key,
-
-              dataTableLookup(selectionData.source, preset)[
+            current.vars[key] = {
+              value: dataTableLookup(selectionData.source, preset)[
                 selectionData.bind[key]
               ],
+              unit:
+                selectionData.source.columns[selectionData.bind[key]]?.unit ||
+                ''
+            };
 
-              selectionData.source.columns[selectionData.bind[key]]?.unit || '',
-              currentValues,
-              updateFieldFunc
-            );
+            if (current.outputVariable === key) current.outputVariable = '';
           }
-
-          // Update state with new bindings
-          setValsBoundToPreset((prevState) => ({
-            ...prevState,
-            ...newBindings
-          }));
-        } else {
-          throw new Error(
-            `Preset "${preset}" is not valid for selection "${selection}"`
-          );
         }
-      }
+
+        return current;
+      });
     };
 
-    calcData.variables.forEach((variable) => {
-      if (variable.solvable === undefined) {
-        variable.solvable = true;
+    const solveCurrentValues = (
+      currentValues: InitialValuesType
+    ): {
+      solvedValues: InitialValuesType;
+      solvedExtraOutputs: Record<string, number>;
+    } => {
+      if (!currentValues.outputVariable) {
+        throw new Error(t('number:common.selectSolveTarget'));
       }
-      if (variable.default === undefined) {
-        initialValues.vars[variable.name] = {
-          value: NaN,
-          unit: variable.unit
-        };
-        initialValues.outputVariable = variable.name;
-      } else {
-        initialValues.vars[variable.name] = {
-          value: variable.default || 0,
-          unit: variable.unit
-        };
-      }
-    });
 
-    calcData.presets?.forEach((selection) => {
-      initialValues.presets[selection.title] = selection.default;
-      if (selection.default == '<custom>') return;
-      for (const key in selection.bind) {
-        initialValues.vars[key] = {
-          value: dataTableLookup(selection.source, selection.default)[
-            selection.bind[key]
-          ],
+      const solvedValues = cloneValues(currentValues);
+      const targetVariable = calcData.variables.find(
+        (variable) => variable.name === solvedValues.outputVariable
+      );
+      const baseFormula = targetVariable?.formula || calcData.formula;
+      let expr = nerdamer(baseFormula);
 
-          unit: selection.source.columns[selection.bind[key]]?.unit || ''
-        };
-        // We'll set this in useEffect instead of directly modifying state
-      }
-    });
-
-    function getAlternate(
-      alternateInfo: AlternativeVarInfo,
-      mainInfo: GenericCalcType['variables'][number],
-      mainValue: {
-        value: number;
-        unit: string;
-      }
-    ) {
-      if (isNaN(mainValue.value)) return NaN;
-      const canonicalValue = Qty(mainValue.value, mainValue.unit).to(
-        mainInfo.unit
-      ).scalar;
-
-      return numericSolveEquationFor(alternateInfo.formula, 'x', {
-        v: canonicalValue
+      Object.keys(solvedValues.vars).forEach((key) => {
+        if (key === solvedValues.outputVariable) return;
+        expr = expr.sub(key, solvedValues.vars[key].value.toString());
       });
-    }
 
-    function getMainFromAlternate(
-      alternateInfo: AlternativeVarInfo,
-      mainInfo: GenericCalcType['variables'][number],
-      alternateValue: {
-        value: number;
-        unit: string;
+      let result: nerdamer.Expression | nerdamer.Expression[] = expr.solveFor(
+        solvedValues.outputVariable
+      );
+
+      if ((result as unknown as nerdamer.Expression).toDecimal === undefined) {
+        if ((result as unknown as nerdamer.Expression[])?.length < 1) {
+          solvedValues.vars[solvedValues.outputVariable].value = NaN;
+          throw new Error(t('number:common.noSolution'));
+        }
+        result = (result as unknown as nerdamer.Expression[])[0];
       }
-    ) {
-      if (isNaN(alternateValue.value)) return NaN;
-      const canonicalValue = Qty(alternateValue.value, alternateValue.unit).to(
-        alternateInfo.unit
-      ).scalar;
 
-      return numericSolveEquationFor(alternateInfo.formula, 'v', {
-        x: canonicalValue
+      solvedValues.vars[solvedValues.outputVariable].value = parseFloat(
+        (result as unknown as nerdamer.Expression).evaluate().toDecimal()
+      );
+
+      const solvedExtraOutputs: Record<string, number> = {};
+      calcData.extraOutputs?.forEach((extraOutput) => {
+        let extraExpr = nerdamer(extraOutput.formula);
+        Object.keys(solvedValues.vars).forEach((key) => {
+          extraExpr = extraExpr.sub(
+            key,
+            solvedValues.vars[key].value.toString()
+          );
+        });
+        solvedExtraOutputs[extraOutput.title] = parseFloat(
+          extraExpr.evaluate().toDecimal()
+        );
       });
-    }
+
+      return { solvedValues, solvedExtraOutputs };
+    };
+
+    useEffect(() => {
+      try {
+        const { solvedValues, solvedExtraOutputs } = solveCurrentValues(values);
+        setExtraOutputs(solvedExtraOutputs);
+        setError('');
+
+        const target = values.outputVariable;
+        const currentValue = values.vars[target]?.value;
+        const solvedValue = solvedValues.vars[target]?.value;
+        if (!Object.is(currentValue, solvedValue)) {
+          setValues(solvedValues);
+        }
+      } catch (error) {
+        setExtraOutputs({});
+        setError(
+          error instanceof Error ? error.message : t('number:common.solveError')
+        );
+      }
+    }, [values, t]);
+
+    const resultText = (() => {
+      const targetVariable = calcData.variables.find(
+        (variable) => variable.name === values.outputVariable
+      );
+      if (!targetVariable) return '';
+
+      const targetValue = values.vars[targetVariable.name];
+      const lines = [
+        `${targetVariable.title}: ${formatNumber(targetValue.value)} ${
+          targetValue.unit
+        }`.trim()
+      ];
+
+      calcData.extraOutputs?.forEach((extraOutput) => {
+        lines.push(
+          `${extraOutput.title}: ${formatNumber(
+            extraOutputs[extraOutput.title]
+          )} ${extraOutput.unit}`.trim()
+        );
+      });
+
+      return lines.join('\n');
+    })();
 
     return (
-      <ToolContent
-        title={title}
-        inputComponent={null}
-        initialValues={initialValues}
-        toolInfo={{
-          title: t(calcData.i18n.name),
-          description: calcData.i18n.longDescription
-            ? t(calcData.i18n.longDescription)
-            : undefined
-        }}
-        verticalGroups
-        // @ts-ignore
-        getGroups={({ values, updateField }) => [
-          ...(calcData.presets?.length
-            ? [
-                {
-                  title: 'Presets',
-                  component: (
-                    <Grid container spacing={2} maxWidth={500}>
-                      {calcData.presets?.map((preset) => (
-                        <Grid item xs={12} key={preset.title}>
-                          <Stack
-                            direction={{ xs: 'column', md: 'row' }}
-                            spacing={2}
-                            alignItems={'center'}
-                            justifyContent={'space-between'}
-                          >
-                            <Typography>{preset.title}</Typography>
-                            <Autocomplete
-                              disablePortal
-                              id="combo-box-demo"
-                              value={values.presets[preset.title]}
-                              options={[
-                                '<custom>',
-                                ...Object.keys(preset.source.data).sort()
-                              ]}
-                              sx={{ width: '80%' }}
-                              onChange={(event, newValue) => {
-                                handleSelectedPresetChange(
-                                  preset.title,
-                                  newValue || '',
-                                  values,
-                                  updateField
-                                );
-                              }}
-                              renderInput={(params) => (
-                                <TextField {...params} label="Preset" />
-                              )}
-                            />
-                          </Stack>
+      <Box>
+        <ToolInputAndResult
+          input={
+            <Box>
+              <InputHeader title={title} />
+              <NumberOptionStack>
+                {calcData.presets?.map((preset) => (
+                  <Autocomplete
+                    key={preset.title}
+                    disablePortal
+                    value={values.presets[preset.title]}
+                    options={[
+                      '<custom>',
+                      ...Object.keys(preset.source.data).sort()
+                    ]}
+                    onChange={(_, nextValue) =>
+                      handleSelectedPresetChange(preset.title, nextValue || '')
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={preset.title}
+                        size="small"
+                        sx={{ backgroundColor: 'background.paper' }}
+                      />
+                    )}
+                  />
+                ))}
+                <CompactNumberSelect
+                  label={t('number:common.solveFor')}
+                  value={values.outputVariable}
+                  options={[
+                    {
+                      label: t('number:common.selectSolveTarget'),
+                      value: ''
+                    },
+                    ...solveOptions
+                  ]}
+                  onChange={(outputVariable) =>
+                    updateValues((current) => ({
+                      ...current,
+                      outputVariable
+                    }))
+                  }
+                />
+                <Stack spacing={2}>
+                  {calcData.variables.map((variable) => (
+                    <Box key={variable.name}>
+                      <Grid container spacing={1.5} alignItems="center">
+                        <Grid item xs={12} md={3}>
+                          <Box>{variable.title}</Box>
                         </Grid>
-                      ))}
-                    </Grid>
-                  )
-                }
-              ]
-            : []),
-          {
-            title: 'Variables',
-            component: (
-              <Box>
-                {lessThanSmall ? (
-                  <Stack
-                    direction={'column'}
-                    spacing={2}
-                    alignItems={'center'}
-                    justifyContent={'space-between'}
-                  >
-                    <Typography>Solve for</Typography>
-                    <Select
-                      sx={{ width: '80%' }}
-                      fullWidth
-                      value={values.outputVariable}
-                      onChange={(event) =>
-                        handleSelectedTargetChange(
-                          event.target.value,
-                          updateField
-                        )
-                      }
-                    >
-                      {calcData.variables.map((variable) => (
-                        <MenuItem
-                          disabled={
-                            valsBoundToPreset[variable.name] !== undefined ||
-                            variable.solvable === false
-                          }
-                          key={variable.name}
-                          value={variable.name}
-                        >
-                          {variable.title}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </Stack>
-                ) : (
-                  <Grid container spacing={2} sx={{ mb: 2 }}>
-                    <Grid item xs={10}></Grid>
-                    <Grid item xs={2}>
-                      <Typography fontWeight="bold" align="center">
-                        Solve For
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                )}
-                {calcData.variables.map((variable) => (
-                  <Box
-                    key={variable.name}
-                    sx={{
-                      my: 3,
-                      p: 1,
-                      borderRadius: 1
-                    }}
-                  >
-                    <Grid container spacing={2} alignItems="center">
-                      <Grid item xs={lessThanSmall ? 12 : 10}>
-                        <Box>
-                          <Stack spacing={2}>
-                            <Stack
-                              direction={{ xs: 'column', md: 'row' }}
-                              spacing={2}
-                              alignItems="center"
-                            >
-                              <Typography sx={{ minWidth: '8%' }}>
-                                {variable.title}
-                              </Typography>
-                              <NumericInputWithUnit
-                                defaultPrefix={variable.defaultPrefix}
-                                value={values.vars[variable.name]}
-                                disabled={
-                                  values.outputVariable === variable.name ||
-                                  valsBoundToPreset[variable.name] !== undefined
-                                }
-                                disableChangingUnit={
-                                  valsBoundToPreset[variable.name] !== undefined
-                                }
-                                onOwnChange={(val) =>
-                                  updateVarField(
-                                    variable.name,
-                                    val.value,
-                                    val.unit,
-                                    values,
-                                    updateField
-                                  )
-                                }
-                              />
-                            </Stack>
-
-                            {variable.alternates?.map((alt) => (
-                              <Box key={alt.title}>
-                                <Stack
-                                  direction="row"
-                                  spacing={2}
-                                  alignItems="center"
-                                >
-                                  <Typography sx={{ minWidth: '8%' }}>
-                                    {alt.title}
-                                  </Typography>
-                                  <Box sx={{ flexGrow: 1 }}>
-                                    <NumericInputWithUnit
-                                      key={alt.title}
-                                      defaultPrefix={alt.defaultPrefix || ''}
-                                      value={{
-                                        value:
-                                          getAlternate(
-                                            alt,
-                                            variable,
-                                            values.vars[variable.name]
-                                          ) || NaN,
-                                        unit: alt.unit || ''
-                                      }}
-                                      disabled={
-                                        values.outputVariable ===
-                                          variable.name ||
-                                        valsBoundToPreset[variable.name] !==
-                                          undefined
-                                      }
-                                      disableChangingUnit={
-                                        valsBoundToPreset[variable.name] !==
-                                        undefined
-                                      }
-                                      onOwnChange={(val) =>
-                                        updateVarField(
-                                          variable.name,
-                                          getMainFromAlternate(
-                                            alt,
-                                            variable,
-                                            val
-                                          ),
-                                          variable.unit,
-                                          values,
-                                          updateField
-                                        )
-                                      }
-                                    />
-                                  </Box>
-                                </Stack>
-                              </Box>
-                            ))}
-                          </Stack>
-                        </Box>
-                      </Grid>
-
-                      {!lessThanSmall && (
-                        <Grid
-                          item
-                          xs={2}
-                          sx={{ display: 'flex', justifyContent: 'center' }}
-                        >
-                          <Radio
-                            value={variable.name}
-                            checked={values.outputVariable === variable.name}
-                            disabled={
-                              valsBoundToPreset[variable.name] !== undefined ||
-                              variable.solvable === false
+                        <Grid item xs={12} md={9}>
+                          <NumericInputWithUnit
+                            defaultPrefix={variable.defaultPrefix}
+                            value={
+                              values.vars[variable.name] || {
+                                value: NaN,
+                                unit: variable.unit
+                              }
                             }
-                            onClick={() =>
-                              handleSelectedTargetChange(
+                            disabled={
+                              values.outputVariable === variable.name ||
+                              valsBoundToPreset[variable.name] !== undefined
+                            }
+                            disableChangingUnit={
+                              valsBoundToPreset[variable.name] !== undefined
+                            }
+                            onOwnChange={(value) =>
+                              updateVarField(
                                 variable.name,
-                                updateField
+                                value.value,
+                                value.unit
                               )
                             }
                           />
                         </Grid>
-                      )}
-                    </Grid>
-                  </Box>
-                ))}
-              </Box>
-            )
-          },
-          ...(calcData.extraOutputs
-            ? [
-                {
-                  title: 'Extra outputs',
-                  component: (
-                    <Box>
-                      <Grid container spacing={2}>
-                        {calcData.extraOutputs?.map((extraOutput) => (
-                          <Grid item xs={12} key={extraOutput.title}>
-                            <Stack spacing={1}>
-                              <Typography>{extraOutput.title}</Typography>
-                              <NumericInputWithUnit
-                                disabled={true}
-                                defaultPrefix={extraOutput.defaultPrefix}
-                                value={{
-                                  value: extraOutputs[extraOutput.title],
-                                  unit: extraOutput.unit
-                                }}
-                              />
-                            </Stack>
-                          </Grid>
-                        ))}
                       </Grid>
+                      {variable.alternates?.map((alternate) => (
+                        <Grid
+                          key={alternate.title}
+                          container
+                          spacing={1.5}
+                          alignItems="center"
+                          sx={{ mt: 1 }}
+                        >
+                          <Grid item xs={12} md={3}>
+                            <Box>{alternate.title}</Box>
+                          </Grid>
+                          <Grid item xs={12} md={9}>
+                            <NumericInputWithUnit
+                              defaultPrefix={alternate.defaultPrefix || ''}
+                              value={{
+                                value:
+                                  getAlternate(
+                                    alternate,
+                                    variable,
+                                    values.vars[variable.name]
+                                  ) || NaN,
+                                unit: alternate.unit || ''
+                              }}
+                              disabled={
+                                values.outputVariable === variable.name ||
+                                valsBoundToPreset[variable.name] !== undefined
+                              }
+                              disableChangingUnit={
+                                valsBoundToPreset[variable.name] !== undefined
+                              }
+                              onOwnChange={(value) =>
+                                updateVarField(
+                                  variable.name,
+                                  getMainFromAlternate(
+                                    alternate,
+                                    variable,
+                                    value
+                                  ),
+                                  variable.unit
+                                )
+                              }
+                            />
+                          </Grid>
+                        </Grid>
+                      ))}
                     </Box>
-                  )
-                }
-              ]
-            : [])
-        ]}
-        compute={(values) => {
-          if (values.outputVariable === '') {
-            showSnackBar('Please select a solve for variable', 'error');
-            return;
+                  ))}
+                </Stack>
+              </NumberOptionStack>
+            </Box>
           }
-          let expr: nerdamer.Expression | null = null;
-
-          for (const variable of calcData.variables) {
-            if (variable.name === values.outputVariable) {
-              if (variable.formula !== undefined) {
-                expr = nerdamer(variable.formula);
-              }
-            }
+          result={
+            <Stack spacing={2}>
+              {error && <Alert severity="error">{error}</Alert>}
+              <ToolTextResult
+                title={t('number:common.result')}
+                value={error ? '' : resultText}
+                monospace
+              />
+            </Stack>
           }
-
-          if (expr == null) {
-            expr = nerdamer(calcData.formula);
-          }
-          if (expr == null) {
-            throw new Error('No formula found');
-          }
-
-          Object.keys(values.vars).forEach((key) => {
-            if (key === values.outputVariable) return;
-            if (expr === null) {
-              throw new Error('Math fail');
-            }
-            expr = expr.sub(key, values.vars[key].value.toString());
-          });
-
-          let result: nerdamer.Expression | nerdamer.Expression[] =
-            expr.solveFor(values.outputVariable);
-
-          // Sometimes the result is an array
-          if (
-            (result as unknown as nerdamer.Expression).toDecimal === undefined
-          ) {
-            if ((result as unknown as nerdamer.Expression[])?.length < 1) {
-              values.vars[values.outputVariable].value = NaN;
-              if (calcData.extraOutputs !== undefined) {
-                // Update extraOutputs using setState
-                setExtraOutputs((prevState) => {
-                  const newState = { ...prevState };
-                  for (let i = 0; i < calcData.extraOutputs!.length; i++) {
-                    const extraOutput = calcData.extraOutputs![i];
-                    newState[extraOutput.title] = NaN;
-                  }
-                  return newState;
-                });
-              }
-              throw new Error('No solution found for this input');
-            }
-            result = (result as unknown as nerdamer.Expression[])[0];
-          }
-
-          if (result) {
-            if (values.vars[values.outputVariable] != undefined) {
-              values.vars[values.outputVariable].value = parseFloat(
-                (result as unknown as nerdamer.Expression)
-                  .evaluate()
-                  .toDecimal()
-              );
-            }
-          } else {
-            values.vars[values.outputVariable].value = NaN;
-          }
-
-          if (calcData.extraOutputs !== undefined) {
-            for (let i = 0; i < calcData.extraOutputs.length; i++) {
-              const extraOutput = calcData.extraOutputs[i];
-
-              let expr = nerdamer(extraOutput.formula);
-
-              Object.keys(values.vars).forEach((key) => {
-                expr = expr.sub(key, values.vars[key].value.toString());
-              });
-
-              // todo could this have multiple solutions too?
-              const result: nerdamer.Expression = expr.evaluate();
-
-              if (result) {
-                // Update extraOutputs state properly
-                setExtraOutputs((prevState) => ({
-                  ...prevState,
-                  [extraOutput.title]: parseFloat(result.toDecimal())
-                }));
-              }
-            }
-          }
-        }}
-      />
+        />
+      </Box>
     );
   };
 }

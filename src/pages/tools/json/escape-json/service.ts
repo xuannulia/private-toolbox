@@ -1,7 +1,7 @@
-export const escapeJson = (input: string, wrapInQuotesFlag: boolean) => {
-  const escapedJson = JSON.stringify(input);
-  if (!wrapInQuotesFlag) {
-    return escapedJson.slice(1, -1);
-  }
-  return escapedJson;
-};
+import { escapeJson as escapeJsonCore } from '@private-toolbox/core';
+
+export const escapeJson = (input: string, wrapInQuotesFlag: boolean): string =>
+  escapeJsonCore({
+    text: input,
+    wrapInQuotes: wrapInQuotesFlag
+  });

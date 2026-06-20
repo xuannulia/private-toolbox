@@ -9,17 +9,21 @@ import { globalInputHeight } from '../../config/uiConfig';
 import { useTranslation } from 'react-i18next';
 
 export default function ToolTextResult({
+  disabled,
   title = 'Result',
   value,
   extension = 'txt',
   keepSpecialCharacters,
-  loading
+  loading,
+  monospace
 }: {
+  disabled?: boolean;
   title?: string;
   value: string;
   extension?: string;
   keepSpecialCharacters?: boolean;
   loading?: boolean;
+  monospace?: boolean;
 }) {
   const { t } = useTranslation();
   const { showSnackBar } = useContext(CustomSnackBarContext);
@@ -32,7 +36,7 @@ export default function ToolTextResult({
       });
   };
   const handleDownload = () => {
-    const filename = `output-omni-tools.${extension}`;
+    const filename = `private-toolbox-output.${extension}`;
 
     const mimeType = mime.getType(extension) || 'text/plain';
 
@@ -76,13 +80,20 @@ export default function ToolTextResult({
           sx={{
             '&.MuiTextField-root': {
               backgroundColor: 'background.paper'
+            },
+            '& textarea': {
+              fontFamily: monospace ? 'monospace' : undefined
             }
           }}
           rows={10}
           inputProps={{ 'data-testid': 'text-result' }}
         />
       )}
-      <ResultFooter handleCopy={handleCopy} handleDownload={handleDownload} />
+      <ResultFooter
+        disabled={disabled}
+        handleCopy={handleCopy}
+        handleDownload={handleDownload}
+      />
     </Box>
   );
 }

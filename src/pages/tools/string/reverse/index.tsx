@@ -1,127 +1,87 @@
-import { Box } from '@mui/material';
-import React, { useState, useRef } from 'react';
+import { Box, Checkbox, FormControlLabel, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import ToolOptions, { GetGroupsType } from '@components/options/ToolOptions';
-import { stringReverser } from './service';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import ToolInputAndResult from '@components/ToolInputAndResult';
-import ToolExamples, {
-  CardExampleType
-} from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
-import { FormikProps } from 'formik';
-import ToolContent from '@components/ToolContent';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { stringReverser } from './service';
 
-const initialValues = {
-  multiLine: true,
-  emptyItems: false,
-  trim: false
-};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Text reverse failed';
 
-const exampleCards: CardExampleType<typeof initialValues>[] = [
-  {
-    title: 'Simple Text Reversal',
-    description:
-      'Reverses each character in the text. Perfect for creating mirror text.',
-    sampleText: 'Hello World',
-    sampleResult: 'dlroW olleH',
-    sampleOptions: {
-      ...initialValues,
-      multiLine: false
-    }
-  },
-  {
-    title: 'Multi-line Reversal',
-    description:
-      'Reverses each line independently while preserving the line breaks.',
-    sampleText: 'First line\nSecond line\nThird line',
-    sampleResult: 'enil tsriF\nenil dnoceS\nenil drihT',
-    sampleOptions: {
-      ...initialValues,
-      multiLine: true
-    }
-  },
-  {
-    title: 'Clean Reversed Text',
-    description:
-      'Trims whitespace and skips empty lines before reversing the text.',
-    sampleText: '  Spaces removed  \n\nEmpty line skipped',
-    sampleResult: 'devomer secapS\ndeppiks enil ytpmE',
-    sampleOptions: {
-      ...initialValues,
-      multiLine: true,
-      emptyItems: true,
-      trim: true
-    }
-  }
-];
-
-export default function Reverse({ title }: ToolComponentProps) {
+export default function Reverse() {
   const { t } = useTranslation('string');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [multiLine, setMultiLine] = useState(true);
+  const [emptyItems, setEmptyItems] = useState(false);
+  const [trim, setTrim] = useState(false);
+  const [result, setResult] = useState('');
 
-  const computeExternal = (
-    optionsValues: typeof initialValues,
-    input: string
-  ) => {
-    const { multiLine, emptyItems, trim } = optionsValues;
-    setResult(stringReverser(input, multiLine, emptyItems, trim));
-  };
-
-  const getGroups: GetGroupsType<typeof initialValues> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('reverse.reversalOptions'),
-      component: [
-        <CheckboxWithDesc
-          key="multiLine"
-          checked={values.multiLine}
-          title={t('reverse.processMultiLine')}
-          description={t('reverse.processMultiLineDescription')}
-          onChange={(val) => updateField('multiLine', val)}
-        />,
-        <CheckboxWithDesc
-          key="emptyItems"
-          checked={values.emptyItems}
-          title={t('reverse.skipEmptyLines')}
-          description={t('reverse.skipEmptyLinesDescription')}
-          onChange={(val) => updateField('emptyItems', val)}
-        />,
-        <CheckboxWithDesc
-          key="trim"
-          checked={values.trim}
-          title={t('reverse.trimWhitespace')}
-          description={t('reverse.trimWhitespaceDescription')}
-          onChange={(val) => updateField('trim', val)}
-        />
-      ]
+  useEffect(() => {
+    try {
+      setResult(stringReverser(input, multiLine, emptyItems, trim));
+    } catch (error) {
+      setResult(formatError(error));
     }
-  ];
+  }, [emptyItems, input, multiLine, trim]);
 
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={getGroups}
-      compute={computeExternal}
-      input={input}
-      setInput={setInput}
-      inputComponent={
-        <ToolTextInput
-          title={t('reverse.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult title={t('reverse.resultTitle')} value={result} />
-      }
-      exampleCards={exampleCards}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('reverse.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <Stack spacing={0.5}>
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={multiLine}
+                    onChange={(event) => setMultiLine(event.target.checked)}
+                    size="small"
+                  />
+                }
+                label={t('reverse.processMultiLine')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={emptyItems}
+                    onChange={(event) => setEmptyItems(event.target.checked)}
+                    size="small"
+                  />
+                }
+                label={t('reverse.skipEmptyLines')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={trim}
+                    onChange={(event) => setTrim(event.target.checked)}
+                    size="small"
+                  />
+                }
+                label={t('reverse.trimWhitespace')}
+              />
+            </Stack>
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            disabled={!result}
+            keepSpecialCharacters
+            monospace
+            title={t('reverse.resultTitle')}
+            value={result}
+          />
+        }
+      />
+    </Box>
   );
 }

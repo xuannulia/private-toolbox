@@ -1,10 +1,9 @@
+import { minifyJson as minifyJsonCore } from '@private-toolbox/core';
+
 export const minifyJson = (text: string) => {
-  let parsedJson;
   try {
-    parsedJson = JSON.parse(text);
+    return minifyJsonCore({ text });
   } catch (e) {
     throw new Error('Invalid JSON string');
   }
-
-  return JSON.stringify(parsedJson);
 };

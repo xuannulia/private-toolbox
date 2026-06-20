@@ -1,186 +1,146 @@
-import {
-  Box,
-  Slider,
-  Typography,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  Stack
-} from '@mui/material';
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolMultipleImageInput, {
-  MultiImageInput
+  type MultiImageInput
 } from '@components/input/ToolMultipleImageInput';
-import ToolFileResult from 'components/result/ToolFileResult';
-import { ToolComponentProps } from '@tools/defineTool';
-import { Orientation, PageType, InitialValuesType, ImageSize } from './types';
-import { buildPdf } from './service';
+import ToolFileResult from '@components/result/ToolFileResult';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  CompactPdfToggle,
+  PdfOptionStack,
+  PdfSlider
+} from '../PdfToolControls';
+import { buildPdf } from './service';
+import type { InitialValuesType, Orientation, PageType } from './types';
 
-const initialValues: InitialValuesType = {
+const initialOptions: InitialValuesType = {
   pageType: 'full',
   orientation: 'portrait',
   scale: 100
 };
 
-export default function ConvertToPdf({ title }: ToolComponentProps) {
+export default function ConvertToPdf() {
   const { t } = useTranslation('pdf');
   const [input, setInput] = useState<MultiImageInput[]>([]);
+  const [options, setOptions] = useState<InitialValuesType>(initialOptions);
   const [result, setResult] = useState<File | null>(null);
-  const [imageSizes, setImageSizes] = useState<ImageSize[] | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
-  const compute = async (
-    optionsValues: InitialValuesType,
-    input: MultiImageInput[]
+  const updateOption = <K extends keyof InitialValuesType>(
+    key: K,
+    value: InitialValuesType[K]
   ) => {
-    if (!input.length) return;
-
-    setIsProcessing(true);
-
-    try {
-      const files = input.sort((a, b) => a.order - b.order).map((i) => i.file);
-
-      const { pdfFile, imageSizes } = await buildPdf(files, optionsValues);
-      setResult(pdfFile);
-      setImageSizes(imageSizes);
-    } catch (error) {
-      throw new Error('Error converting image(s) to PDF:' + error);
-    } finally {
-      setIsProcessing(false);
-    }
+    setOptions((current) => ({ ...current, [key]: value }));
   };
 
+  useEffect(() => {
+    if (!input.length) {
+      setResult(null);
+      setLoading(false);
+      return;
+    }
+
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runConversion() {
+        try {
+          setLoading(true);
+          const files = [...input]
+            .sort((a, b) => a.order - b.order)
+            .map((item) => item.file);
+          const { pdfFile } = await buildPdf(files, options);
+
+          if (!canceled) setResult(pdfFile);
+        } catch (error) {
+          console.error('Error converting image(s) to PDF:', error);
+          if (!canceled) setResult(null);
+        } finally {
+          if (!canceled) setLoading(false);
+        }
+      }
+
+      void runConversion();
+    }, 300);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options]);
+
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      setInput={setInput}
-      initialValues={initialValues}
-      compute={compute}
-      inputComponent={
-        <Box>
-          <ToolMultipleImageInput
-            type="image"
-            value={input}
-            onChange={setInput}
-            accept={[
-              'image/png',
-              'image/jpeg',
-              'image/webp',
-              'image/gif',
-              'image/heic',
-              'image/heif'
-            ]}
-            title={t('convertToPdf.inputTitle')}
-          />
-        </Box>
-      }
-      getGroups={({ values, updateField }) => {
-        return [
-          {
-            title: '',
-            component: (
-              <Stack spacing={4}>
-                <Box>
-                  <Typography variant="h6">
-                    {t('convertToPdf.options.type')}
-                  </Typography>
-                  <RadioGroup
-                    row
-                    value={values.pageType}
-                    onChange={(e) =>
-                      updateField('pageType', e.target.value as PageType)
-                    }
-                  >
-                    <FormControlLabel
-                      value="full"
-                      control={<Radio />}
-                      label={t('convertToPdf.options.fullsize')}
-                    />
-                    <FormControlLabel
-                      value="a4"
-                      control={<Radio />}
-                      label={t('convertToPdf.options.a4')}
-                    />
-                  </RadioGroup>
-
-                  {values.pageType === 'full' && imageSizes && (
-                    <Stack spacing={1} mt={1}>
-                      {imageSizes.map((size, index) => (
-                        <Typography
-                          key={index}
-                          variant="body2"
-                          color="text.secondary"
-                        >
-                          {t('convertToPdf.options.image')} {index + 1}:{' '}
-                          {size.widthMm.toFixed(1)} × {size.heightMm.toFixed(1)}{' '}
-                          mm ({size.widthPx} × {size.heightPx} px)
-                        </Typography>
-                      ))}
-                    </Stack>
-                  )}
-                </Box>
-
-                {values.pageType === 'a4' && (
-                  <Box>
-                    <Typography variant="h6">
-                      {t('convertToPdf.options.orientation')}
-                    </Typography>
-                    <RadioGroup
-                      row
-                      value={values.orientation}
-                      onChange={(e) =>
-                        updateField(
-                          'orientation',
-                          e.target.value as Orientation
-                        )
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolMultipleImageInput
+              type="image"
+              value={input}
+              onChange={setInput}
+              accept={[
+                'image/png',
+                'image/jpeg',
+                'image/webp',
+                'image/gif',
+                'image/heic',
+                'image/heif'
+              ]}
+              title={t('convertToPdf.inputTitle')}
+            />
+            <PdfOptionStack>
+              <CompactPdfToggle<PageType>
+                label={t('convertToPdf.options.type')}
+                value={options.pageType}
+                options={[
+                  {
+                    value: 'full',
+                    label: t('convertToPdf.options.fullsize')
+                  },
+                  { value: 'a4', label: t('convertToPdf.options.a4') }
+                ]}
+                onChange={(pageType) => updateOption('pageType', pageType)}
+              />
+              {options.pageType === 'a4' && (
+                <>
+                  <CompactPdfToggle<Orientation>
+                    label={t('convertToPdf.options.orientation')}
+                    value={options.orientation}
+                    options={[
+                      {
+                        value: 'portrait',
+                        label: t('convertToPdf.options.portrait')
+                      },
+                      {
+                        value: 'landscape',
+                        label: t('convertToPdf.options.landscape')
                       }
-                    >
-                      <FormControlLabel
-                        value="portrait"
-                        control={<Radio />}
-                        label={t('convertToPdf.options.portrait')}
-                      />
-                      <FormControlLabel
-                        value="landscape"
-                        control={<Radio />}
-                        label={t('convertToPdf.options.landscape')}
-                      />
-                    </RadioGroup>
-                  </Box>
-                )}
-
-                {values.pageType === 'a4' && (
-                  <Box>
-                    <Typography variant="h6">
-                      {t('convertToPdf.options.scale')}
-                    </Typography>
-                    <Typography>{values.scale}%</Typography>
-                    <Slider
-                      value={values.scale}
-                      onChange={(_, v) => updateField('scale', v as number)}
-                      min={10}
-                      max={100}
-                      step={1}
-                      valueLabelDisplay="auto"
-                    />
-                  </Box>
-                )}
-              </Stack>
-            )
-          }
-        ] as const;
-      }}
-      resultComponent={
-        <ToolFileResult
-          title={t('convertToPdf.resultTitle')}
-          value={result}
-          extension="pdf"
-          loading={isProcessing}
-        />
-      }
-    />
+                    ]}
+                    onChange={(orientation) =>
+                      updateOption('orientation', orientation)
+                    }
+                  />
+                  <PdfSlider
+                    label={t('convertToPdf.options.scale')}
+                    value={options.scale}
+                    min={10}
+                    max={100}
+                    onChange={(scale) => updateOption('scale', scale)}
+                  />
+                </>
+              )}
+            </PdfOptionStack>
+          </Stack>
+        }
+        result={
+          <ToolFileResult
+            title={t('convertToPdf.resultTitle')}
+            value={result}
+            extension="pdf"
+            loading={loading}
+          />
+        }
+      />
+    </Box>
   );
 }

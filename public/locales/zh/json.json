@@ -1,22 +1,146 @@
 {
   "comparison": {
-    "description": "比较两个 JSON 对象以识别结构和值的差异。",
-    "shortDescription": "查找两个 JSON 对象之间的差异",
+    "description": "比较两个 JSON 文档。",
+    "invalidInput": "对比失败：{{error}}",
+    "leftTitle": "左侧 JSON",
+    "noDifferences": "没有差异",
+    "resultTitle": "差异结果",
+    "rightTitle": "右侧 JSON",
+    "shortDescription": "查找 JSON 差异",
     "title": "比较 JSON"
   },
   "escapeJson": {
-    "description": "转义 JSON 字符串中的特殊字符。将 JSON 数据转换为正确的转义格式，以便安全传输或存储。",
-    "shortDescription": "转义 JSON 中的特殊字符",
-    "title": "转义 JSON"
+    "description": "转义 JSON 文本。",
+    "inputTitle": "输入 JSON",
+    "resultTitle": "转义结果",
+    "shortDescription": "转义 JSON 文本",
+    "title": "转义 JSON",
+    "wrapInQuotes": "包裹引号"
+  },
+  "jsonToCsv": {
+    "delimiterOption": "分隔符",
+    "description": "将 JSON 数据转换为 CSV。",
+    "headerOption": "表头",
+    "inputTitle": "输入 JSON",
+    "invalidInput": "转换失败：{{error}}",
+    "options": {
+      "alwaysQuote": {
+        "description": "所有单元格都包裹双引号。",
+        "label": "全部引用"
+      },
+      "autoQuote": {
+        "description": "只在需要时引用。",
+        "label": "自动"
+      },
+      "delimiter": "分隔符",
+      "header": {
+        "description": "使用 JSON key 作为第一行。",
+        "label": "表头行"
+      }
+    },
+    "outputTitle": "输出 CSV",
+    "quotingOption": "引用",
+    "shortDescription": "将 JSON 转换为 CSV",
+    "title": "JSON 转 CSV"
   },
   "jsonToXml": {
-    "description": "将 JSON 数据转换为 XML 格式。将结构化的 JSON 对象转换为格式良好的 XML 文档。",
-    "shortDescription": "将 JSON 转换为 XML 格式",
-    "title": "JSON 到 XML"
+    "addMetaTag": "XML 声明",
+    "description": "将 JSON 数据转换为 XML。",
+    "indentation": "缩进",
+    "inputTitle": "输入 JSON",
+    "invalidInput": "转换失败：{{error}}",
+    "noIndentation": "无",
+    "resultTitle": "输出 XML",
+    "shortDescription": "将 JSON 转换为 XML",
+    "title": "JSON 转 XML",
+    "useSpaces": "空格",
+    "useTabs": "Tab"
+  },
+  "jsonToExcel": {
+    "description": "将 JSON 对象或对象数组转换为 XLSX 文件。",
+    "errorTitle": "错误",
+    "fileName": "文件名",
+    "includeHeaders": "包含表头",
+    "inputTitle": "输入 JSON",
+    "resultTitle": "Excel 文件（{{rows}} 行 / {{columns}} 列）",
+    "sheetName": "工作表",
+    "shortDescription": "将 JSON 转换为 Excel 文件",
+    "title": "JSON 转 Excel"
+  },
+  "jsonToYaml": {
+    "description": "将 JSON 数据转换为 YAML。",
+    "inputTitle": "JSON",
+    "resultTitle": "YAML",
+    "shortDescription": "将 JSON 转换为 YAML",
+    "title": "JSON 转 YAML"
+  },
+  "yamlToJson": {
+    "description": "将 YAML 数据转换为格式化 JSON。",
+    "inputTitle": "YAML",
+    "resultTitle": "JSON",
+    "shortDescription": "将 YAML 转换为 JSON",
+    "title": "YAML 转 JSON"
+  },
+  "jsonToQuery": {
+    "description": "将 JSON 对象转换为 URL GET 参数。",
+    "inputTitle": "JSON",
+    "resultTitle": "GET 参数",
+    "shortDescription": "将 JSON 转换为 GET 参数",
+    "title": "JSON 转 GET 参数"
+  },
+  "queryToJson": {
+    "description": "将 URL GET 参数转换为格式化 JSON。",
+    "inputTitle": "GET 参数",
+    "resultTitle": "JSON",
+    "shortDescription": "将 GET 参数转换为 JSON",
+    "title": "GET 参数转 JSON"
+  },
+  "jsonSchemaValidator": {
+    "dataTitle": "JSON 数据",
+    "description": "使用 JSON Schema 校验 JSON 数据。",
+    "resultTitle": "校验结果",
+    "schemaTitle": "JSON Schema",
+    "shortDescription": "使用 JSON Schema 校验数据",
+    "title": "JSON Schema 校验"
+  },
+  "jsonSchemaFromJson": {
+    "description": "从示例 JSON 推断 JSON Schema。",
+    "inputTitle": "示例 JSON",
+    "resultTitle": "生成的 Schema",
+    "shortDescription": "从 JSON 生成 JSON Schema",
+    "title": "JSON 转 JSON Schema"
+  },
+  "jsonSchemaMock": {
+    "arrayItemCount": "数组元素数",
+    "arrayItemCountDescription": "生成数组时的元素数量，范围 0 到 20",
+    "arrayItemCountPlaceholder": "例如 2",
+    "description": "根据 JSON Schema 生成 Mock JSON。",
+    "includeOptionalProperties": "包含可选字段",
+    "invalidInput": "生成失败：{{error}}",
+    "resultTitle": "Mock JSON",
+    "schemaTitle": "JSON Schema",
+    "shortDescription": "根据 JSON Schema 生成 Mock JSON",
+    "title": "JSON Schema Mock"
+  },
+  "jsonToTypes": {
+    "description": "从示例 JSON 生成 TypeScript、Java、Go 或 C# 实体类型。",
+    "inputTitle": "示例 JSON",
+    "language": "语言",
+    "languages": {
+      "csharp": "C#",
+      "go": "Go",
+      "java": "Java",
+      "typescript": "TypeScript"
+    },
+    "resultTitle": "实体类型",
+    "rootName": "根类型名",
+    "shortDescription": "从 JSON 生成实体类型",
+    "title": "JSON 生成实体类"
   },
   "minify": {
     "description": "从 JSON 中删除所有不必要的空格。",
     "inputTitle": "输入 JSON",
+    "invalidJson": "JSON 无效",
     "resultTitle": "最小化 JSON",
     "shortDescription": "通过删除空格来缩小 JSON",
     "title": "最小化 JSON",
@@ -27,29 +151,42 @@
   },
   "prettify": {
     "description": "使用适当的缩进和间距来格式化 JSON。",
+    "emptyTree": "无 JSON",
     "indentation": "缩进",
     "inputTitle": "输入 JSON",
+    "invalidTree": "JSON 无效",
     "resultTitle": "美化 JSON",
     "shortDescription": "格式化并美化 JSON 代码",
+    "spacesCount": "空格数",
+    "textView": "文本",
     "title": "美化 JSON",
     "toolInfo": {
       "description": "此工具允许您使用适当的缩进和间距格式化 JSON 数据，使其更具可读性且更易于使用。",
       "title": "美化 JSON"
     },
-    "useSpaces": "使用空格",
+    "treeView": "树",
+    "useSpaces": "空格",
     "useSpacesDescription": "使用空格缩进输出",
-    "useTabs": "使用标签",
+    "useTabs": "Tab",
     "useTabsDescription": "使用制表符缩进输出。"
   },
   "stringify": {
-    "description": "将 JavaScript 对象转换为 JSON 字符串格式。将数据结构序列化为 JSON 字符串以便存储或传输。",
-    "shortDescription": "将对象转换为 JSON 字符串",
-    "title": "字符串化 JSON"
+    "description": "将 JavaScript 对象文本转换为 JSON。",
+    "escapeHtml": "转义 HTML",
+    "indentation": "缩进",
+    "inputTitle": "输入对象 / JSON",
+    "invalidInput": "转换失败：{{error}}",
+    "resultTitle": "JSON 字符串",
+    "shortDescription": "将对象转换为 JSON",
+    "spacesCount": "空格数",
+    "title": "字符串化 JSON",
+    "useSpaces": "空格",
+    "useTabs": "Tab"
   },
   "validateJson": {
     "description": "检查 JSON 是否有效且格式正确。",
     "inputTitle": "输入 JSON",
-    "invalidJson": "❌ {{error}}",
+    "invalidJson": "JSON 无效：{{error}}",
     "resultTitle": "验证结果",
     "shortDescription": "验证 JSON 代码是否存在错误",
     "title": "验证 JSON",
@@ -57,6 +194,29 @@
       "description": "JSON（JavaScript 对象表示法）是一种轻量级数据交换格式。JSON 验证可确保数据结构符合 JSON 标准。有效的 JSON 对象必须具备以下特征：- 属性名称用双引号括起来。- 正确匹配的花括号 {}。- 最后一个键值对后没有尾随逗号。- 对象和数组的嵌套正确。此工具会检查输入的 JSON 并提供反馈，以帮助识别和修复常见错误。",
       "title": "什么是 JSON 验证？"
     },
-    "validJson": "✅ 有效的 JSON"
+    "validJson": "JSON 有效"
+  },
+  "sortJson": {
+    "title": "JSON 排序",
+    "description": "对 JSON 对象 key 或数组项排序。",
+    "shortDescription": "排序 JSON key 或数组",
+    "longDescription": "对 JSON 对象 key 或数组对象按字段排序。",
+    "inputTitle": "输入 JSON",
+    "invalidInput": "排序失败：{{error}}",
+    "resultTitle": "排序结果",
+    "options": {
+      "ascending": "升序",
+      "descending": "降序",
+      "key": "排序字段",
+      "mode": "模式",
+      "modeDescription": "选择按对象 key 排序，或按数组对象字段排序",
+      "keyDescription": "选择用于排序的字段",
+      "order": "顺序",
+      "orderDescription": "选择排序顺序",
+      "selectKey": "选择字段",
+      "sortByKey": "对象 Key",
+      "sortByValue": "数组字段",
+      "title": "排序选项"
+    }
   }
 }

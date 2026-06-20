@@ -1,0 +1,266 @@
+{
+  "codeFormat": {
+    "description": "格式化或压缩 HTML、CSS、JavaScript 片段。",
+    "inputTitle": "代码",
+    "language": "语言",
+    "languages": {
+      "css": "CSS",
+      "html": "HTML",
+      "javascript": "JavaScript"
+    },
+    "operations": {
+      "format": "格式化",
+      "minify": "压缩"
+    },
+    "resultTitle": "结果",
+    "shortDescription": "格式化 / 压缩代码片段",
+    "summaryTitle": "摘要",
+    "title": "代码格式化"
+  },
+  "codePreview": {
+    "consoleTitle": "Console",
+    "description": "在浏览器本地预览 HTML、CSS、JavaScript 片段。",
+    "emptyConsole": "暂无输出",
+    "panes": {
+      "css": "CSS",
+      "html": "HTML",
+      "javascript": "JavaScript"
+    },
+    "previewTitle": "预览",
+    "run": "运行",
+    "runModes": {
+      "auto": "自动",
+      "manual": "手动"
+    },
+    "shortDescription": "本地预览前端片段",
+    "title": "代码片段预览"
+  },
+  "dockerCompose": {
+    "description": "格式化 Docker Compose YAML，并检查常见结构问题。",
+    "inputTitle": "Compose YAML",
+    "issuesTitle": "校验结果",
+    "resultTitle": "格式化 YAML",
+    "shortDescription": "格式化并校验 Docker Compose YAML",
+    "title": "Docker Compose"
+  },
+  "dockerfileFormat": {
+    "description": "格式化 Dockerfile，并报告常见结构问题。",
+    "inputTitle": "Dockerfile",
+    "issuesTitle": "校验结果",
+    "resultTitle": "格式化 Dockerfile",
+    "shortDescription": "格式化并检查 Dockerfile",
+    "title": "Dockerfile 格式化"
+  },
+  "dockerfileSnippet": {
+    "baseImage": "构建镜像",
+    "defaults": {
+      "go_app": {
+        "baseImage": "golang:1.23-alpine",
+        "runtimeImage": "alpine:3.20"
+      },
+      "node_app": {
+        "baseImage": "node:20-alpine",
+        "runtimeImage": "node:20-alpine"
+      },
+      "python_app": {
+        "baseImage": "python:3.12-slim",
+        "runtimeImage": ""
+      },
+      "static_nginx": {
+        "baseImage": "node:20-alpine",
+        "runtimeImage": "nginx:1.27-alpine"
+      }
+    },
+    "description": "生成常用 Dockerfile 模板。",
+    "dockerignoreTitle": ".dockerignore 建议",
+    "healthcheck": "Healthcheck",
+    "kind": "模板类型",
+    "kinds": {
+      "goApp": "Go 服务",
+      "nodeApp": "Node 应用",
+      "pythonApp": "Python ASGI",
+      "staticNginx": "静态前端 + Nginx"
+    },
+    "nonRoot": "非 root 用户",
+    "packageManager": "包管理器",
+    "packageManagers": {
+      "npm": "npm",
+      "pip": "pip",
+      "pnpm": "pnpm",
+      "poetry": "Poetry",
+      "yarn": "Yarn"
+    },
+    "port": "端口",
+    "pythonModule": "ASGI 模块",
+    "resultTitle": "Dockerfile",
+    "runtimeImage": "运行镜像",
+    "shortDescription": "生成 Dockerfile 模板",
+    "title": "Dockerfile 片段生成",
+    "workdir": "工作目录"
+  },
+  "dockerCommands": {
+    "categories": {
+      "all": "全部",
+      "cleanup": "清理",
+      "compose": "Compose",
+      "containers": "容器",
+      "images": "镜像",
+      "logs": "日志",
+      "network": "网络"
+    },
+    "commands": {
+      "cleanup-builder": {
+        "summary": "清理 BuildKit 构建缓存。",
+        "title": "清理构建缓存"
+      },
+      "cleanup-system": {
+        "summary": "清理未使用的容器、网络和悬空镜像。",
+        "title": "系统清理"
+      },
+      "cleanup-volumes": {
+        "summary": "清理未使用的数据卷。",
+        "title": "清理数据卷"
+      },
+      "compose-build": {
+        "summary": "重新构建并后台启动 Compose 服务。",
+        "title": "Compose 构建启动"
+      },
+      "compose-down": {
+        "summary": "停止 Compose 服务并清理孤儿容器。",
+        "title": "Compose 停止"
+      },
+      "compose-service-shell": {
+        "summary": "进入 Compose 服务容器。",
+        "title": "进入服务容器"
+      },
+      "compose-up": {
+        "summary": "后台启动 Compose 服务。",
+        "title": "Compose 启动"
+      },
+      "container-list": {
+        "summary": "查看所有容器，包括已停止容器。",
+        "title": "列出容器"
+      },
+      "container-run": {
+        "summary": "后台运行容器并映射端口。",
+        "title": "运行容器"
+      },
+      "container-shell": {
+        "summary": "进入正在运行的容器。",
+        "title": "进入容器"
+      },
+      "container-stop-remove": {
+        "summary": "停止并删除指定容器。",
+        "title": "停止删除容器"
+      },
+      "image-build": {
+        "summary": "基于当前目录构建镜像。",
+        "title": "构建镜像"
+      },
+      "image-list": {
+        "summary": "查看本地镜像。",
+        "title": "列出镜像"
+      },
+      "image-pull": {
+        "summary": "拉取远程镜像。",
+        "title": "拉取镜像"
+      },
+      "image-save-load": {
+        "summary": "导出或导入镜像归档。",
+        "title": "镜像导入导出"
+      },
+      "inspect": {
+        "summary": "查看容器完整结构信息。",
+        "title": "查看详情"
+      },
+      "logs-tail": {
+        "summary": "持续查看最近日志。",
+        "title": "跟踪日志"
+      },
+      "network-create": {
+        "summary": "创建自定义网络。",
+        "title": "创建网络"
+      },
+      "network-list": {
+        "summary": "查看 Docker 网络。",
+        "title": "列出网络"
+      },
+      "port-list": {
+        "summary": "查看容器端口映射。",
+        "title": "端口映射"
+      },
+      "stats": {
+        "summary": "查看容器资源占用。",
+        "title": "资源占用"
+      }
+    },
+    "copy": "复制命令",
+    "copied": "已复制命令",
+    "copyFailed": "复制失败：{{error}}",
+    "description": "常用 Docker 命令速查。",
+    "empty": "没有匹配的命令",
+    "search": "搜索命令",
+    "shortDescription": "查找并复制常用 Docker 命令",
+    "title": "Docker 命令速查"
+  },
+  "nginxFormat": {
+    "description": "格式化 Nginx 配置，并报告常见语法问题。",
+    "inputTitle": "Nginx 配置",
+    "issuesTitle": "校验结果",
+    "resultTitle": "格式化配置",
+    "shortDescription": "格式化并检查 Nginx 配置",
+    "title": "Nginx 格式化"
+  },
+  "nginxLocationMatch": {
+    "configTitle": "Nginx 配置",
+    "description": "测试请求 URI 会命中哪个 Nginx location。",
+    "error": "匹配失败",
+    "noMatch": "没有匹配的 location",
+    "resultTitle": "匹配详情",
+    "selected": "命中的 location",
+    "shortDescription": "检查 Nginx location 匹配",
+    "title": "Nginx Location 匹配",
+    "uri": "请求 URI"
+  },
+  "nginxSnippet": {
+    "accessLog": "访问日志",
+    "clientMaxBodySize": "请求体上限",
+    "description": "生成常用 Nginx server 配置片段。",
+    "gzip": "Gzip",
+    "kind": "片段类型",
+    "kinds": {
+      "httpsRedirect": "HTTPS 跳转",
+      "reverseProxy": "反向代理",
+      "spa": "SPA 静态站点",
+      "staticSite": "静态站点"
+    },
+    "listenPort": "监听端口",
+    "resultTitle": "Nginx 片段",
+    "root": "站点目录",
+    "securityHeaders": "安全响应头",
+    "serverName": "Server Name",
+    "shortDescription": "生成常用 Nginx 配置片段",
+    "title": "Nginx 片段生成",
+    "upstreamUrl": "上游地址",
+    "websocket": "WebSocket"
+  },
+  "sqlFormat": {
+    "description": "格式化或压缩 SQL，支持常见数据库方言。",
+    "dialect": "方言",
+    "inputTitle": "SQL",
+    "keywordCase": "关键字",
+    "keywordCases": {
+      "lower": "小写",
+      "preserve": "保持",
+      "upper": "大写"
+    },
+    "operations": {
+      "format": "格式化",
+      "minify": "压缩"
+    },
+    "resultTitle": "结果",
+    "shortDescription": "格式化 / 压缩 SQL",
+    "summaryTitle": "摘要",
+    "title": "SQL 格式化"
+  }
+}

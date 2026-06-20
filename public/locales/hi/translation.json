@@ -22,6 +22,10 @@
       "description": "ऑडियो के साथ काम करने के लिए टूल्स – वीडियो से ऑडियो निकालें, ऑडियो गति समायोजित करें, कई ऑडियो फ़ाइलों को मर्ज करें और बहुत कुछ।",
       "title": "ऑडियो टूल्स"
     },
+    "converters": {
+      "description": "Convert files and data between common formats.",
+      "title": "Converter Tools"
+    },
     "csv": {
       "description": "CSV फ़ाइलों के साथ काम करने के लिए टूल्स - CSV को विभिन्न प्रारूपों में बदलें, CSV डेटा में हेरफेर करें, CSV संरचना को मान्य करें, और CSV फ़ाइलों को कुशलतापूर्वक संसाधित करें।",
       "title": "CSV टूल्स"
@@ -45,6 +49,14 @@
     "number": {
       "description": "संख्याओं के साथ काम करने के लिए टूल्स – संख्या अनुक्रम उत्पन्न करें, संख्याओं को शब्दों में और शब्दों को संख्याओं में बदलें, क्रमबद्ध करें, गोल करें, संख्याओं का गुणनखंड करें, और बहुत कुछ।",
       "title": "संख्या टूल्स"
+    },
+    "network": {
+      "description": "RDAP, DNS, SSL, IP, CIDR, and local API request tools.",
+      "title": "Network Tools"
+    },
+    "ops": {
+      "description": "Docker and Nginx formatters, validators, and match testers.",
+      "title": "Ops Tools"
     },
     "pdf": {
       "description": "PDF फ़ाइलों के साथ काम करने के लिए टूल्स - PDF से टेक्स्ट निकालें, PDF को अन्य प्रारूपों में बदलें, PDF में हेरफेर करें, और बहुत कुछ।",
@@ -81,8 +93,8 @@
     }
   },
   "hero": {
-    "brand": "ओमनीटूल्स",
-    "description": "ओमनीटूल्स के साथ अपनी उत्पादकता बढ़ाएं, जल्दी काम करने के लिए अंतिम टूलकिट! छवियों, टेक्स्ट, सूचियों और डेटा को संपादित करने के लिए हजारों उपयोगकर्ता-अनुकूल उपयोगिताओं तक पहुंचें, सभी सीधे अपने ब्राउज़र से।",
+    "brand": "Private Toolbox",
+    "description": "Local-first tools for text, files, media, data, and developer workflows.",
     "examples": {
       "calculateNumberSum": "संख्याओं का योग करें",
       "changeGifSpeed": "GIF गति बदलें",
@@ -220,6 +232,9 @@
     "seeExamples": "उदाहरण देखें"
   },
   "toolLayout": {
+    "addBookmark": "बुकमार्क जोड़ें",
+    "allTools": "सभी टूल",
+    "removeBookmark": "बुकमार्क हटाएं",
     "allToolsTitle": "सभी {{type}}"
   },
   "toolMultiFileResult": {

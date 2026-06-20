@@ -1,165 +1,127 @@
-import { useState } from 'react';
-import ToolContent from '@components/ToolContent';
+import {
+  Box,
+  FormControlLabel,
+  MenuItem,
+  Stack,
+  Switch,
+  TextField
+} from '@mui/material';
 import ToolCodeInput from '@components/input/ToolCodeInput';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { convertJsonToCsv } from './service';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
-import { Box } from '@mui/material';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import SimpleRadio from '@components/options/SimpleRadio';
-import { InitialValuesType } from './types';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { convertJsonToCsv } from './service';
+import { InitialValuesType } from './types';
 
-const initialValues: InitialValuesType = {
-  delimiter: ',',
-  includeHeaders: true,
-  quoteStrings: 'auto'
-};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Invalid JSON input';
 
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Array of objects',
-    description:
-      'Convert multiple JSON objects into CSV rows, one row per object.',
-    sampleText: `[
-  { "name": "John Doe", "age": 25, "city": "New York" },
-  { "name": "Jane Doe", "age": 30, "city": "Los Angeles" },
-  { "name": "Bob Smith", "age": 22, "city": "Chicago" }
-]`,
-    sampleResult: `name,age,city\nJohn Doe,25,New York\nJane Doe,30,Los Angeles\nBob Smith,22,Chicago`,
-    sampleOptions: {
-      ...initialValues
-    }
-  },
-  {
-    title: 'Nested object (dot notation)',
-    description:
-      'Nested keys are flattened using dot notation (e.g. address.city).',
-    sampleText: `[
-  {
-    "name": "John Doe",
-    "age": 25,
-    "address": {
-      "street": "123 Main St",
-      "city": "New York",
-      "state": "NY",
-      "postalCode": "10001"
-    },
-    "hobbies": ["reading", "running"]
-  }
-]`,
-    sampleResult: `name,age,address.street,address.city,address.state,address.postalCode,hobbies[0],hobbies[1]\nJohn Doe,25,123 Main St,New York,NY,10001,reading,running`,
-    sampleOptions: {
-      ...initialValues
-    }
-  },
-  {
-    title: 'Sparse rows',
-    description:
-      'Missing keys are filled with empty values to keep columns aligned.',
-    sampleText: `[
-  { "name": "Alice", "age": 30 },
-  { "name": "Bob", "city": "Paris" },
-  { "name": "Carol", "age": 25, "city": "Rome" }
-]`,
-    sampleResult: `name,age,city\nAlice,30,\nBob,,Paris\nCarol,25,Rome`,
-    sampleOptions: {
-      ...initialValues
-    }
-  }
-];
-
-export default function JsonToCsv({ title }: ToolComponentProps) {
+export default function JsonToCsv() {
   const { t } = useTranslation('json');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [delimiter, setDelimiter] = useState(',');
+  const [includeHeaders, setIncludeHeaders] = useState(true);
+  const [quoteStrings, setQuoteStrings] =
+    useState<InitialValuesType['quoteStrings']>('auto');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const compute = (values: InitialValuesType, input: string) => {
-    if (input) {
-      try {
-        const csvResult = convertJsonToCsv(input, values);
-        setResult(csvResult);
-      } catch (error) {
-        setResult(
-          `Error: ${
-            error instanceof Error ? error.message : 'Invalid JSON format'
-          }`
-        );
-      }
+  useEffect(() => {
+    if (!input.trim()) {
+      setResult('');
+      setError('');
+      return;
     }
-  };
+
+    try {
+      setResult(
+        convertJsonToCsv(input, {
+          delimiter,
+          includeHeaders,
+          quoteStrings
+        })
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [delimiter, includeHeaders, input, quoteStrings]);
+
+  const output = error ? t('jsonToCsv.invalidInput', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      setInput={setInput}
-      initialValues={initialValues}
-      compute={compute}
-      exampleCards={exampleCards}
-      inputComponent={
-        <ToolCodeInput
-          title={t('jsonToCsv.inputTitle')}
-          value={input}
-          onChange={setInput}
-          language="json"
-        />
-      }
-      resultComponent={
-        <ToolTextResult
-          title={t('jsonToCsv.outputTitle')}
-          value={result}
-          extension={'csv'}
-        />
-      }
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('jsonToCsv.delimiterOption'),
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                description={t('jsonToCsv.options.delimiter')}
-                value={values.delimiter}
-                onOwnChange={(val) => updateField('delimiter', val)}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolCodeInput
+              title={t('jsonToCsv.inputTitle')}
+              value={input}
+              onChange={setInput}
+              language="json"
+            />
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+            >
+              <TextField
+                fullWidth
+                size="small"
+                label={t('jsonToCsv.delimiterOption')}
+                value={delimiter}
+                onChange={(event) => setDelimiter(event.target.value)}
+                sx={{ backgroundColor: 'background.paper' }}
               />
-            </Box>
-          )
-        },
-        {
-          title: t('jsonToCsv.quotingOption'),
-          component: (
-            <Box>
-              <SimpleRadio
-                checked={values.quoteStrings === 'auto'}
-                title={t('jsonToCsv.options.autoQuote.label')}
-                description={t('jsonToCsv.options.autoQuote.description')}
-                onClick={() => updateField('quoteStrings', 'auto')}
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label={t('jsonToCsv.quotingOption')}
+                value={quoteStrings}
+                onChange={(event) =>
+                  setQuoteStrings(
+                    event.target.value as InitialValuesType['quoteStrings']
+                  )
+                }
+                sx={{ backgroundColor: 'background.paper' }}
+              >
+                <MenuItem value="auto">
+                  {t('jsonToCsv.options.autoQuote.label')}
+                </MenuItem>
+                <MenuItem value="always">
+                  {t('jsonToCsv.options.alwaysQuote.label')}
+                </MenuItem>
+              </TextField>
+              <FormControlLabel
+                sx={{ m: 0, minWidth: 160 }}
+                control={
+                  <Switch
+                    checked={includeHeaders}
+                    onChange={(event) =>
+                      setIncludeHeaders(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t('jsonToCsv.options.header.label')}
               />
-              <SimpleRadio
-                checked={values.quoteStrings === 'always'}
-                title={t('jsonToCsv.options.alwaysQuote.label')}
-                description={t('jsonToCsv.options.alwaysQuote.description')}
-                onClick={() => updateField('quoteStrings', 'always')}
-              />
-            </Box>
-          )
-        },
-        {
-          title: t('jsonToCsv.headerOption'),
-          component: (
-            <Box>
-              <CheckboxWithDesc
-                checked={values.includeHeaders}
-                onChange={(value) => updateField('includeHeaders', value)}
-                title={t('jsonToCsv.options.header.label')}
-                description={t('jsonToCsv.options.header.description')}
-              />
-            </Box>
-          )
+            </Stack>
+          </Stack>
         }
-      ]}
-    />
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            extension="csv"
+            keepSpecialCharacters
+            monospace
+            title={t('jsonToCsv.outputTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

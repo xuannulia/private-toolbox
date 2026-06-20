@@ -1,6 +1,5 @@
 import { InitialValuesType } from './types';
-import { transpose, normalizeAndFill } from '@utils/array';
-import { splitCsv } from '@utils/csv';
+import { transposeCsv } from '@private-toolbox/core';
 
 export function transposeCSV(
   input: string,
@@ -8,20 +7,13 @@ export function transposeCSV(
 ): string {
   if (!input) return '';
 
-  const rows = splitCsv(
-    input,
-    true,
-    options.commentCharacter,
-    true,
-    options.separator,
-    options.quoteChar
-  );
-
-  const normalizeAndFillRows = options.customFill
-    ? normalizeAndFill(rows, options.customFillValue)
-    : normalizeAndFill(rows, '');
-
-  return transpose(normalizeAndFillRows)
-    .map((row) => row.join(options.separator))
-    .join('\n');
+  return transposeCsv({
+    text: input,
+    delimiter: options.separator,
+    quote: options.quoteChar,
+    comment: options.commentCharacter,
+    skipEmptyLines: true,
+    fillMissing: true,
+    fillValue: options.customFill ? options.customFillValue : ''
+  }).text;
 }

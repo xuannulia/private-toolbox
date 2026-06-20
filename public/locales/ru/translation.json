@@ -22,6 +22,10 @@
       "description": "Инструменты для работы со звуком — извлечение звука из видео, регулировка скорости звука, объединение нескольких аудиофайлов и многое другое.",
       "title": "Аудио инструменты"
     },
+    "converters": {
+      "description": "Convert files and data between common formats.",
+      "title": "Converter Tools"
+    },
     "csv": {
       "description": "Инструменты для работы с CSV-файлами — конвертируйте CSV в различные форматы, обрабатывайте CSV-данные, проверяйте структуру CSV и эффективно обрабатывайте CSV-файлы.",
       "title": "CSV-инструменты"
@@ -45,6 +49,14 @@
     "number": {
       "description": "Инструменты для работы с числами — генерация числовых последовательностей, преобразование чисел в слова и слов в числа, сортировка, округление, разложение чисел на множители и многое другое.",
       "title": "Числовые инструменты"
+    },
+    "network": {
+      "description": "RDAP, DNS, SSL, IP, CIDR, and local API request tools.",
+      "title": "Network Tools"
+    },
+    "ops": {
+      "description": "Docker and Nginx formatters, validators, and match testers.",
+      "title": "Ops Tools"
     },
     "pdf": {
       "description": "Инструменты для работы с PDF-файлами — извлечение текста из PDF-файлов, конвертация PDF-файлов в другие форматы, манипулирование PDF-файлами и многое другое.",
@@ -81,8 +93,8 @@
     }
   },
   "hero": {
-    "brand": "OmniTools",
-    "description": "Повысьте свою производительность с OmniTools — лучшим набором инструментов для быстрого решения задач! Получите доступ к тысячам удобных утилит для редактирования изображений, текста, списков и данных — и всё это прямо в браузере.",
+    "brand": "Private Toolbox",
+    "description": "Local-first tools for text, files, media, data, and developer workflows.",
     "examples": {
       "calculateNumberSum": "Вычислить сумму чисел",
       "changeGifSpeed": "Изменить скорость GIF-анимации",
@@ -220,6 +232,9 @@
     "seeExamples": "См. примеры"
   },
   "toolLayout": {
+    "addBookmark": "Добавить в закладки",
+    "allTools": "Все инструменты",
+    "removeBookmark": "Удалить из закладок",
     "allToolsTitle": "Все {{type}}"
   },
   "toolMultiFileResult": {

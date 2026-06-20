@@ -5,8 +5,6 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from 'assets/logo.png';
-import logoWhite from 'assets/logo-white.png';
 import {
   Drawer,
   List,
@@ -16,7 +14,8 @@ import {
   Stack,
   Select,
   MenuItem,
-  FormControl
+  FormControl,
+  Typography
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
@@ -30,14 +29,6 @@ interface NavbarProps {
 }
 const languages = [
   { code: 'en', label: 'English' },
-  { code: 'de', label: 'Deutsch' },
-  { code: 'es', label: 'Español' },
-  { code: 'fr', label: 'Français' },
-  { code: 'pt', label: 'Português' },
-  { code: 'ja', label: '日本語' },
-  { code: 'hi', label: 'हिंदी' },
-  { code: 'nl', label: 'Nederlands' },
-  { code: 'ru', label: 'Русский' },
   { code: 'zh', label: '中文' }
 ];
 
@@ -45,11 +36,15 @@ const Navbar: React.FC<NavbarProps> = ({
   mode,
   onChangeMode: onChangeMode
 }) => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const currentLanguage =
+    languages.find(({ code }) => code === i18n.resolvedLanguage)?.code ??
+    languages.find(({ code }) => code === i18n.language?.split('-')[0])?.code ??
+    'en';
   const toggleDrawer = (open: boolean) => () => {
     setDrawerOpen(open);
   };
@@ -66,9 +61,9 @@ const Navbar: React.FC<NavbarProps> = ({
   ];
 
   const languageSelector = (
-    <FormControl size="small" sx={{ minWidth: 120 }}>
+    <FormControl key="language-selector" size="small" sx={{ minWidth: 120 }}>
       <Select
-        value={i18n.language}
+        value={currentLanguage}
         onChange={handleLanguageChange}
         displayEmpty
         sx={{
@@ -110,40 +105,7 @@ const Navbar: React.FC<NavbarProps> = ({
             ? 'ic:round-light-mode'
             : 'ic:round-contrast'
       }
-    />,
-    <Icon
-      onClick={() => window.open('https://discord.gg/SDbbn3hT4b', '_blank')}
-      style={{ cursor: 'pointer' }}
-      fontSize={30}
-      icon={'ic:baseline-discord'}
-    />,
-    <iframe
-      src="https://ghbtns.com/github-btn.html?user=iib0011&repo=omni-tools&type=star&count=true&size=large"
-      frameBorder="0"
-      scrolling="0"
-      width="150"
-      height="30"
-      title="GitHub"
-    ></iframe>,
-    <Button
-      onClick={() => {
-        window.open(
-          'https://drive.google.com/file/d/1-r9-rDYnDJic9dnDywKTAsueehIAVp5F/view?usp=sharing',
-          '_blank'
-        );
-      }}
-      sx={{ borderRadius: '100px' }}
-      variant={'contained'}
-      startIcon={
-        <Icon
-          style={{ cursor: 'pointer' }}
-          fontSize={25}
-          icon={'hugeicons:job-search'}
-        />
-      }
-    >
-      {t('navbar.hireMe')}
-    </Button>
+    />
   ];
   const drawerList = (
     <List>
@@ -155,8 +117,8 @@ const Navbar: React.FC<NavbarProps> = ({
           <ListItemText primary={navItem.label} />
         </ListItemButton>
       ))}
-      {buttons.map((button) => (
-        <ListItem>{button}</ListItem>
+      {buttons.map((button, index) => (
+        <ListItem key={index}>{button}</ListItem>
       ))}
     </List>
   );
@@ -178,11 +140,26 @@ const Navbar: React.FC<NavbarProps> = ({
           mx: { md: '50px', lg: '150px' }
         }}
       >
-        <Link to="/">
-          <img
-            src={theme.palette.mode === 'light' ? logo : logoWhite}
-            width={isMobile ? '120px' : '200px'}
-          />
+        <Link
+          to="/"
+          aria-label="Private Toolbox home"
+          style={{ color: 'inherit', textDecoration: 'none' }}
+        >
+          <Stack direction={'row'} alignItems={'center'} spacing={1}>
+            <Icon
+              icon={'mdi:toolbox-outline'}
+              fontSize={isMobile ? 28 : 32}
+              color={theme.palette.primary.main}
+            />
+            <Typography
+              component={'span'}
+              fontWeight={800}
+              fontSize={{ xs: 18, md: 24 }}
+              lineHeight={1}
+            >
+              Private Toolbox
+            </Typography>
+          </Stack>
         </Link>
         {isMobile ? (
           <>

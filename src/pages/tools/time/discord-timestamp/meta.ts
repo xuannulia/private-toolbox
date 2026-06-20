@@ -11,7 +11,7 @@ export const tool = defineTool('time', {
     name: 'time:discordTimestamp.name',
     description: 'time:discordTimestamp.description',
     shortDescription: 'time:discordTimestamp.shortDescription',
-    longDescription: 'time:discordTimestamp.toolInfo.description',
+    longDescription: 'time:discordTimestamp.longDescription',
     userTypes: ['generalUsers', 'developers']
   }
 });

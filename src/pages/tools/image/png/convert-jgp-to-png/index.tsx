@@ -1,145 +1,167 @@
-import { Box } from '@mui/material';
-import ToolImageInput from 'components/input/ToolImageInput';
-import CheckboxWithDesc from 'components/options/CheckboxWithDesc';
-import ColorSelector from 'components/options/ColorSelector';
-import TextFieldWithDesc from 'components/options/TextFieldWithDesc';
-import ToolFileResult from 'components/result/ToolFileResult';
+import { Box, Stack } from '@mui/material';
 import Color from 'color';
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import ToolImageInput from '@components/input/ToolImageInput';
+import ColorSelector from '@components/options/ColorSelector';
+import ToolFileResult from '@components/result/ToolFileResult';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import {
+  CompactImageCheckbox,
+  CompactImageField,
+  ImageOptionStack
+} from '../../ImageToolControls';
 import { areColorsSimilar } from 'utils/color';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
 
-const initialValues = {
+const initialOptions = {
   enableTransparency: false,
   color: 'white',
   similarity: '10'
 };
 
-export default function ConvertJgpToPng({ title }: ToolComponentProps) {
-  const [input, setInput] = useState<File | null>(null);
-  const [result, setResult] = useState<File | null>(null);
+async function convertJpgToPng(
+  file: File,
+  options: typeof initialOptions
+): Promise<File | null> {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
 
-  const compute = async (
-    optionsValues: typeof initialValues,
-    input: any
-  ): Promise<void> => {
-    if (!input) return;
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.src = url;
+  await img.decode();
+  URL.revokeObjectURL(url);
 
-    const processImage = async (
-      file: File,
-      transparencyTransform?: {
-        color: [number, number, number];
-        similarity: number;
-      }
-    ) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (ctx == null) return;
-      const img = new Image();
+  canvas.width = img.width;
+  canvas.height = img.height;
+  ctx.drawImage(img, 0, 0);
 
-      img.src = URL.createObjectURL(file);
-      await img.decode();
-
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-
-      if (transparencyTransform) {
-        const { color, similarity } = transparencyTransform;
-
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data: Uint8ClampedArray = imageData.data;
-
-        for (let i = 0; i < data.length; i += 4) {
-          const currentColor: [number, number, number] = [
-            data[i],
-            data[i + 1],
-            data[i + 2]
-          ];
-          if (areColorsSimilar(currentColor, color, similarity)) {
-            data[i + 3] = 0;
-          }
-        }
-
-        ctx.putImageData(imageData, 0, 0);
-      }
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const newFile = new File([blob], file.name, {
-            type: 'image/png'
-          });
-          setResult(newFile);
-        }
-      }, 'image/png');
-    };
-
-    if (optionsValues.enableTransparency) {
-      let rgb: [number, number, number];
-      try {
-        //@ts-ignore
-        rgb = Color(optionsValues.color).rgb().array();
-      } catch (err) {
-        return;
-      }
-
-      processImage(input, {
-        color: rgb,
-        similarity: Number(optionsValues.similarity)
-      });
-    } else {
-      processImage(input);
+  if (options.enableTransparency) {
+    let rgb: [number, number, number];
+    try {
+      rgb = Color(options.color).rgb().array() as [number, number, number];
+    } catch (error) {
+      return null;
     }
-  };
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const currentColor: [number, number, number] = [
+        data[i],
+        data[i + 1],
+        data[i + 2]
+      ];
+      if (areColorsSimilar(currentColor, rgb, Number(options.similarity))) {
+        data[i + 3] = 0;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      resolve(blob ? new File([blob], file.name, { type: 'image/png' }) : null);
+    }, 'image/png');
+  });
+}
+
+export default function ConvertJgpToPng() {
+  const { t } = useTranslation('image');
+  const [input, setInput] = useState<File | null>(null);
+  const [options, setOptions] = useState(initialOptions);
+  const [result, setResult] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!input) {
+      setResult(null);
+      setLoading(false);
+      return;
+    }
+
+    const image = input;
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runConversion() {
+        try {
+          setLoading(true);
+          const output = await convertJpgToPng(image, options);
+          if (!canceled) setResult(output);
+        } catch (error) {
+          console.error('Error converting JPG to PNG:', error);
+          if (!canceled) setResult(null);
+        } finally {
+          if (!canceled) setLoading(false);
+        }
+      }
+
+      void runConversion();
+    }, 500);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolImageInput
-          value={input}
-          onChange={setInput}
-          accept={['image/jpeg']}
-          title={'Input JPG'}
-        />
-      }
-      resultComponent={
-        <ToolFileResult title={'Output PNG'} value={result} extension={'png'} />
-      }
-      initialValues={initialValues}
-      getGroups={({ values, updateField }) => [
-        {
-          title: 'PNG Transparency Color',
-          component: (
-            <Box>
-              <CheckboxWithDesc
-                key="enableTransparency"
-                title="Enable PNG Transparency"
-                checked={!!values.enableTransparency}
-                onChange={(value) => updateField('enableTransparency', value)}
-                description="Make the color below transparent."
-              />
-              <ColorSelector
-                value={values.color}
-                onColorChange={(val) => updateField('color', val)}
-                description={'With this color (to color)'}
-                inputProps={{ 'data-testid': 'color-input' }}
-              />
-              <TextFieldWithDesc
-                value={values.similarity}
-                onOwnChange={(val) => updateField('similarity', val)}
-                description={
-                  'Match this % of similar. For example, 10% white will match white and a little bit of gray.'
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolImageInput
+              value={input}
+              onChange={setInput}
+              accept={['image/jpeg']}
+              title={t('convertJgpToPng.inputTitle')}
+            />
+            <ImageOptionStack>
+              <CompactImageCheckbox
+                checked={options.enableTransparency}
+                label={t('convertJgpToPng.enableTransparency')}
+                onChange={(enableTransparency) =>
+                  setOptions((current) => ({
+                    ...current,
+                    enableTransparency
+                  }))
                 }
               />
-            </Box>
-          )
+              {options.enableTransparency && (
+                <>
+                  <ColorSelector
+                    value={options.color}
+                    onColorChange={(color) =>
+                      setOptions((current) => ({ ...current, color }))
+                    }
+                    description={t('convertJgpToPng.color')}
+                    inputProps={{ 'data-testid': 'color-input' }}
+                  />
+                  <CompactImageField
+                    label={t('convertJgpToPng.similarity')}
+                    value={options.similarity}
+                    onChange={(similarity) =>
+                      setOptions((current) => ({ ...current, similarity }))
+                    }
+                  />
+                </>
+              )}
+            </ImageOptionStack>
+          </Stack>
         }
-      ]}
-      compute={compute}
-      setInput={setInput}
-    />
+        result={
+          <ToolFileResult
+            title={t('convertJgpToPng.resultTitle')}
+            value={result}
+            extension="png"
+            loading={loading}
+            loadingText={t('convertJgpToPng.loadingText')}
+          />
+        }
+      />
+    </Box>
   );
 }

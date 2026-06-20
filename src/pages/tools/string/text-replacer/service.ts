@@ -1,3 +1,4 @@
+import { replaceText as replaceTextCore } from '@private-toolbox/core';
 import { InitialValuesType } from './initialValues';
 
 function isFieldsEmpty(textField: string, searchField: string) {
@@ -10,7 +11,12 @@ export function replaceText(options: InitialValuesType, text: string) {
   switch (mode) {
     case 'text':
       if (isFieldsEmpty(text, searchValue)) return text;
-      return text.replaceAll(searchValue, replaceValue);
+      return replaceTextCore({
+        text,
+        search: searchValue,
+        replacement: replaceValue,
+        mode: 'literal'
+      }).output;
     case 'regexp':
       if (isFieldsEmpty(text, searchRegexp)) return text;
       return replaceTextWithRegexp(text, searchRegexp, replaceValue);
@@ -23,18 +29,13 @@ function replaceTextWithRegexp(
   replaceValue: string
 ) {
   try {
-    const match = searchRegexp.match(/^\/(.*)\/([a-z]*)$/i);
-
-    if (match) {
-      // Input is in /pattern/flags format
-      const [, pattern, flags] = match;
-      return text.replace(new RegExp(pattern, flags), replaceValue);
-    } else {
-      // Input is a raw pattern - don't escape it
-      return text.replace(new RegExp(searchRegexp, 'g'), replaceValue);
-    }
+    return replaceTextCore({
+      text,
+      search: searchRegexp,
+      replacement: replaceValue,
+      mode: 'regex'
+    }).output;
   } catch (err) {
-    // console.error('Invalid regular expression:', err);
     return text;
   }
 }

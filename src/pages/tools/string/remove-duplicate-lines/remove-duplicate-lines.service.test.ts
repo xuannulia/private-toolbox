@@ -159,6 +159,52 @@ describe('removeDuplicateLines function', () => {
     });
   });
 
+  describe('keyMode option', () => {
+    it('should remove duplicates by first word', () => {
+      const input = 'id1 alpha\nid2 beta\nid1 gamma';
+      const options: DuplicateRemoverOptions = {
+        mode: 'all',
+        keyMode: 'word',
+        keyIndex: 1,
+        newlines: 'filter',
+        sortLines: false,
+        trimTextLines: false
+      };
+      const result = removeDuplicateLines(input, options);
+      expect(result).toBe('id1 alpha\nid2 beta');
+    });
+
+    it('should remove duplicates by delimited field', () => {
+      const input = '1,Alice\n2,Bob\n1,Alicia';
+      const options: DuplicateRemoverOptions = {
+        mode: 'all',
+        keyMode: 'field',
+        fieldDelimiter: ',',
+        keyIndex: 1,
+        newlines: 'filter',
+        sortLines: false,
+        trimTextLines: false
+      };
+      const result = removeDuplicateLines(input, options);
+      expect(result).toBe('1,Alice\n2,Bob');
+    });
+
+    it('should remove duplicates by regex capture key', () => {
+      const input =
+        'user=alice action=login\nuser=bob action=logout\nuser=alice action=write';
+      const options: DuplicateRemoverOptions = {
+        mode: 'all',
+        keyMode: 'regex',
+        keyRegex: 'user=(\\w+)',
+        newlines: 'filter',
+        sortLines: false,
+        trimTextLines: false
+      };
+      const result = removeDuplicateLines(input, options);
+      expect(result).toBe('user=alice action=login\nuser=bob action=logout');
+    });
+  });
+
   // Edge cases
   describe('edge cases', () => {
     it('should handle empty input', () => {

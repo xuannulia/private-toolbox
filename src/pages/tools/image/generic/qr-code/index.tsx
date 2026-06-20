@@ -1,25 +1,42 @@
-import React, { useCallback, useState } from 'react';
-import { Box } from '@mui/material';
-import * as Yup from 'yup';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { GetGroupsType } from '@components/options/ToolOptions';
+import React, { useContext, useEffect, useState } from 'react';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
 import SelectWithDesc from '@components/options/SelectWithDesc';
-import { InitialValuesType, QRCodeType, WifiEncryptionType } from './types';
+import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
+import {
+  InitialValuesType,
+  QRCodeType,
+  QrCodeErrorCorrectionLevel,
+  QrCodeModuleStyle,
+  QrCodeOutputFormat,
+  WifiEncryptionType
+} from './types';
 import ColorSelector from '@components/options/ColorSelector';
 import ToolFileResult from '@components/result/ToolFileResult';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import { useTranslation } from 'react-i18next';
-import * as QRCode from 'qrcode';
-import { debounce } from 'lodash';
+import { generateQrCode } from '@private-toolbox/core';
+import { CustomSnackBarContext } from '../../../../../contexts/CustomSnackBarContext';
+import { ImageOptionStack } from '../../ImageToolControls';
 
 const initialValues: InitialValuesType = {
   qrCodeType: 'URL',
 
   // Common settings
   size: '200',
+  margin: '4',
+  outputFormat: 'png',
   bgColor: '#FFFFFF',
   fgColor: '#000000',
+  transparentBackground: false,
+  errorCorrectionLevel: 'M',
+  moduleStyle: 'square',
+  logoDataUrl: '',
+  logoName: '',
+  logoSizePercent: '18',
+  logoPadding: '1',
 
   // URL
   url: 'https://example.com',
@@ -111,72 +128,88 @@ END:VCARD`;
   }
 };
 
-const validationSchema = Yup.object().shape({
-  qrCodeType: Yup.string().required('QR code type is required'),
-  size: Yup.number()
-    .min(100, 'Size must be at least 100px')
-    .max(1000, 'Size must be at most 1000px')
-    .required('Size is required'),
-  bgColor: Yup.string().required('Background color is required'),
-  fgColor: Yup.string().required('Foreground color is required'),
+const readLogoAsDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        reject(new Error('Failed to read logo image'));
+        return;
+      }
+      resolve(reader.result);
+    };
+    reader.onerror = () =>
+      reject(reader.error || new Error('Failed to read logo image'));
+    reader.readAsDataURL(file);
+  });
 
-  // URL
-  url: Yup.string().when('qrCodeType', {
-    is: 'URL',
-    then: (schema) =>
-      schema.url('Please enter a valid URL').required('URL is required')
-  }),
+const svgToFile = (svg: string): File =>
+  new File([svg], 'qr-code.svg', {
+    type: 'image/svg+xml'
+  });
 
-  // Text
-  text: Yup.string().when('qrCodeType', {
-    is: 'Text',
-    then: (schema) => schema.required('Text is required')
-  }),
+const svgToPngFile = (svg: string, size: number): Promise<File> =>
+  new Promise((resolve, reject) => {
+    const blob = new Blob([svg], {
+      type: 'image/svg+xml;charset=utf-8'
+    });
+    const objectUrl = URL.createObjectURL(blob);
+    const image = new Image();
 
-  // Email
-  emailAddress: Yup.string().when('qrCodeType', {
-    is: 'Email',
-    then: (schema) =>
-      schema
-        .email('Please enter a valid email address')
-        .required('Email address is required')
-  }),
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const context = canvas.getContext('2d');
 
-  // Phone
-  phoneNumber: Yup.string().when('qrCodeType', {
-    is: 'Phone',
-    then: (schema) => schema.required('Phone number is required')
-  }),
+      if (!context) {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Canvas is not available'));
+        return;
+      }
 
-  // SMS
-  smsNumber: Yup.string().when('qrCodeType', {
-    is: 'SMS',
-    then: (schema) => schema.required('Phone number is required')
-  }),
+      context.clearRect(0, 0, size, size);
+      context.drawImage(image, 0, 0, size, size);
+      canvas.toBlob((pngBlob) => {
+        URL.revokeObjectURL(objectUrl);
+        if (!pngBlob) {
+          reject(new Error('Failed to render QR code PNG'));
+          return;
+        }
 
-  // WiFi
-  wifiSsid: Yup.string().when('qrCodeType', {
-    is: 'WiFi',
-    then: (schema) => schema.required('SSID is required')
-  }),
+        resolve(
+          new File([pngBlob], 'qr-code.png', {
+            type: 'image/png'
+          })
+        );
+      }, 'image/png');
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Failed to render QR code SVG'));
+    };
+    image.src = objectUrl;
+  });
 
-  // vCard
-  vCardName: Yup.string().when('qrCodeType', {
-    is: 'vCard',
-    then: (schema) => schema.required('Name is required')
-  })
-});
+type UpdateField = <TKey extends keyof InitialValuesType>(
+  key: TKey,
+  value: InitialValuesType[TKey]
+) => void;
 
-export default function QRCodeGenerator({ title }: ToolComponentProps) {
+export default function QRCodeGenerator() {
   const { t } = useTranslation('image');
+  const { showSnackBar } = useContext(CustomSnackBarContext);
+  const [options, setOptions] = useState<InitialValuesType>(initialValues);
   const [result, setResult] = useState<File | null>(null);
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => {
+
+  const updateField: UpdateField = (key, value) => {
+    setOptions((current) => ({ ...current, [key]: value }));
+  };
+
+  const getGroups = (values: InitialValuesType, updateField: UpdateField) => {
     return [
       {
-        title: 'QR Code Type',
+        title: t('qrCode.groups.type'),
         component: (
           <Box>
             <SelectWithDesc
@@ -199,9 +232,20 @@ export default function QRCodeGenerator({ title }: ToolComponentProps) {
         )
       },
       {
-        title: 'QR Code Settings',
+        title: t('qrCode.groups.settings'),
         component: (
           <Box>
+            <SelectWithDesc
+              selected={values.outputFormat}
+              onChange={(value) =>
+                updateField('outputFormat', value as QrCodeOutputFormat)
+              }
+              options={[
+                { label: 'PNG', value: 'png' },
+                { label: 'SVG', value: 'svg' }
+              ]}
+              description={t('qrCode.options.outputFormat')}
+            />
             <TextFieldWithDesc
               value={values.size}
               onOwnChange={(val) => updateField('size', val)}
@@ -212,22 +256,152 @@ export default function QRCodeGenerator({ title }: ToolComponentProps) {
                 max: 1000
               }}
             />
+            <TextFieldWithDesc
+              value={values.margin}
+              onOwnChange={(val) => updateField('margin', val)}
+              description={t('qrCode.options.margin')}
+              inputProps={{
+                type: 'number',
+                min: 0,
+                max: 20
+              }}
+            />
+            <SelectWithDesc
+              selected={values.errorCorrectionLevel}
+              onChange={(value) =>
+                updateField(
+                  'errorCorrectionLevel',
+                  value as QrCodeErrorCorrectionLevel
+                )
+              }
+              options={[
+                { label: 'L', value: 'L' },
+                { label: 'M', value: 'M' },
+                { label: 'Q', value: 'Q' },
+                { label: 'H', value: 'H' }
+              ]}
+              description={t('qrCode.options.errorCorrectionLevel')}
+            />
+            <SelectWithDesc
+              selected={values.moduleStyle}
+              onChange={(value) =>
+                updateField('moduleStyle', value as QrCodeModuleStyle)
+              }
+              options={[
+                { label: t('qrCode.options.square'), value: 'square' },
+                { label: t('qrCode.options.dots'), value: 'dots' }
+              ]}
+              description={t('qrCode.options.moduleStyle')}
+            />
             <ColorSelector
-              description="Background Color"
+              description={t('qrCode.options.backgroundColor')}
               value={values.bgColor}
               onColorChange={(val) => updateField('bgColor', val)}
             />
             <ColorSelector
-              description="Foreground Color"
+              description={t('qrCode.options.foregroundColor')}
               value={values.fgColor}
               onColorChange={(val) => updateField('fgColor', val)}
+            />
+            <CheckboxWithDesc
+              checked={values.transparentBackground}
+              onChange={(checked) =>
+                updateField('transparentBackground', checked)
+              }
+              title={t('qrCode.options.transparentBackground')}
+            />
+          </Box>
+        )
+      },
+      {
+        title: t('qrCode.groups.logo'),
+        component: (
+          <Box>
+            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+              <Button
+                component="label"
+                startIcon={<UploadFileIcon />}
+                variant="outlined"
+              >
+                {t('qrCode.options.logoUpload')}
+                <input
+                  hidden
+                  accept="image/*"
+                  type="file"
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0] ?? null;
+                    event.currentTarget.value = '';
+
+                    if (!file) return;
+                    if (!file.type.startsWith('image/')) {
+                      showSnackBar(t('qrCode.logoInvalid'), 'error');
+                      return;
+                    }
+
+                    readLogoAsDataUrl(file)
+                      .then((dataUrl) => {
+                        updateField('logoDataUrl', dataUrl);
+                        updateField('logoName', file.name);
+                      })
+                      .catch((error) =>
+                        showSnackBar(
+                          error instanceof Error
+                            ? error.message
+                            : t('qrCode.logoInvalid'),
+                          'error'
+                        )
+                      );
+                  }}
+                />
+              </Button>
+              <Button
+                disabled={!values.logoDataUrl}
+                onClick={() => {
+                  updateField('logoDataUrl', '');
+                  updateField('logoName', '');
+                }}
+                startIcon={<CloseIcon />}
+              >
+                {t('qrCode.options.logoRemove')}
+              </Button>
+            </Stack>
+            {values.logoName && (
+              <Typography
+                color="text.secondary"
+                sx={{ mb: 2, overflowWrap: 'anywhere' }}
+                variant="body2"
+              >
+                {values.logoName}
+              </Typography>
+            )}
+            <TextFieldWithDesc
+              value={values.logoSizePercent}
+              onOwnChange={(val) => updateField('logoSizePercent', val)}
+              description={t('qrCode.options.logoSize')}
+              disabled={!values.logoDataUrl}
+              inputProps={{
+                type: 'number',
+                min: 5,
+                max: 30
+              }}
+            />
+            <TextFieldWithDesc
+              value={values.logoPadding}
+              onOwnChange={(val) => updateField('logoPadding', val)}
+              description={t('qrCode.options.logoPadding')}
+              disabled={!values.logoDataUrl}
+              inputProps={{
+                type: 'number',
+                min: 0,
+                max: 8
+              }}
             />
           </Box>
         )
       },
       // Dynamic form fields based on QR code type
       {
-        title: `${values.qrCodeType} Details`,
+        title: t('qrCode.groups.details', { type: values.qrCodeType }),
         component: (
           <Box>
             {values.qrCodeType === 'URL' && (
@@ -426,42 +600,82 @@ export default function QRCodeGenerator({ title }: ToolComponentProps) {
 
   const compute = async (options: InitialValuesType) => {
     const qrValue = formatQRCodeData(options);
-    if (!qrValue) return;
-    const canvas = document.createElement('canvas');
-    QRCode.toDataURL(
-      canvas,
-      qrValue,
-      {
-        color: {
-          dark: options.fgColor,
-          light: options.bgColor
-        },
-        width: Number(options.size) || 200
-      },
-      async (error, url) => {
-        const res = await fetch(url);
-        const blob = await res.blob();
-        const file = new File([blob], 'Qr code.png', { type: 'image/png' });
-        setResult(file);
-      }
-    );
+    if (!qrValue) {
+      setResult(null);
+      return;
+    }
+
+    try {
+      const size = Number(options.size) || 200;
+      const output = await generateQrCode({
+        text: qrValue,
+        format: 'svg',
+        size,
+        margin: Number(options.margin) || 0,
+        darkColor: options.fgColor,
+        lightColor: options.bgColor,
+        transparentBackground: options.transparentBackground,
+        errorCorrectionLevel: options.errorCorrectionLevel,
+        moduleStyle: options.moduleStyle,
+        logoDataUrl: options.logoDataUrl || undefined,
+        logoSizePercent: Number(options.logoSizePercent) || 18,
+        logoPadding: Number(options.logoPadding) || 0
+      });
+      setResult(
+        options.outputFormat === 'svg'
+          ? svgToFile(output.text)
+          : await svgToPngFile(output.text, size)
+      );
+    } catch (error) {
+      setResult(null);
+      showSnackBar(
+        error instanceof Error ? error.message : t('qrCode.failed'),
+        'error'
+      );
+    }
   };
-  const debouncedCompute = useCallback(debounce(compute, 1000), []);
+  useEffect(() => {
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runQrCode() {
+        if (canceled) return;
+        await compute(options);
+      }
+
+      void runQrCode();
+    }, 500);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [options]);
 
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={getGroups}
-      validationSchema={validationSchema}
-      compute={debouncedCompute}
-      resultComponent={
-        <ToolFileResult title={t('qrCode.resultOutput')} value={result} />
-      }
-      toolInfo={{
-        title: t('qrCode.title'),
-        description: t('qrCode.description')
-      }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ImageOptionStack>
+              {getGroups(options, updateField).map((group) => (
+                <Box key={group.title}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                  >
+                    {group.title}
+                  </Typography>
+                  {group.component}
+                </Box>
+              ))}
+            </ImageOptionStack>
+          </Stack>
+        }
+        result={
+          <ToolFileResult title={t('qrCode.resultOutput')} value={result} />
+        }
+      />
+    </Box>
   );
 }

@@ -1,4 +1,7 @@
 {
+  "common": {
+    "errorFallback": "Error: {{error}}"
+  },
   "checkLeapYears": {
     "description": "Check if a year is a leap year and get leap year information.",
     "exampleDescription": "One of our friends was born on a leap year on February 29th and as a consequence, she has a birthday only once every 4 years. As we can never really remember when her birthday is, we are using our program to create a reminder list of the upcoming leap years. To create a list of her next birthdays, we load a sequence of years from 2025 to 2040 into the input and get the status of each year. If the program says that it's a leap year, then we know that we'll be invited to a birthday party on February 29th.",
@@ -17,6 +20,8 @@
     "addHoursNameDescription": "Append the string hours to output values",
     "description": "Convert days to hours with customizable options.",
     "hoursName": "Hours Name",
+    "inputTitle": "Input days",
+    "resultTitle": "Hours",
     "shortDescription": "Convert days to hours",
     "title": "Convert Days to Hours",
     "toolInfo": {
@@ -25,10 +30,13 @@
     }
   },
   "convertHoursToDays": {
+    "accuracyLabel": "Decimal places",
     "addDaysName": "Add Days Name",
     "addDaysNameDescription": "Append the string days to output values",
     "daysName": "Days Name",
     "description": "Convert hours to days with customizable options.",
+    "inputTitle": "Input hours",
+    "resultTitle": "Days",
     "shortDescription": "Convert hours to days",
     "title": "Convert Hours to Days",
     "toolInfo": {
@@ -40,6 +48,8 @@
     "addPadding": "Add Padding",
     "addPaddingDescription": "Add zero padding to hours, minutes, and seconds.",
     "description": "Convert seconds to a readable time format (hours:minutes:seconds). Enter the number of seconds to get the formatted time.",
+    "inputTitle": "Input seconds",
+    "resultTitle": "Time",
     "shortDescription": "Convert seconds to time format",
     "timePadding": "Time Padding",
     "title": "Convert Seconds to Time",
@@ -48,8 +58,11 @@
     }
   },
   "convertTimeToDecimal": {
+    "decimalPlacesLabel": "Decimal places",
     "description": "Convert a formatted time duration (HH:MM:SS) into a decimal hour value.",
+    "inputTitle": "Input time",
     "longDescription": "Convert a formatted time string (HH:MM:SS or HH:MM) into its decimal-hour equivalent. Hours can be any positive number, while minutes and seconds accept values from 0-59 and can be single or double digits (e.g., '12:5' or '12:05'). This function interprets hours, minutes, and seconds, then calculates the total duration as a single decimal value. It is useful for productivity tracking, payroll calculations, time-based billing, data analysis, or any workflow that requires converting human-readable time into a numerical format that can be easily summed, compared, or processed. For example, '03:26:00' becomes 3.43 hours, and '12:5' becomes 12.08 hours.",
+    "resultTitle": "Decimal hours",
     "shortDescription": "Convert human time to decimal time",
     "title": "Convert time to decimal"
   },
@@ -68,6 +81,8 @@
     "addUtcLabel": "Add 'UTC' suffix",
     "addUtcLabelDescription": "Append 'UTC' after the converted date (available only in UTC mode)",
     "description": "Convert Unix timestamps to readable dates and convert dates back to Unix timestamps.",
+    "inputTitle": "Input",
+    "resultTitle": "Result",
     "shortDescription": "Convert Unix timestamps and dates in both directions.",
     "title": "Convert Unix ↔ Date",
     "toolInfo": {
@@ -85,7 +100,17 @@
   "crontabGuru": {
     "title": "Crontab Guru",
     "description": "Parse and explain cron expressions in plain English. Instantly understand what any cron schedule does, validate syntax, and process multiple expressions at once.",
+    "convertedExpressionTitle": "Converted expression",
+    "expressionTitle": "Expression",
+    "monthTitle": "Month",
+    "resultTitle": "Cron JSON",
     "shortDescription": "Parse and explain cron expressions in plain English",
+    "targetCrontab": "To crontab",
+    "targetDialectTitle": "Target format",
+    "targetQuartz": "To Quartz",
+    "timezoneTitle": "Timezone",
+    "totalRuns": "{{count}} runs",
+    "yearTitle": "Year",
     "longDescription": "Crontab Guru is a cron expression parser and validator that translates complex cron syntax into plain, human-readable descriptions. Whether you're scheduling automated backups, system maintenance tasks, or CI/CD pipelines, this tool helps you understand exactly when your jobs will run. Supports standard 5-field cron expressions, validates syntax in real time, and processes multiple expressions at once — one per line. Available in English, French, Spanish, German, Japanese, Chinese, Portuguese, Dutch, and Russian."
   },
   "timeBetweenDates": {
@@ -94,6 +119,7 @@
     "endDateTime": "End Date & Time",
     "endTime": "End Time",
     "endTimezone": "End Timezone",
+    "resultTitle": "Time difference",
     "shortDescription": "Calculate time between two dates",
     "startDate": "Start Date",
     "startDateTime": "Start Date & Time",
@@ -107,7 +133,9 @@
   },
   "truncateClockTime": {
     "description": "Truncate clock time to remove seconds or minutes. Round time to the nearest hour, minute, or custom interval.",
+    "inputTitle": "Input clock time",
     "printDroppedComponents": "Print Dropped Components",
+    "resultTitle": "Truncated time",
     "shortDescription": "Truncate clock time to specified precision",
     "timePadding": "Time Padding",
     "title": "Truncate Clock Time",
@@ -127,6 +155,7 @@
   "discordTimestamp": {
     "name": "Discord Timestamp Generator",
     "description": "Convert dates and times into Discord's special timestamp format that automatically adapts to each user's local timezone and language",
+    "longDescription": "Discord timestamps are a special syntax that displays dates and times dynamically. Instead of showing a fixed time, they automatically convert to each viewer's local timezone and language.",
     "shortDescription": "Generate Discord timestamps from dates",
     "inputTitle": "Input Datetimes",
     "outputTitle": "Discord Timestamps",

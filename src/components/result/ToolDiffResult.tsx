@@ -14,11 +14,13 @@ const DOMPURIFY_CONFIG = {
 };
 
 export default function ToolDiffResult({
+  disabled,
   title = 'Differences',
   value,
   loading,
   isHtml = false
 }: {
+  disabled?: boolean;
   title?: string;
   value: string;
   loading?: boolean;
@@ -107,7 +109,11 @@ export default function ToolDiffResult({
       ) : (
         <Box sx={sharedBoxSx}>{value}</Box>
       )}
-      <ResultFooter handleCopy={handleCopy} handleDownload={handleDownload} />
+      <ResultFooter
+        disabled={disabled}
+        handleCopy={handleCopy}
+        handleDownload={handleDownload}
+      />
     </Box>
   );
 }

@@ -1,4 +1,4 @@
-import { Box, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
 import Hero from 'components/Hero';
 import Categories from './Categories';
 import { Helmet } from 'react-helmet';
@@ -6,32 +6,26 @@ import { useUserTypeFilter } from 'providers/UserTypeFilterProvider';
 import UserTypeFilter from '@components/UserTypeFilter';
 
 export default function Home() {
-  const theme = useTheme();
   const { selectedUserTypes, setSelectedUserTypes } = useUserTypeFilter();
   return (
     <Box
       padding={{
-        xs: 1,
-        md: 3,
-        lg: 5
+        xs: 1.5,
+        md: 3
       }}
       sx={{
-        background: `url(/assets/${
-          theme.palette.mode === 'dark'
-            ? 'background-dark.png'
-            : 'background.svg'
-        })`,
-        backgroundColor: 'background.default'
+        backgroundColor: 'background.default',
+        minHeight: '100%'
       }}
       display={'flex'}
       flexDirection={'column'}
       alignItems={'center'}
-      justifyContent={'center'}
+      gap={2}
       width={'100%'}
     >
-      <Helmet title={'OmniTools'} />
+      <Helmet title={'Private Toolbox'} />
       <Hero />
-      <Box my={3}>
+      <Box>
         <UserTypeFilter
           selectedUserTypes={selectedUserTypes}
           onUserTypesChange={setSelectedUserTypes}

@@ -1,198 +1,122 @@
-import React, { useState } from 'react';
-import { Box } from '@mui/material';
-import ToolContent from '@components/ToolContent';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { SplitOperatorType, wrapList } from './service';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import SimpleRadio from '@components/options/SimpleRadio';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import * as Yup from 'yup';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  CompactCheckbox,
+  CompactTextField,
+  ListSplitMode,
+  SplitOptions,
+  normalizeListSeparator
+} from '../ListToolControls';
+import { wrapList } from './service';
 
-interface InitialValuesType {
-  splitOperatorType: SplitOperatorType;
-  splitSeparator: string;
-  joinSeparator: string;
-  deleteEmptyItems: boolean;
-  left: string;
-  right: string;
-}
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Wrap list failed';
 
-const initialValues: InitialValuesType = {
-  splitOperatorType: 'symbol',
-  splitSeparator: ',',
-  joinSeparator: ',',
-  deleteEmptyItems: true,
-  left: '"',
-  right: '"'
-};
-
-const validationSchema = Yup.object({
-  splitSeparator: Yup.string().required('The separator is required'),
-  joinSeparator: Yup.string().required('The join separator is required')
-});
-
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Wrap list items with quotes',
-    description:
-      'This example shows how to wrap each item in a list with quotes.',
-    sampleText: 'apple,banana,orange',
-    sampleResult: '"apple","banana","orange"',
-    sampleOptions: {
-      splitOperatorType: 'symbol',
-      splitSeparator: ',',
-      joinSeparator: ',',
-      deleteEmptyItems: true,
-      left: '"',
-      right: '"'
-    }
-  },
-  {
-    title: 'Wrap list items with brackets',
-    description:
-      'This example shows how to wrap each item in a list with brackets.',
-    sampleText: 'item1,item2,item3',
-    sampleResult: '[item1],[item2],[item3]',
-    sampleOptions: {
-      splitOperatorType: 'symbol',
-      splitSeparator: ',',
-      joinSeparator: ',',
-      deleteEmptyItems: true,
-      left: '[',
-      right: ']'
-    }
-  },
-  {
-    title: 'Wrap list items with custom text',
-    description:
-      'This example shows how to wrap each item with different text on each side.',
-    sampleText: 'apple,banana,orange',
-    sampleResult:
-      'prefix-apple-suffix,prefix-banana-suffix,prefix-orange-suffix',
-    sampleOptions: {
-      splitOperatorType: 'symbol',
-      splitSeparator: ',',
-      joinSeparator: ',',
-      deleteEmptyItems: true,
-      left: 'prefix-',
-      right: '-suffix'
-    }
-  }
-];
-
-export default function Wrap({ title }: ToolComponentProps) {
+export default function Wrap() {
   const { t } = useTranslation('list');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [splitMode, setSplitMode] = useState<ListSplitMode>('symbol');
+  const [splitSeparator, setSplitSeparator] = useState(',');
+  const [joinSeparator, setJoinSeparator] = useState(',');
+  const [deleteEmptyItems, setDeleteEmptyItems] = useState(true);
+  const [left, setLeft] = useState('"');
+  const [right, setRight] = useState('"');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const compute = (optionsValues: InitialValuesType, input: string) => {
-    if (input) {
-      try {
-        setResult(
-          wrapList(
-            optionsValues.splitOperatorType,
-            input,
-            optionsValues.splitSeparator,
-            optionsValues.joinSeparator,
-            optionsValues.deleteEmptyItems,
-            optionsValues.left,
-            optionsValues.right
-          )
-        );
-      } catch (error) {
-        if (error instanceof Error) {
-          setResult(`Error: ${error.message}`);
-        } else {
-          setResult('An unknown error occurred');
-        }
-      }
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
     }
-  };
 
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('wrap.splitOptions'),
-      component: (
-        <Box>
-          <SimpleRadio
-            onClick={() => updateField('splitOperatorType', 'symbol')}
-            checked={values.splitOperatorType === 'symbol'}
-            title={t('wrap.splitBySymbol')}
-          />
-          <SimpleRadio
-            onClick={() => updateField('splitOperatorType', 'regex')}
-            checked={values.splitOperatorType === 'regex'}
-            title={t('wrap.splitByRegex')}
-          />
-          <TextFieldWithDesc
-            value={values.splitSeparator}
-            onOwnChange={(val) => updateField('splitSeparator', val)}
-            description={t('wrap.splitSeparatorDescription')}
-          />
-          <TextFieldWithDesc
-            value={values.joinSeparator}
-            onOwnChange={(val) => updateField('joinSeparator', val)}
-            description={t('wrap.joinSeparatorDescription')}
-          />
-          <CheckboxWithDesc
-            checked={values.deleteEmptyItems}
-            onChange={(checked) => updateField('deleteEmptyItems', checked)}
-            title={t('wrap.removeEmptyItems')}
-          />
-        </Box>
-      )
-    },
-    {
-      title: t('wrap.wrapOptions'),
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            value={values.left}
-            onOwnChange={(val) => updateField('left', val)}
-            description={t('wrap.leftTextDescription')}
-          />
-          <TextFieldWithDesc
-            value={values.right}
-            onOwnChange={(val) => updateField('right', val)}
-            description={t('wrap.rightTextDescription')}
-          />
-        </Box>
-      )
+    try {
+      setResult(
+        wrapList(
+          splitMode,
+          input,
+          normalizeListSeparator(splitSeparator),
+          normalizeListSeparator(joinSeparator),
+          deleteEmptyItems,
+          normalizeListSeparator(left),
+          normalizeListSeparator(right)
+        )
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
     }
-  ];
+  }, [
+    deleteEmptyItems,
+    input,
+    joinSeparator,
+    left,
+    right,
+    splitMode,
+    splitSeparator
+  ]);
+
+  const output = error ? t('common.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      inputComponent={
-        <ToolTextInput
-          title={t('wrap.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult title={t('wrap.resultTitle')} value={result} />
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      validationSchema={validationSchema}
-      toolInfo={{
-        title: t('wrap.toolInfo.title'),
-        description: t('wrap.toolInfo.description')
-      }}
-      exampleCards={exampleCards}
-      input={input}
-      setInput={setInput}
-      compute={compute}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('wrap.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <SplitOptions
+              splitMode={splitMode}
+              splitSeparator={splitSeparator}
+              joinSeparator={joinSeparator}
+              labels={{
+                symbol: t('common.symbolMode'),
+                regex: t('common.regexMode'),
+                splitSeparator: t('common.splitSeparator'),
+                joinSeparator: t('common.joinSeparator')
+              }}
+              onSplitModeChange={setSplitMode}
+              onSplitSeparatorChange={setSplitSeparator}
+              onJoinSeparatorChange={setJoinSeparator}
+            />
+            <Stack spacing={1.5}>
+              <CompactTextField
+                label={t('wrap.leftTextLabel')}
+                value={left}
+                onChange={setLeft}
+              />
+              <CompactTextField
+                label={t('wrap.rightTextLabel')}
+                value={right}
+                onChange={setRight}
+              />
+              <CompactCheckbox
+                checked={deleteEmptyItems}
+                label={t('wrap.removeEmptyItems')}
+                onChange={setDeleteEmptyItems}
+              />
+            </Stack>
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('wrap.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

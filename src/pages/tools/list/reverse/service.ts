@@ -1,3 +1,5 @@
+import { reverseListItems } from '@private-toolbox/core';
+
 export type SplitOperatorType = 'symbol' | 'regex';
 
 export function reverseList(
@@ -6,18 +8,11 @@ export function reverseList(
   joinSeparator: string = '\n',
   input: string
 ): string {
-  let array: string[] = [];
-  switch (splitOperatorType) {
-    case 'symbol':
-      array = input.split(splitSeparator);
-      break;
-    case 'regex':
-      array = input
-        .split(new RegExp(splitSeparator))
-        .filter((item) => item !== '');
-      break;
-  }
-
-  const reversedList = array.reverse();
-  return reversedList.join(joinSeparator);
+  return reverseListItems({
+    text: input,
+    splitMode: splitOperatorType === 'regex' ? 'regex' : 'separator',
+    separator: splitSeparator,
+    joinSeparator,
+    removeEmpty: splitOperatorType === 'regex'
+  }).result;
 }

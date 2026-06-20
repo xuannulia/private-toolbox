@@ -1,114 +1,111 @@
-import React, { useState } from 'react';
-import * as Yup from 'yup';
-import ToolFileResult from '@components/result/ToolFileResult';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { Box, Stack } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ToolImageInput from '@components/input/ToolImageInput';
+import ToolFileResult from '@components/result/ToolFileResult';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import { removeBackground } from '@imgly/background-removal';
 import * as heic2any from 'heic2any';
 
-const initialValues = {};
+async function normalizeHeicImage(input: File): Promise<File> {
+  if (
+    input.type !== 'image/heic' &&
+    !input.name?.toLowerCase().endsWith('.heic')
+  ) {
+    return input;
+  }
 
-const validationSchema = Yup.object({});
+  const convertedBlob = await heic2any.default({
+    blob: input,
+    toType: 'image/png'
+  });
+  const pngBlob = Array.isArray(convertedBlob)
+    ? convertedBlob[0]
+    : convertedBlob;
 
-export default function RemoveBackgroundFromImage({
-  title
-}: ToolComponentProps) {
+  return new File([pngBlob], input.name.replace(/\.[^/.]+$/, '') + '.png', {
+    type: 'image/png'
+  });
+}
+
+async function removeImageBackground(input: File): Promise<File> {
+  const fileToProcess = await normalizeHeicImage(input);
+  const inputUrl = URL.createObjectURL(fileToProcess);
+
+  try {
+    const blob = await removeBackground(inputUrl);
+
+    return new File(
+      [blob],
+      fileToProcess.name.replace(/\.[^/.]+$/, '') + '-no-bg.png',
+      {
+        type: 'image/png'
+      }
+    );
+  } finally {
+    URL.revokeObjectURL(inputUrl);
+  }
+}
+
+export default function RemoveBackgroundFromImage() {
+  const { t } = useTranslation('image');
   const [input, setInput] = useState<File | null>(null);
   const [result, setResult] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const compute = async (_optionsValues: typeof initialValues, input: any) => {
-    if (!input) return;
-
-    setIsProcessing(true);
-
-    try {
-      let fileToProcess = input;
-      // Check if the file is HEIC (by MIME type or extension)
-      if (
-        input.type === 'image/heic' ||
-        input.name?.toLowerCase().endsWith('.heic')
-      ) {
-        // Convert HEIC to PNG using heic2any
-        const convertedBlob = await heic2any.default({
-          blob: input,
-          toType: 'image/png'
-        });
-        // heic2any returns a Blob or an array of Blobs
-        let pngBlob;
-        if (Array.isArray(convertedBlob)) {
-          pngBlob = convertedBlob[0];
-        } else {
-          pngBlob = convertedBlob;
-        }
-        fileToProcess = new File(
-          [pngBlob],
-          input.name.replace(/\.[^/.]+$/, '') + '.png',
-          { type: 'image/png' }
-        );
-      }
-
-      // Convert the file to a Blob URL
-      const inputUrl = URL.createObjectURL(fileToProcess);
-
-      // Process the image with the background removal library
-      const blob = await removeBackground(inputUrl, {
-        progress: (progress) => {
-          console.log(`Background removal progress: ${progress}`);
-        }
-      });
-
-      // Create a new file from the blob
-      const newFile = new File(
-        [blob],
-        fileToProcess.name.replace(/\.[^/.]+$/, '') + '-no-bg.png',
-        {
-          type: 'image/png'
-        }
-      );
-
-      setResult(newFile);
-    } catch (err) {
-      console.error('Error removing background:', err);
-      throw new Error(
-        'Failed to remove background. Please try a different image or try again later.'
-      );
-    } finally {
+  useEffect(() => {
+    if (!input) {
+      setResult(null);
       setIsProcessing(false);
+      return;
     }
-  };
+
+    const image = input;
+    let canceled = false;
+
+    async function runRemoveBackground() {
+      try {
+        setIsProcessing(true);
+        const output = await removeImageBackground(image);
+        if (!canceled) setResult(output);
+      } catch (error) {
+        console.error('Error removing background:', error);
+        if (!canceled) setResult(null);
+      } finally {
+        if (!canceled) setIsProcessing(false);
+      }
+    }
+
+    void runRemoveBackground();
+
+    return () => {
+      canceled = true;
+    };
+  }, [input]);
 
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={null}
-      compute={compute}
-      input={input}
-      validationSchema={validationSchema}
-      inputComponent={
-        <ToolImageInput
-          value={input}
-          onChange={setInput}
-          accept={['image/*']}
-          title={'Input Image'}
-        />
-      }
-      resultComponent={
-        <ToolFileResult
-          title={'Transparent PNG'}
-          value={result}
-          extension={'png'}
-          loading={isProcessing}
-          loadingText={'Removing background'}
-        />
-      }
-      toolInfo={{
-        title: 'Remove Background from Image',
-        description:
-          'This tool uses AI to automatically remove the background from your images, creating a transparent PNG. Perfect for product photos, profile pictures, and design assets.'
-      }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolImageInput
+              value={input}
+              onChange={setInput}
+              accept={['image/*']}
+              title={t('removeBackground.inputTitle')}
+            />
+          </Stack>
+        }
+        result={
+          <ToolFileResult
+            title={t('removeBackground.resultTitle')}
+            value={result}
+            extension="png"
+            loading={isProcessing}
+            loadingText={t('removeBackground.loadingText')}
+          />
+        }
+      />
+    </Box>
   );
 }

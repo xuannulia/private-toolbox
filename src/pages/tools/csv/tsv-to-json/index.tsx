@@ -1,232 +1,133 @@
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import ToolCodeInput from '@components/input/ToolCodeInput';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  CompactCheckbox,
+  CompactSelect,
+  CompactTextField,
+  normalizeCsvToken
+} from '../CsvToolControls';
 import { convertTsvToJson } from './service';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import { ToolComponentProps } from '@tools/defineTool';
-import { Box } from '@mui/material';
-import { updateNumberField } from '@utils/string';
-import SimpleRadio from '@components/options/SimpleRadio';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
 import { InitialValuesType } from './types';
 
-const initialValues: InitialValuesType = {
-  delimiter: '\t',
-  quote: '"',
-  comment: '#',
-  useHeaders: true,
-  skipEmptyLines: true,
-  dynamicTypes: true,
-  indentationType: 'space',
-  spacesCount: 2
-};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'TSV to JSON failed';
 
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Basic TSV to JSON Array',
-    description:
-      'Convert a simple TSV file into a JSON array structure by using spaces as formatting indentation.',
-    sampleText: `name	age	city
-John	30	New York
-Alice	25	London`,
-    sampleResult: `[
-  {
-    "name": "John",
-    "age": 30,
-    "city": "New York"
-  },
-  {
-    "name": "Alice",
-    "age": 25,
-    "city": "London"
-  }
-]`,
-    sampleOptions: {
-      ...initialValues,
-      useHeaders: true,
-      dynamicTypes: true
-    }
-  },
-  {
-    title: 'Turn TSV to JSON without Headers',
-    description: 'Convert a TSV file in minified JSON file.',
-    sampleText: `Square	Triangle	Circle
-Cube	Cone	Sphere
-#Oval`,
-    sampleResult: `[["Square","Triangle","Circle"],["Cube","Cone","Sphere"]]`,
-    sampleOptions: {
-      ...initialValues,
-      useHeaders: false,
-      indentationType: 'none'
-    }
-  },
-  {
-    title: 'Transform TSV to JSON with Headers',
-    description: 'Convert a TSV file with headers into a JSON file.',
-    sampleText: `item	material	quantity
+export default function TsvToJson() {
+  const { t } = useTranslation('csv');
+  const [input, setInput] = useState('');
+  const [options, setOptions] = useState<InitialValuesType>({
+    delimiter: '\t',
+    quote: '"',
+    comment: '#',
+    useHeaders: true,
+    skipEmptyLines: true,
+    dynamicTypes: true,
+    indentationType: 'space',
+    spacesCount: 2
+  });
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-
-Hat	Wool	3
-Gloves	Leather	5
-Candle	Wax	4
-Vase	Glass	2
-
-Sculpture	Bronze	1
-Table	Wood	1
-
-Bookshelf	Wood	2`,
-    sampleResult: `[
-  {
-    "item": "Hat",
-    "material": "Wool",
-    "quantity": 3
-  },
-  {
-    "item": "Gloves",
-    "material": "Leather",
-    "quantity": 5
-  },
-  {
-    "item": "Candle",
-    "material": "Wax",
-    "quantity": 4
-  },
-  {
-    "item": "Vase",
-    "material": "Glass",
-    "quantity": 2
-  },
-  {
-    "item": "Sculpture",
-    "material": "Bronze",
-    "quantity": 1
-  },
-  {
-    "item": "Table",
-    "material": "Wood",
-    "quantity": 1
-  },
-  {
-    "item": "Bookshelf",
-    "material": "Wood",
-    "quantity": 2
-  }
-]`,
-    sampleOptions: {
-      ...initialValues
-    }
-  }
-];
-
-export default function TsvToJson({
-  title,
-  longDescription
-}: ToolComponentProps) {
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
-
-  const compute = (values: InitialValuesType, input: string) => {
-    setResult(convertTsvToJson(input, values));
+  const updateOption = <K extends keyof InitialValuesType>(
+    key: K,
+    value: InitialValuesType[K]
+  ) => {
+    setOptions((current) => ({ ...current, [key]: value }));
   };
 
-  const getGroups: GetGroupsType<InitialValuesType> | null = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: 'Input CSV Format',
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            description="Character used to qutoe tsv values"
-            onOwnChange={(val) => updateField('quote', val)}
-            value={values.quote}
-          />
-          <TextFieldWithDesc
-            description="Symbol use to mark comments in the TSV"
-            value={values.comment}
-            onOwnChange={(val) => updateField('comment', val)}
-          />
-        </Box>
-      )
-    },
-    {
-      title: 'Conversion Options',
-      component: (
-        <Box>
-          <CheckboxWithDesc
-            checked={values.useHeaders}
-            onChange={(value) => updateField('useHeaders', value)}
-            title="Use Headers"
-            description="First row is treated as column headers"
-          />
-          <CheckboxWithDesc
-            checked={values.dynamicTypes}
-            onChange={(value) => updateField('dynamicTypes', value)}
-            title="Dynamic Types"
-            description="Convert numbers and booleans to their proper types"
-          />
-        </Box>
-      )
-    },
-    {
-      title: 'Output Formatting',
-      component: (
-        <Box>
-          <SimpleRadio
-            onClick={() => updateField('indentationType', 'space')}
-            checked={values.indentationType === 'space'}
-            title={'Use Spaces for indentation'}
-          />
-          {values.indentationType === 'space' && (
-            <TextFieldWithDesc
-              description="Number of spaces for indentation"
-              value={values.spacesCount}
-              onOwnChange={(val) =>
-                updateNumberField(val, 'spacesCount', updateField)
-              }
-              type="number"
-            />
-          )}
-          <SimpleRadio
-            onClick={() => updateField('indentationType', 'tab')}
-            checked={values.indentationType === 'tab'}
-            title={'Use Tabs for indentation'}
-          />
-          <SimpleRadio
-            onClick={() => updateField('indentationType', 'none')}
-            checked={values.indentationType === 'none'}
-            title={'Minify JSON'}
-          />
-        </Box>
-      )
+  useEffect(() => {
+    try {
+      setResult(
+        convertTsvToJson(input, {
+          ...options,
+          delimiter: normalizeCsvToken(options.delimiter),
+          quote: normalizeCsvToken(options.quote),
+          comment: normalizeCsvToken(options.comment)
+        })
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
     }
-  ];
+  }, [input, options]);
+
+  const output = error ? t('common.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      setInput={setInput}
-      initialValues={initialValues}
-      compute={compute}
-      exampleCards={exampleCards}
-      getGroups={getGroups}
-      inputComponent={
-        <ToolCodeInput
-          title="Input TSV"
-          value={input}
-          onChange={setInput}
-          language="tsv"
-        />
-      }
-      resultComponent={
-        <ToolTextResult title="Output JSON" value={result} extension={'json'} />
-      }
-      toolInfo={{ title: `What is a ${title}?`, description: longDescription }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('common.inputTsv')}
+              value={input}
+              onChange={setInput}
+            />
+            <Stack spacing={1.5}>
+              <CompactTextField
+                label={t('common.quote')}
+                value={options.quote}
+                onChange={(value) => updateOption('quote', value)}
+              />
+              <CompactTextField
+                label={t('common.comment')}
+                value={options.comment}
+                onChange={(value) => updateOption('comment', value)}
+              />
+              <CompactCheckbox
+                checked={options.useHeaders}
+                label={t('common.useHeaders')}
+                onChange={(value) => updateOption('useHeaders', value)}
+              />
+              <CompactCheckbox
+                checked={options.skipEmptyLines}
+                label={t('common.skipEmptyLines')}
+                onChange={(value) => updateOption('skipEmptyLines', value)}
+              />
+              <CompactCheckbox
+                checked={options.dynamicTypes}
+                label={t('csvToJson.dynamicTypes')}
+                onChange={(value) => updateOption('dynamicTypes', value)}
+              />
+              <CompactSelect
+                label={t('common.jsonIndent')}
+                value={options.indentationType}
+                options={[
+                  { label: t('common.indentSpaces'), value: 'space' },
+                  { label: t('common.indentTabs'), value: 'tab' },
+                  { label: t('common.minified'), value: 'none' }
+                ]}
+                onChange={(value) => updateOption('indentationType', value)}
+              />
+              {options.indentationType === 'space' && (
+                <CompactTextField
+                  label={t('common.indentSpaces')}
+                  type="number"
+                  value={options.spacesCount}
+                  onChange={(value) =>
+                    updateOption('spacesCount', Number(value) || 0)
+                  }
+                />
+              )}
+            </Stack>
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            extension="json"
+            keepSpecialCharacters
+            monospace
+            title={t('csvToJson.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

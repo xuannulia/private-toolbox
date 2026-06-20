@@ -1,0 +1,266 @@
+{
+  "codeFormat": {
+    "description": "Format or minify HTML, CSS, and JavaScript snippets.",
+    "inputTitle": "Code",
+    "language": "Language",
+    "languages": {
+      "css": "CSS",
+      "html": "HTML",
+      "javascript": "JavaScript"
+    },
+    "operations": {
+      "format": "Format",
+      "minify": "Minify"
+    },
+    "resultTitle": "Result",
+    "shortDescription": "Format / minify code snippets",
+    "summaryTitle": "Summary",
+    "title": "Code Format"
+  },
+  "codePreview": {
+    "consoleTitle": "Console",
+    "description": "Preview HTML, CSS, and JavaScript snippets locally in the browser.",
+    "emptyConsole": "No output",
+    "panes": {
+      "css": "CSS",
+      "html": "HTML",
+      "javascript": "JavaScript"
+    },
+    "previewTitle": "Preview",
+    "run": "Run",
+    "runModes": {
+      "auto": "Auto",
+      "manual": "Manual"
+    },
+    "shortDescription": "Preview frontend snippets locally",
+    "title": "Code Preview"
+  },
+  "dockerCompose": {
+    "description": "Format Docker Compose YAML and check common structure.",
+    "inputTitle": "Compose YAML",
+    "issuesTitle": "Validation",
+    "resultTitle": "Formatted YAML",
+    "shortDescription": "Format and validate Docker Compose YAML",
+    "title": "Docker Compose"
+  },
+  "dockerfileFormat": {
+    "description": "Format a Dockerfile and report common structure issues.",
+    "inputTitle": "Dockerfile",
+    "issuesTitle": "Validation",
+    "resultTitle": "Formatted Dockerfile",
+    "shortDescription": "Format and check Dockerfiles",
+    "title": "Dockerfile Format"
+  },
+  "dockerfileSnippet": {
+    "baseImage": "Build image",
+    "defaults": {
+      "go_app": {
+        "baseImage": "golang:1.23-alpine",
+        "runtimeImage": "alpine:3.20"
+      },
+      "node_app": {
+        "baseImage": "node:20-alpine",
+        "runtimeImage": "node:20-alpine"
+      },
+      "python_app": {
+        "baseImage": "python:3.12-slim",
+        "runtimeImage": ""
+      },
+      "static_nginx": {
+        "baseImage": "node:20-alpine",
+        "runtimeImage": "nginx:1.27-alpine"
+      }
+    },
+    "description": "Generate common Dockerfile templates.",
+    "dockerignoreTitle": ".dockerignore suggestions",
+    "healthcheck": "Healthcheck",
+    "kind": "Template type",
+    "kinds": {
+      "goApp": "Go service",
+      "nodeApp": "Node app",
+      "pythonApp": "Python ASGI",
+      "staticNginx": "Static frontend + Nginx"
+    },
+    "nonRoot": "Non-root user",
+    "packageManager": "Package manager",
+    "packageManagers": {
+      "npm": "npm",
+      "pip": "pip",
+      "pnpm": "pnpm",
+      "poetry": "Poetry",
+      "yarn": "Yarn"
+    },
+    "port": "Port",
+    "pythonModule": "ASGI module",
+    "resultTitle": "Dockerfile",
+    "runtimeImage": "Runtime image",
+    "shortDescription": "Generate Dockerfile templates",
+    "title": "Dockerfile Snippet Generator",
+    "workdir": "Workdir"
+  },
+  "dockerCommands": {
+    "categories": {
+      "all": "All",
+      "cleanup": "Cleanup",
+      "compose": "Compose",
+      "containers": "Containers",
+      "images": "Images",
+      "logs": "Logs",
+      "network": "Network"
+    },
+    "commands": {
+      "cleanup-builder": {
+        "summary": "Remove BuildKit build cache.",
+        "title": "Prune build cache"
+      },
+      "cleanup-system": {
+        "summary": "Remove unused containers, networks, and dangling images.",
+        "title": "System prune"
+      },
+      "cleanup-volumes": {
+        "summary": "Remove unused volumes.",
+        "title": "Prune volumes"
+      },
+      "compose-build": {
+        "summary": "Rebuild and start Compose services in the background.",
+        "title": "Compose build up"
+      },
+      "compose-down": {
+        "summary": "Stop Compose services and remove orphan containers.",
+        "title": "Compose down"
+      },
+      "compose-service-shell": {
+        "summary": "Open a shell inside a Compose service container.",
+        "title": "Service shell"
+      },
+      "compose-up": {
+        "summary": "Start Compose services in the background.",
+        "title": "Compose up"
+      },
+      "container-list": {
+        "summary": "List every container, including stopped containers.",
+        "title": "List containers"
+      },
+      "container-run": {
+        "summary": "Run a container in the background with a port mapping.",
+        "title": "Run container"
+      },
+      "container-shell": {
+        "summary": "Open a shell inside a running container.",
+        "title": "Container shell"
+      },
+      "container-stop-remove": {
+        "summary": "Stop and remove a named container.",
+        "title": "Stop and remove"
+      },
+      "image-build": {
+        "summary": "Build an image from the current directory.",
+        "title": "Build image"
+      },
+      "image-list": {
+        "summary": "List local images.",
+        "title": "List images"
+      },
+      "image-pull": {
+        "summary": "Pull an image from a registry.",
+        "title": "Pull image"
+      },
+      "image-save-load": {
+        "summary": "Export or import an image archive.",
+        "title": "Save / load image"
+      },
+      "inspect": {
+        "summary": "Inspect full container metadata.",
+        "title": "Inspect"
+      },
+      "logs-tail": {
+        "summary": "Follow recent container logs.",
+        "title": "Follow logs"
+      },
+      "network-create": {
+        "summary": "Create a user-defined network.",
+        "title": "Create network"
+      },
+      "network-list": {
+        "summary": "List Docker networks.",
+        "title": "List networks"
+      },
+      "port-list": {
+        "summary": "Show container port mappings.",
+        "title": "Port mappings"
+      },
+      "stats": {
+        "summary": "Show container resource usage.",
+        "title": "Stats"
+      }
+    },
+    "copy": "Copy command",
+    "copied": "Command copied",
+    "copyFailed": "Copy failed: {{error}}",
+    "description": "Common Docker command cheat sheet.",
+    "empty": "No matching commands",
+    "search": "Search commands",
+    "shortDescription": "Find and copy common Docker commands",
+    "title": "Docker Commands"
+  },
+  "nginxFormat": {
+    "description": "Format Nginx configuration and report common syntax issues.",
+    "inputTitle": "Nginx config",
+    "issuesTitle": "Validation",
+    "resultTitle": "Formatted config",
+    "shortDescription": "Format and check Nginx config",
+    "title": "Nginx Format"
+  },
+  "nginxLocationMatch": {
+    "configTitle": "Nginx config",
+    "description": "Test which Nginx location block matches a request URI.",
+    "error": "Match failed",
+    "noMatch": "No matching location",
+    "resultTitle": "Match Details",
+    "selected": "Selected location",
+    "shortDescription": "Check Nginx location matching",
+    "title": "Nginx Location Match",
+    "uri": "Request URI"
+  },
+  "nginxSnippet": {
+    "accessLog": "Access log",
+    "clientMaxBodySize": "Client max body size",
+    "description": "Generate common Nginx server configuration snippets.",
+    "gzip": "Gzip",
+    "kind": "Snippet type",
+    "kinds": {
+      "httpsRedirect": "HTTPS redirect",
+      "reverseProxy": "Reverse proxy",
+      "spa": "SPA static site",
+      "staticSite": "Static site"
+    },
+    "listenPort": "Listen port",
+    "resultTitle": "Nginx snippet",
+    "root": "Site root",
+    "securityHeaders": "Security headers",
+    "serverName": "Server name",
+    "shortDescription": "Generate common Nginx snippets",
+    "title": "Nginx Snippet Generator",
+    "upstreamUrl": "Upstream URL",
+    "websocket": "WebSocket"
+  },
+  "sqlFormat": {
+    "description": "Format or minify SQL with common database dialects.",
+    "dialect": "Dialect",
+    "inputTitle": "SQL",
+    "keywordCase": "Keywords",
+    "keywordCases": {
+      "lower": "Lower",
+      "preserve": "Preserve",
+      "upper": "Upper"
+    },
+    "operations": {
+      "format": "Format",
+      "minify": "Minify"
+    },
+    "resultTitle": "Result",
+    "shortDescription": "Format / minify SQL",
+    "summaryTitle": "Summary",
+    "title": "SQL Format"
+  }
+}

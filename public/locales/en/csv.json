@@ -1,4 +1,30 @@
 {
+  "common": {
+    "comment": "Comment prefix",
+    "errorFallback": "Error: {{error}}",
+    "fillMissingWithEmpty": "Fill missing with empty values",
+    "fillValue": "Fill value",
+    "indentSpaces": "Spaces",
+    "indentTabs": "Tabs",
+    "inputCsv": "Input CSV",
+    "inputDelimiter": "Input delimiter",
+    "inputTsv": "Input TSV",
+    "jsonIndent": "JSON indentation",
+    "minified": "Minified",
+    "none": "None",
+    "outputCsv": "Output CSV",
+    "outputDelimiter": "Output delimiter",
+    "outputQuote": "Output quote",
+    "outputTsv": "Output TSV",
+    "outputXml": "Output XML",
+    "outputYaml": "Output YAML",
+    "quote": "Quote",
+    "quoteAllFields": "Quote all fields",
+    "skipComments": "Skip comments",
+    "skipEmptyLines": "Skip empty lines",
+    "useFillValue": "Use fill value",
+    "useHeaders": "Use headers"
+  },
   "changeCsvSeparator": {
     "description": "Change the delimiter/separator in CSV files. Convert between different CSV formats like comma, semicolon, tab, or custom separators.",
     "shortDescription": "Change CSV file delimiter",
@@ -65,6 +91,7 @@
     "inputTitle": "Input CSV",
     "limitNumberOfMessages": "Limit number of messages",
     "messageLimitDescription": "Set the limit of number of messages in the output.",
+    "messageLimitLabel": "Message limit",
     "quoteCharacterDescription": "Enter the quote character used to quote the CSV input fields.",
     "resultTitle": "CSV Status",
     "shortDescription": "Quickly find rows and columns in CSV that are missing values.",
@@ -91,6 +118,8 @@
     "headerNameDescription": "Header of the column you want to insert columns after.",
     "inputTitle": "Input CSV",
     "insertingPositionDescription": "Specify where to insert the columns in the CSV file.",
+    "insertingPositionLabel": "Insert position",
+    "customPositionByLabel": "Custom position by",
     "position": "Position",
     "positionOptions": "Position Options",
     "prependColumns": "Prepend columns",
@@ -106,16 +135,21 @@
     }
   },
   "swapCsvColumns": {
+    "byHeader": "By header",
+    "byPosition": "By position",
     "description": "Just upload your CSV file in the form below, specify the columns to swap, and the tool will automatically change the positions of the specified columns in the output file. In the tool options, you can specify the column positions or names that you want to swap, as well as fix incomplete data and optionally remove empty records and records that have been commented out.",
+    "fromColumn": "From column",
     "longDescription": "This tool reorganizes CSV data by swapping the positions of its columns. Swapping columns can enhance the readability of a CSV file by placing frequently used data together or in the front for easier data comparison and editing. For example, you can swap the first column with the last or swap the second column with the third. To swap columns based on their positions, select the",
     "shortDescription": "Reorder CSV columns.",
-    "title": "Swap CSV Columns"
+    "title": "Swap CSV Columns",
+    "toColumn": "To column"
   },
   "transposeCsv": {
     "description": "Just upload your CSV file in the form below, and this tool will automatically transpose your CSV. In the tool options, you can specify the character that starts the comment lines in the CSV to remove them. Additionally, if the CSV is incomplete (missing values), you can replace missing values with the empty character or a custom character.",
     "longDescription": "This tool transposes Comma Separated Values (CSV). It treats the CSV as a matrix of data and flips all elements across the main diagonal. The output contains the same CSV data as the input, but now all the rows have become columns, and all the columns have become rows. After transposition, the CSV file will have opposite dimensions. For example, if the input file has 4 columns and 3 rows, the output file will have 3 columns and 4 rows. During conversion, the program also cleans the data from unnecessary lines and corrects incomplete data. Specifically, the tool automatically deletes all empty records and comments that begin with a specific character, which you can set in the option. Additionally, in cases where the CSV data is corrupted or lost, the utility completes the file with empty fields or custom fields that can be specified in the options. Csv-abulous!",
     "shortDescription": "Quickly transpose a CSV file.",
-    "title": "Transpose CSV"
+    "title": "Transpose CSV",
+    "resultTitle": "Transposed CSV"
   },
   "tsvToJson": {
     "description": "Convert TSV (Tab-Separated Values) data to JSON format. Transform tabular data into structured JSON objects.",

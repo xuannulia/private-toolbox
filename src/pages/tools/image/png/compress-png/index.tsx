@@ -1,111 +1,126 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
-import * as Yup from 'yup';
+import { Box, Stack } from '@mui/material';
+import imageCompression from 'browser-image-compression';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ToolImageInput from '@components/input/ToolImageInput';
 import ToolFileResult from '@components/result/ToolFileResult';
-import TextFieldWithDesc from 'components/options/TextFieldWithDesc';
-import imageCompression from 'browser-image-compression';
-import Typography from '@mui/material/Typography';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import {
+  CompactImageField,
+  ImageOptionStack,
+  ImageStatList
+} from '../../ImageToolControls';
 
-const initialValues = {
+const initialOptions = {
   rate: '50'
 };
-const validationSchema = Yup.object({
-  // splitSeparator: Yup.string().required('The separator is required')
-});
 
-export default function ChangeColorsInPng({ title }: ToolComponentProps) {
+export default function CompressPng() {
+  const { t } = useTranslation('image');
   const [input, setInput] = useState<File | null>(null);
+  const [options, setOptions] = useState(initialOptions);
   const [result, setResult] = useState<File | null>(null);
-  const [originalSize, setOriginalSize] = useState<number | null>(null); // Store original file size
-  const [compressedSize, setCompressedSize] = useState<number | null>(null); // Store compressed file size
+  const [loading, setLoading] = useState(false);
+  const [originalSize, setOriginalSize] = useState<number | null>(null);
+  const [compressedSize, setCompressedSize] = useState<number | null>(null);
 
-  const compressImage = async (file: File, rate: number) => {
-    if (!file) return;
-
-    // Set original file size
-    setOriginalSize(file.size);
-
-    const options = {
-      maxSizeMB: 1, // Maximum size in MB
-      maxWidthOrHeight: 1024, // Maximum width or height
-      quality: rate / 100, // Convert percentage to decimal (e.g., 50% becomes 0.5)
-      useWebWorker: true
-    };
-
-    try {
-      const compressedFile = await imageCompression(file, options);
-      setResult(compressedFile);
-      setCompressedSize(compressedFile.size); // Set compressed file size
-    } catch (error) {
-      console.error('Error during compression:', error);
+  useEffect(() => {
+    if (!input) {
+      setResult(null);
+      setOriginalSize(null);
+      setCompressedSize(null);
+      setLoading(false);
+      return;
     }
-  };
 
-  const compute = (optionsValues: typeof initialValues, input: any) => {
-    if (!input) return;
+    const image = input;
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runCompression() {
+        const rate = Math.min(100, Math.max(1, Number(options.rate) || 1));
 
-    const { rate } = optionsValues;
-    compressImage(input, Number(rate)); // Pass the rate as a number
-  };
+        try {
+          setLoading(true);
+          setOriginalSize(image.size);
+          const compressedFile = await imageCompression(image, {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1024,
+            initialQuality: rate / 100,
+            useWebWorker: true
+          });
+
+          if (!canceled) {
+            setResult(compressedFile);
+            setCompressedSize(compressedFile.size);
+          }
+        } catch (error) {
+          console.error('Error during compression:', error);
+          if (!canceled) {
+            setResult(null);
+            setCompressedSize(null);
+          }
+        } finally {
+          if (!canceled) setLoading(false);
+        }
+      }
+
+      void runCompression();
+    }, 500);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolImageInput
-          value={input}
-          onChange={setInput}
-          accept={['image/png']}
-          title={'Input PNG'}
-        />
-      }
-      resultComponent={
-        <ToolFileResult
-          title={'Compressed PNG'}
-          value={result}
-          extension={'png'}
-        />
-      }
-      initialValues={initialValues}
-      getGroups={({ values, updateField }) => [
-        {
-          title: 'Compression options',
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                value={values.rate}
-                onOwnChange={(val) => updateField('rate', val)}
-                description={'Compression rate (1-100)'}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolImageInput
+              value={input}
+              onChange={setInput}
+              accept={['image/png']}
+              title={t('compressPng.inputTitle')}
+            />
+            <ImageOptionStack>
+              <CompactImageField
+                label={t('compressPng.rate')}
+                value={options.rate}
+                onChange={(rate) => setOptions({ rate })}
               />
-            </Box>
-          )
-        },
-        {
-          title: 'File sizes',
-          component: (
-            <Box>
-              <Box>
-                {originalSize !== null && (
-                  <Typography>
-                    Original Size: {(originalSize / 1024).toFixed(2)} KB
-                  </Typography>
-                )}
-                {compressedSize !== null && (
-                  <Typography>
-                    Compressed Size: {(compressedSize / 1024).toFixed(2)} KB
-                  </Typography>
-                )}
-              </Box>
-            </Box>
-          )
+              <ImageStatList
+                rows={[
+                  {
+                    label: t('compressPng.originalSize'),
+                    value:
+                      originalSize === null
+                        ? null
+                        : `${(originalSize / 1024).toFixed(2)} KB`
+                  },
+                  {
+                    label: t('compressPng.compressedSize'),
+                    value:
+                      compressedSize === null
+                        ? null
+                        : `${(compressedSize / 1024).toFixed(2)} KB`
+                  }
+                ]}
+              />
+            </ImageOptionStack>
+          </Stack>
         }
-      ]}
-      compute={compute}
-      setInput={setInput}
-    />
+        result={
+          <ToolFileResult
+            title={t('compressPng.resultTitle')}
+            value={result}
+            extension="png"
+            loading={loading}
+            loadingText={t('compressPng.loadingText')}
+          />
+        }
+      />
+    </Box>
   );
 }

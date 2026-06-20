@@ -1,237 +1,200 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
-import * as Yup from 'yup';
+import { Box, Stack } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ToolImageInput from '@components/input/ToolImageInput';
 import ToolFileResult from '@components/result/ToolFileResult';
-import { GetGroupsType, UpdateField } from '@components/options/ToolOptions';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import SimpleRadio from '@components/options/SimpleRadio';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import {
+  CompactImageField,
+  CompactImageToggle,
+  ImageOptionStack
+} from '../../ImageToolControls';
 
-const initialValues = {
+const initialOptions = {
   xPosition: '0',
   yPosition: '0',
   cropWidth: '100',
   cropHeight: '100',
   cropShape: 'rectangular' as 'rectangular' | 'circular'
 };
-type InitialValuesType = typeof initialValues;
-const validationSchema = Yup.object({
-  xPosition: Yup.number()
-    .min(0, 'X position must be positive')
-    .required('X position is required'),
-  yPosition: Yup.number()
-    .min(0, 'Y position must be positive')
-    .required('Y position is required'),
-  cropWidth: Yup.number()
-    .min(1, 'Width must be at least 1px')
-    .required('Width is required'),
-  cropHeight: Yup.number()
-    .min(1, 'Height must be at least 1px')
-    .required('Height is required')
-});
 
-export default function CropImage({ title }: ToolComponentProps) {
+type InitialValuesType = typeof initialOptions;
+
+async function cropImage(
+  file: File,
+  options: InitialValuesType
+): Promise<File | null> {
+  const x = parseInt(options.xPosition);
+  const y = parseInt(options.yPosition);
+  const width = parseInt(options.cropWidth);
+  const height = parseInt(options.cropHeight);
+
+  if (width < 1 || height < 1 || x < 0 || y < 0) return null;
+
+  const sourceCanvas = document.createElement('canvas');
+  const sourceCtx = sourceCanvas.getContext('2d');
+  if (!sourceCtx) return null;
+
+  const destCanvas = document.createElement('canvas');
+  const destCtx = destCanvas.getContext('2d');
+  if (!destCtx) return null;
+
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.src = url;
+  await img.decode();
+  URL.revokeObjectURL(url);
+
+  sourceCanvas.width = img.width;
+  sourceCanvas.height = img.height;
+  sourceCtx.drawImage(img, 0, 0);
+
+  destCanvas.width = width;
+  destCanvas.height = height;
+
+  if (options.cropShape === 'circular') {
+    destCtx.beginPath();
+    destCtx.arc(
+      width / 2,
+      height / 2,
+      Math.min(width, height) / 2,
+      0,
+      Math.PI * 2
+    );
+    destCtx.closePath();
+    destCtx.clip();
+  }
+
+  destCtx.drawImage(img, x, y, width, height, 0, 0, width, height);
+
+  return new Promise((resolve) => {
+    destCanvas.toBlob((blob) => {
+      resolve(blob ? new File([blob], file.name, { type: file.type }) : null);
+    }, file.type);
+  });
+}
+
+export default function CropImage() {
+  const { t } = useTranslation('image');
   const [input, setInput] = useState<File | null>(null);
+  const [options, setOptions] = useState<InitialValuesType>(initialOptions);
   const [result, setResult] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const compute = (optionsValues: InitialValuesType, input: any) => {
-    if (!input) return;
-
-    const { xPosition, yPosition, cropWidth, cropHeight, cropShape } =
-      optionsValues;
-    const x = parseInt(xPosition);
-    const y = parseInt(yPosition);
-    const width = parseInt(cropWidth);
-    const height = parseInt(cropHeight);
-    const isCircular = cropShape === 'circular';
-
-    const processImage = async (
-      file: File,
-      x: number,
-      y: number,
-      width: number,
-      height: number,
-      isCircular: boolean
-    ) => {
-      // Create source canvas
-      const sourceCanvas = document.createElement('canvas');
-      const sourceCtx = sourceCanvas.getContext('2d');
-      if (sourceCtx == null) return;
-
-      // Create destination canvas
-      const destCanvas = document.createElement('canvas');
-      const destCtx = destCanvas.getContext('2d');
-      if (destCtx == null) return;
-
-      // Load image
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-      await img.decode();
-
-      // Set source canvas dimensions
-      sourceCanvas.width = img.width;
-      sourceCanvas.height = img.height;
-
-      // Draw original image on source canvas
-      sourceCtx.drawImage(img, 0, 0);
-
-      // Set destination canvas dimensions to crop size
-      destCanvas.width = width;
-      destCanvas.height = height;
-
-      if (isCircular) {
-        // For circular crop
-        destCtx.beginPath();
-        // Create a circle with center at half width/height and radius of half the smaller dimension
-        const radius = Math.min(width, height) / 2;
-        destCtx.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
-        destCtx.closePath();
-        destCtx.clip();
-
-        // Draw the cropped portion centered in the circle
-        destCtx.drawImage(img, x, y, width, height, 0, 0, width, height);
-      } else {
-        // For rectangular crop, simply draw the specified region
-        destCtx.drawImage(img, x, y, width, height, 0, 0, width, height);
-      }
-
-      // Convert canvas to blob and create file
-      destCanvas.toBlob((blob) => {
-        if (blob) {
-          const newFile = new File([blob], file.name, {
-            type: file.type
-          });
-          setResult(newFile);
-        }
-      }, file.type);
-    };
-
-    processImage(input, x, y, width, height, isCircular);
-  };
-  const handleCropChange =
-    (values: InitialValuesType, updateField: UpdateField<InitialValuesType>) =>
-    (
-      position: { x: number; y: number },
-      size: { width: number; height: number }
-    ) => {
-      updateField('xPosition', position.x.toString());
-      updateField('yPosition', position.y.toString());
-      updateField('cropWidth', size.width.toString());
-      updateField('cropHeight', size.height.toString());
-    };
-
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: 'Crop Position and Size',
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            value={values.xPosition}
-            onOwnChange={(val) => updateField('xPosition', val)}
-            description={'X position (in pixels)'}
-            inputProps={{
-              'data-testid': 'x-position-input',
-              type: 'number',
-              min: 0
-            }}
-          />
-          <TextFieldWithDesc
-            value={values.yPosition}
-            onOwnChange={(val) => updateField('yPosition', val)}
-            description={'Y position (in pixels)'}
-            inputProps={{
-              'data-testid': 'y-position-input',
-              type: 'number',
-              min: 0
-            }}
-          />
-          <TextFieldWithDesc
-            value={values.cropWidth}
-            onOwnChange={(val) => updateField('cropWidth', val)}
-            description={'Crop width (in pixels)'}
-            inputProps={{
-              'data-testid': 'crop-width-input',
-              type: 'number',
-              min: 1
-            }}
-          />
-          <TextFieldWithDesc
-            value={values.cropHeight}
-            onOwnChange={(val) => updateField('cropHeight', val)}
-            description={'Crop height (in pixels)'}
-            inputProps={{
-              'data-testid': 'crop-height-input',
-              type: 'number',
-              min: 1
-            }}
-          />
-        </Box>
-      )
-    },
-    {
-      title: 'Crop Shape',
-      component: (
-        <Box>
-          <SimpleRadio
-            onClick={() => updateField('cropShape', 'rectangular')}
-            checked={values.cropShape == 'rectangular'}
-            description={'Crop a rectangular fragment from an image.'}
-            title={'Rectangular Crop Shape'}
-          />
-          <SimpleRadio
-            onClick={() => updateField('cropShape', 'circular')}
-            checked={values.cropShape == 'circular'}
-            description={'Crop a circular fragment from an image.'}
-            title={'Circular Crop Shape'}
-          />
-        </Box>
-      )
+  useEffect(() => {
+    if (!input) {
+      setResult(null);
+      setLoading(false);
+      return;
     }
-  ];
-  const renderCustomInput = (
-    values: InitialValuesType,
-    updateField: UpdateField<InitialValuesType>
-  ) => (
-    <ToolImageInput
-      value={input}
-      onChange={setInput}
-      accept={['image/*']}
-      title={'Input image'}
-      showCropOverlay={!!input}
-      cropShape={values.cropShape as 'rectangular' | 'circular'}
-      cropPosition={{
-        x: parseInt(values.xPosition || '0'),
-        y: parseInt(values.yPosition || '0')
-      }}
-      cropSize={{
-        width: parseInt(values.cropWidth || '100'),
-        height: parseInt(values.cropHeight || '100')
-      }}
-      onCropChange={handleCropChange(values, updateField)}
-    />
-  );
-  return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={getGroups}
-      compute={compute}
-      input={input}
-      validationSchema={validationSchema}
-      renderCustomInput={renderCustomInput}
-      resultComponent={
-        <ToolFileResult title={'Cropped image'} value={result} />
+
+    const image = input;
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runCrop() {
+        try {
+          setLoading(true);
+          const output = await cropImage(image, options);
+          if (!canceled) setResult(output);
+        } catch (error) {
+          console.error('Error cropping image:', error);
+          if (!canceled) setResult(null);
+        } finally {
+          if (!canceled) setLoading(false);
+        }
       }
-      toolInfo={{
-        title: 'Crop Image',
-        description:
-          'This tool allows you to crop an image by specifying the position, size, and shape of the crop area. You can choose between rectangular or circular cropping.'
-      }}
-    />
+
+      void runCrop();
+    }, 400);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options]);
+
+  const updateOption = (key: keyof InitialValuesType, value: string) => {
+    setOptions((current) => ({ ...current, [key]: value }));
+  };
+
+  return (
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolImageInput
+              value={input}
+              onChange={setInput}
+              accept={['image/*']}
+              title={t('crop.inputTitle')}
+              showCropOverlay={!!input}
+              cropShape={options.cropShape}
+              cropPosition={{
+                x: parseInt(options.xPosition || '0'),
+                y: parseInt(options.yPosition || '0')
+              }}
+              cropSize={{
+                width: parseInt(options.cropWidth || '100'),
+                height: parseInt(options.cropHeight || '100')
+              }}
+              onCropChange={(position, size) => {
+                setOptions((current) => ({
+                  ...current,
+                  xPosition: position.x.toString(),
+                  yPosition: position.y.toString(),
+                  cropWidth: size.width.toString(),
+                  cropHeight: size.height.toString()
+                }));
+              }}
+            />
+            <ImageOptionStack>
+              <CompactImageToggle<InitialValuesType['cropShape']>
+                label={t('crop.cropShape')}
+                value={options.cropShape}
+                options={[
+                  { value: 'rectangular', label: t('crop.rectangular') },
+                  { value: 'circular', label: t('crop.circular') }
+                ]}
+                onChange={(cropShape) =>
+                  setOptions((current) => ({ ...current, cropShape }))
+                }
+              />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactImageField
+                  label={t('crop.xPosition')}
+                  value={options.xPosition}
+                  onChange={(value) => updateOption('xPosition', value)}
+                />
+                <CompactImageField
+                  label={t('crop.yPosition')}
+                  value={options.yPosition}
+                  onChange={(value) => updateOption('yPosition', value)}
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactImageField
+                  label={t('crop.cropWidth')}
+                  value={options.cropWidth}
+                  onChange={(value) => updateOption('cropWidth', value)}
+                />
+                <CompactImageField
+                  label={t('crop.cropHeight')}
+                  value={options.cropHeight}
+                  onChange={(value) => updateOption('cropHeight', value)}
+                />
+              </Stack>
+            </ImageOptionStack>
+          </Stack>
+        }
+        result={
+          <ToolFileResult
+            title={t('crop.resultTitle')}
+            value={result}
+            loading={loading}
+            loadingText={t('crop.loadingText')}
+          />
+        }
+      />
+    </Box>
   );
 }

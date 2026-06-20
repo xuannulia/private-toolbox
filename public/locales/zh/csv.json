@@ -1,4 +1,30 @@
 {
+  "common": {
+    "comment": "注释前缀",
+    "errorFallback": "错误：{{error}}",
+    "fillMissingWithEmpty": "缺失值填空",
+    "fillValue": "填充值",
+    "indentSpaces": "空格",
+    "indentTabs": "制表符",
+    "inputCsv": "输入 CSV",
+    "inputDelimiter": "输入分隔符",
+    "inputTsv": "输入 TSV",
+    "jsonIndent": "JSON 缩进",
+    "minified": "压缩",
+    "none": "无",
+    "outputCsv": "输出 CSV",
+    "outputDelimiter": "输出分隔符",
+    "outputQuote": "输出引号",
+    "outputTsv": "输出 TSV",
+    "outputXml": "输出 XML",
+    "outputYaml": "输出 YAML",
+    "quote": "引号",
+    "quoteAllFields": "所有字段加引号",
+    "skipComments": "跳过注释",
+    "skipEmptyLines": "跳过空行",
+    "useFillValue": "使用填充值",
+    "useHeaders": "使用表头"
+  },
   "changeCsvSeparator": {
     "description": "更改 CSV 文件中的分隔符。在不同的 CSV 格式（例如逗号、分号、制表符或自定义分隔符）之间进行转换。",
     "shortDescription": "更改 CSV 文件分隔符",
@@ -65,6 +91,7 @@
     "inputTitle": "输入 CSV",
     "limitNumberOfMessages": "限制消息数量",
     "messageLimitDescription": "设置输出中消息数量的限制。",
+    "messageLimitLabel": "消息数量",
     "quoteCharacterDescription": "输入用于引用 CSV 输入字段的引号字符。",
     "resultTitle": "CSV 状态",
     "shortDescription": "快速查找 CSV 中缺少值的行和列。",
@@ -91,6 +118,8 @@
     "headerNameDescription": "您想要在其后插入列的列标题。",
     "inputTitle": "输入 CSV",
     "insertingPositionDescription": "指定在 CSV 文件中插入列的位置。",
+    "insertingPositionLabel": "插入位置",
+    "customPositionByLabel": "自定义定位方式",
     "position": "位置",
     "positionOptions": "位置选项",
     "prependColumns": "添加列",
@@ -106,16 +135,21 @@
     }
   },
   "swapCsvColumns": {
+    "byHeader": "按表头",
+    "byPosition": "按位置",
     "description": "只需在下方表单中上传您的 CSV 文件，指定要交换的列，该工具就会自动更改输出文件中指定列的位置。在工具选项中，您可以指定要交换的列位置或名称，还可以修复不完整的数据，并选择性地删除空记录和已注释掉的记录。",
+    "fromColumn": "起始列",
     "longDescription": "此工具通过交换列的位置来重新组织 CSV 数据。交换列可以将常用数据放在一起或放在最前面，以便于数据比较和编辑，从而提高 CSV 文件的可读性。例如，您可以将第一列与最后一列交换，或者将第二列与第三列交换。要根据列的位置交换列，请选择",
     "shortDescription": "重新排序 CSV 列。",
-    "title": "交换 CSV 列"
+    "title": "交换 CSV 列",
+    "toColumn": "目标列"
   },
   "transposeCsv": {
     "description": "只需使用下方表格上传您的 CSV 文件，此工具就会自动转置您的 CSV 文件。在工具选项中，您可以指定 CSV 文件中注释行的起始字符，以将其移除。此外，如果 CSV 文件不完整（缺少值），您可以使用空字符或自定义字符替换缺失值。",
     "longDescription": "此工具用于转置逗号分隔值 (CSV)。它将 CSV 视为数据矩阵，并将所有元素沿主对角线翻转。输出包含与输入相同的 CSV 数据，但现在所有行都变成了列，所有列都变成了行。转置后，CSV 文件的尺寸将相反。例如，如果输入文件有 4 列 3 行，则输出文件将有 3 列 4 行。在转换过程中，程序还会清除数据中不必要的行，并更正不完整的数据。具体来说，该工具会自动删除所有以特定字符开头的空记录和注释，您可以在选项中设置这些字符。此外，如果 CSV 数据损坏或丢失，该实用程序会使用空字段或自定义字段（可在选项中指定）来填充文件。CSV 真是太棒了！",
     "shortDescription": "快速转置 CSV 文件。",
-    "title": "转置 CSV"
+    "title": "转置 CSV",
+    "resultTitle": "转置结果"
   },
   "tsvToJson": {
     "description": "将 TSV（制表符分隔值）数据转换为 JSON 格式。将表格数据转换为结构化的 JSON 对象。",

@@ -1,0 +1,84 @@
+{
+  "common": {
+    "apiBaseUrl": "API 地址",
+    "apiBaseUrlDescription": "默认 http://127.0.0.1:4317，也可以通过 VITE_PRIVATE_TOOLBOX_API_URL 配置。",
+    "query": "查询",
+    "run": "查询",
+    "result": "结果",
+    "history": "历史",
+    "clearHistory": "清空",
+    "toolInfoTitle": "本地后端网络查询",
+    "toolInfoDescription": "这些工具会调用 Private Toolbox 本地 API。使用前需要先启动 API 服务。"
+  },
+  "rdap": {
+    "title": "RDAP 查询",
+    "description": "查询公网 IP 或域名的 RDAP 注册信息。",
+    "shortDescription": "查询域名或 IP 注册信息",
+    "query": "域名或 IP",
+    "queryPlaceholder": "example.com 或 8.8.8.8",
+    "kind": "类型",
+    "auto": "自动",
+    "domain": "域名",
+    "ip": "IP"
+  },
+  "dns": {
+    "title": "DNS 查询",
+    "description": "查询主机名的 DNS 记录。",
+    "shortDescription": "查询 DNS 记录",
+    "name": "主机名",
+    "namePlaceholder": "example.com",
+    "type": "记录类型"
+  },
+  "ssl": {
+    "title": "SSL 证书检测",
+    "description": "检测公网主机的 TLS 证书信息。",
+    "shortDescription": "检测 TLS 证书详情",
+    "host": "主机",
+    "hostPlaceholder": "example.com",
+    "port": "端口",
+    "serverName": "SNI 主机名"
+  },
+  "ipCurrent": {
+    "title": "当前公网 IP",
+    "description": "查询 IPPure 当前出口 IP 卡片数据。",
+    "shortDescription": "查看当前出口 IP",
+    "runLabel": "检测当前 IP"
+  },
+  "ipLookup": {
+    "title": "IP 信息查询",
+    "description": "通过 IPPure 查询流程查询公网 IP 信息。",
+    "shortDescription": "查询公网 IP 信息",
+    "ip": "IP 地址",
+    "ipPlaceholder": "8.8.8.8"
+  },
+  "cidrCalculator": {
+    "title": "CIDR 计算器",
+    "description": "计算 IPv4 网络范围、子网掩码、反掩码和可用主机数。",
+    "shortDescription": "计算 IPv4 子网范围",
+    "inputTitle": "CIDR",
+    "cidrDescription": "IPv4 CIDR 输入",
+    "cidrPlaceholder": "例如 192.168.1.10/24",
+    "includeBinary": "包含二进制字段",
+    "resultTitle": "CIDR 结果"
+  },
+  "httpRequest": {
+    "title": "HTTP 在线请求",
+    "description": "通过本地后端发送 HTTP 请求。",
+    "shortDescription": "从本地 API 发起 HTTP 请求",
+    "method": "方法",
+    "url": "URL",
+    "headers": "请求头 JSON",
+    "body": "请求体",
+    "followRedirects": "跟随重定向",
+    "send": "发送"
+  },
+  "httpStatus": {
+    "title": "HTTP 状态查询",
+    "description": "通过本地后端查询 URL 的 HTTP 状态、重定向和响应头。",
+    "shortDescription": "查询 URL 状态码和响应头",
+    "url": "URL",
+    "method": "方法",
+    "followRedirects": "跟随重定向",
+    "check": "查询"
+  }
+}

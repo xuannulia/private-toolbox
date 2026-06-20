@@ -1,5 +1,5 @@
 import { InitialValuesType } from './types';
-import { splitCsv } from '@utils/csv';
+import { changeCsvSeparator as changeCsvSeparatorCore } from '@private-toolbox/core';
 
 export function changeCsvSeparator(
   input: string,
@@ -7,25 +7,14 @@ export function changeCsvSeparator(
 ): string {
   if (!input) return '';
 
-  const rows = splitCsv(
-    input,
-    true,
-    options.commentCharacter,
-    options.emptyLines,
-    options.inputSeparator,
-    options.inputQuoteCharacter
-  );
-
-  return rows
-    .map((row) => {
-      return row
-        .map((cell) => {
-          if (options.outputQuoteAll) {
-            return `${options.OutputQuoteCharacter}${cell}${options.OutputQuoteCharacter}`;
-          }
-          return cell;
-        })
-        .join(options.outputSeparator);
-    })
-    .join('\n');
+  return changeCsvSeparatorCore({
+    text: input,
+    delimiter: options.inputSeparator,
+    quote: options.inputQuoteCharacter,
+    comment: options.commentCharacter,
+    skipEmptyLines: options.emptyLines,
+    outputDelimiter: options.outputSeparator,
+    outputQuote: options.OutputQuoteCharacter,
+    quoteAll: options.outputQuoteAll
+  }).text;
 }

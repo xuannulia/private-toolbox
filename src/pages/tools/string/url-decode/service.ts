@@ -1,4 +1,6 @@
+import { decodeUrlComponent } from '@private-toolbox/core';
+
 export function decodeString(input: string): string {
   if (!input) return '';
-  return decodeURIComponent(input);
+  return decodeUrlComponent({ text: input });
 }

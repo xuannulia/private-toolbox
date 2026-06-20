@@ -1,92 +1,84 @@
-import React, { useState } from 'react';
-import { Box } from '@mui/material';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { Box, Stack } from '@mui/material';
 import ToolAudioInput from '@components/input/ToolAudioInput';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolFileResult from '@components/result/ToolFileResult';
-import SelectWithDesc from '@components/options/SelectWithDesc';
-import { convertAudio } from './service';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import { InitialValuesType, AUDIO_FORMATS, AudioFormat } from './types';
+import { CompactSelect, ConverterOptionStack } from '../ConvertersToolControls';
+import { convertAudio } from './service';
+import { AUDIO_FORMATS } from './types';
+import type { AudioFormat, InitialValuesType } from './types';
 
-const initialValues: InitialValuesType = {
-  outputFormat: 'mp3'
-};
-
-export default function AudioConverter({ title }: ToolComponentProps) {
+export default function AudioConverter() {
   const { t } = useTranslation('converters');
   const [input, setInput] = useState<File | null>(null);
+  const [options, setOptions] = useState<InitialValuesType>({
+    outputFormat: 'mp3'
+  });
   const [result, setResult] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const compute = async (
-    values: InitialValuesType,
-    inputFile: File | null
-  ): Promise<void> => {
-    if (!inputFile) return;
-
-    try {
-      setLoading(true);
-      const resultFile = await convertAudio(inputFile, values);
-      setResult(resultFile);
-    } catch (error) {
-      console.error('Conversion failed:', error);
+  useEffect(() => {
+    if (!input) {
       setResult(null);
-    } finally {
       setLoading(false);
+      return;
     }
-  };
 
-  // Explicitly type getGroups to match GetGroupsType<InitialValuesType>
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('audioConverter.outputFormat'),
-      component: (
-        <Box>
-          <SelectWithDesc
-            selected={values.outputFormat}
-            onChange={(value) => updateField('outputFormat', value)}
-            options={Object.entries(AUDIO_FORMATS).map(([value]) => ({
-              label: value.toUpperCase(),
-              value: value as AudioFormat
-            }))}
-            description={t('audioConverter.outputFormatDescription')}
-          />
-        </Box>
-      )
+    const inputFile = input;
+    let canceled = false;
+
+    async function runConversion() {
+      try {
+        setLoading(true);
+        const nextResult = await convertAudio(inputFile, options);
+        if (!canceled) setResult(nextResult);
+      } catch (error) {
+        console.error('Audio conversion failed:', error);
+        if (!canceled) setResult(null);
+      } finally {
+        if (!canceled) setLoading(false);
+      }
     }
-  ];
+
+    void runConversion();
+
+    return () => {
+      canceled = true;
+    };
+  }, [input, options]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolAudioInput
-          value={input}
-          onChange={setInput}
-          title={t('audioConverter.inputTitle')}
-        />
-      }
-      resultComponent={
-        <ToolFileResult
-          value={result}
-          title={t('audioConverter.outputTitle')}
-          loading={loading}
-        />
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      setInput={setInput}
-      compute={compute}
-      toolInfo={{
-        title: t('audioConverter.title'),
-        description: t('audioConverter.longDescription')
-      }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolAudioInput
+              value={input}
+              onChange={setInput}
+              title={t('audioConverter.inputTitle')}
+            />
+            <ConverterOptionStack>
+              <CompactSelect<AudioFormat>
+                label={t('audioConverter.outputFormat')}
+                value={options.outputFormat}
+                options={Object.keys(AUDIO_FORMATS).map((format) => ({
+                  label: format.toUpperCase(),
+                  value: format as AudioFormat
+                }))}
+                onChange={(outputFormat) => setOptions({ outputFormat })}
+              />
+            </ConverterOptionStack>
+          </Stack>
+        }
+        result={
+          <ToolFileResult
+            value={result}
+            title={t('audioConverter.outputTitle')}
+            loading={loading}
+          />
+        }
+      />
+    </Box>
   );
 }

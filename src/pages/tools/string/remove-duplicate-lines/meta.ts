@@ -5,7 +5,7 @@ export const tool = defineTool('string', {
   path: 'remove-duplicate-lines',
   icon: 'pepicons-print:duplicate-off',
 
-  keywords: ['remove', 'duplicate', 'lines'],
+  keywords: ['remove', 'duplicate', 'lines', 'unique', 'field', 'regex'],
   component: lazy(() => import('./index')),
   i18n: {
     name: 'string:removeDuplicateLines.title',

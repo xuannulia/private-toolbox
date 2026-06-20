@@ -1,8 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import type { TFunction } from 'i18next';
-import { filterTools } from './index';
+import { getCoreToolsByChannel } from '@private-toolbox/core';
+import { getServerToolsByChannel } from '@private-toolbox/server';
+import {
+  filterTools,
+  getToolsByCategory,
+  tools as registeredTools
+} from './index';
 import type { DefinedTool } from './defineTool';
 import type { FullI18nKey, I18nNamespaces } from '../i18n';
+import { getMappedToolProcessingPaths } from './processing';
 
 const mergePdfTool = {
   type: 'pdf',
@@ -125,5 +132,141 @@ describe('filterTools token-based search', () => {
   it('ranks tools with title matches above description-only matches', () => {
     const result = filterTools(tools, 'pdf', [], tEn);
     expect(result[0]).toBe(mergePdfTool);
+  });
+});
+
+describe('tool processing metadata', () => {
+  const getRegisteredTool = (path: string): DefinedTool => {
+    const tool = registeredTools.find((item) => item.path === path);
+    expect(tool, `Expected registered tool at ${path}`).toBeDefined();
+    return tool!;
+  };
+
+  it('marks every registered tool with internal processing metadata', () => {
+    for (const tool of registeredTools) {
+      expect(tool.processing, tool.path).toBeDefined();
+      expect(tool.processing.runtimes, tool.path).toContain('web');
+      expect(tool.processing.apiTools, tool.path).toBeInstanceOf(Array);
+      expect(tool.processing.mcpTools, tool.path).toBeInstanceOf(Array);
+    }
+  });
+
+  it('keeps web processing tool names aligned with API and MCP registries', () => {
+    const registeredApiToolNames = new Set([
+      ...getCoreToolsByChannel('api').map((tool) => tool.name),
+      ...getServerToolsByChannel('api').map((tool) => tool.name)
+    ]);
+    const registeredMcpToolNames = new Set([
+      ...getCoreToolsByChannel('mcp').map((tool) => tool.name),
+      ...getServerToolsByChannel('mcp').map((tool) => tool.name)
+    ]);
+
+    for (const tool of registeredTools) {
+      for (const name of tool.processing.apiTools) {
+        expect(registeredApiToolNames.has(name), `${tool.path}: ${name}`).toBe(
+          true
+        );
+      }
+
+      for (const name of tool.processing.mcpTools) {
+        expect(name.startsWith('http.'), `${tool.path}: ${name}`).toBe(false);
+        expect(registeredMcpToolNames.has(name), `${tool.path}: ${name}`).toBe(
+          true
+        );
+      }
+    }
+  });
+
+  it('keeps explicit processing metadata mapped to registered tools', () => {
+    const registeredPaths = new Set(registeredTools.map((tool) => tool.path));
+
+    for (const path of getMappedToolProcessingPaths()) {
+      expect(registeredPaths.has(path), path).toBe(true);
+    }
+  });
+
+  it('marks shared core tools as local with API and MCP availability', () => {
+    const tool = getRegisteredTool('json/prettify');
+
+    expect(tool.processing).toMatchObject({
+      dataFlow: 'local',
+      usesBackend: false,
+      usesNetwork: false,
+      apiTools: ['json.format'],
+      mcpTools: ['json.format']
+    });
+    expect(tool.processing.runtimes).toEqual(['web', 'api', 'mcp']);
+  });
+
+  it('marks guarded network lookup tools as backend network tools exposed to MCP', () => {
+    const tool = getRegisteredTool('network/dns-lookup');
+
+    expect(tool.processing).toMatchObject({
+      dataFlow: 'network',
+      usesBackend: true,
+      usesNetwork: true,
+      apiTools: ['dns.lookup'],
+      mcpTools: ['dns.lookup']
+    });
+    expect(tool.processing.runtimes).toEqual(['web', 'api', 'mcp']);
+  });
+
+  it('keeps HTTP request tools API-only and hidden from MCP metadata', () => {
+    const tool = getRegisteredTool('network/http-request');
+
+    expect(tool.processing).toMatchObject({
+      dataFlow: 'network',
+      usesBackend: true,
+      usesNetwork: true,
+      apiTools: ['http.request'],
+      mcpTools: []
+    });
+    expect(tool.processing.runtimes).toEqual(['web', 'api']);
+  });
+
+  it('marks local server file tools as backend-capable MCP tools', () => {
+    const tool = getRegisteredTool('image-generic/image-to-base64');
+
+    expect(tool.processing).toMatchObject({
+      dataFlow: 'backend',
+      usesBackend: true,
+      usesNetwork: false,
+      apiTools: ['image.to_base64'],
+      mcpTools: ['image.to_base64']
+    });
+  });
+
+  it('keeps unmigrated browser-only tools local to the Web UI', () => {
+    const tool = getRegisteredTool('pdf/merge-pdf');
+
+    expect(tool.processing).toMatchObject({
+      dataFlow: 'local',
+      runtimes: ['web'],
+      usesBackend: false,
+      usesNetwork: false,
+      apiTools: [],
+      mcpTools: []
+    });
+  });
+});
+
+describe('tool category layout', () => {
+  it('keeps common developer categories before network and ops sections', () => {
+    const orderedTypes = getToolsByCategory([], makeT({})).map(
+      (category) => category.type
+    );
+
+    expect(orderedTypes.indexOf('json')).toBeLessThan(
+      orderedTypes.indexOf('string')
+    );
+    expect(orderedTypes.indexOf('string')).toBeLessThan(
+      orderedTypes.indexOf('time')
+    );
+    expect(orderedTypes.indexOf('time')).toBeLessThan(
+      orderedTypes.indexOf('network')
+    );
+    expect(orderedTypes.indexOf('network')).toBeLessThan(
+      orderedTypes.indexOf('ops')
+    );
   });
 });

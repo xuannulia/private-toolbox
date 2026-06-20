@@ -1,129 +1,112 @@
-import { Box, FormControlLabel, Radio, RadioGroup } from '@mui/material';
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import { InitialValuesType } from './types';
+import { Box, Stack } from '@mui/material';
 import ToolAudioInput from '@components/input/ToolAudioInput';
 import ToolFileResult from '@components/result/ToolFileResult';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import RadioWithTextField from '@components/options/RadioWithTextField';
-import { changeAudioSpeed } from './service';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  AUDIO_FORMAT_OPTIONS,
+  AudioOptionStack,
+  CompactAudioField,
+  CompactAudioSelect
+} from '../AudioToolControls';
+import { changeAudioSpeed } from './service';
+import type { InitialValuesType } from './types';
 
 const initialValues: InitialValuesType = {
   newSpeed: 2,
   outputFormat: 'mp3'
 };
 
-const formatOptions = [
-  { label: 'MP3', value: 'mp3' },
-  { label: 'AAC', value: 'aac' },
-  { label: 'WAV', value: 'wav' }
-];
-
-export default function ChangeSpeed({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function ChangeSpeed() {
   const { t } = useTranslation('audio');
   const [input, setInput] = useState<File | null>(null);
+  const [options, setOptions] = useState<InitialValuesType>(initialValues);
   const [result, setResult] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const compute = async (
-    optionsValues: InitialValuesType,
-    input: File | null
+  const updateOption = <K extends keyof InitialValuesType>(
+    key: K,
+    value: InitialValuesType[K]
   ) => {
-    setLoading(true);
-    try {
-      const newFile = await changeAudioSpeed(input, optionsValues);
-      setResult(newFile);
-    } catch (err) {
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
+    setOptions((current) => ({ ...current, [key]: value }));
   };
 
-  const getGroups: GetGroupsType<InitialValuesType> | null = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('changeSpeed.newAudioSpeed'),
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            value={values.newSpeed.toString()}
-            onOwnChange={(val) => updateField('newSpeed', Number(val))}
-            description={t('changeSpeed.speedDescription')}
-            type="number"
-          />
-        </Box>
-      )
-    },
-    {
-      title: t('changeSpeed.outputFormat'),
-      component: (
-        <Box mt={2}>
-          <RadioGroup
-            row
-            value={values.outputFormat}
-            onChange={(e) =>
-              updateField(
-                'outputFormat',
-                e.target.value as 'mp3' | 'aac' | 'wav'
-              )
-            }
-          >
-            {formatOptions.map((opt) => (
-              <FormControlLabel
-                key={opt.value}
-                value={opt.value}
-                control={<Radio />}
-                label={opt.label}
-              />
-            ))}
-          </RadioGroup>
-        </Box>
-      )
+  useEffect(() => {
+    if (!input) {
+      setResult(null);
+      setLoading(false);
+      return;
     }
-  ];
-  return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolAudioInput
-          value={input}
-          onChange={setInput}
-          title={t('changeSpeed.inputTitle')}
-        />
+
+    const inputFile = input;
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runConversion() {
+        try {
+          setLoading(true);
+          const newFile = await changeAudioSpeed(inputFile, options);
+          if (!canceled) setResult(newFile);
+        } catch (error) {
+          console.error('Audio speed change failed:', error);
+          if (!canceled) setResult(null);
+        } finally {
+          if (!canceled) setLoading(false);
+        }
       }
-      resultComponent={
-        loading ? (
+
+      void runConversion();
+    }, 300);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options]);
+
+  return (
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolAudioInput
+              value={input}
+              onChange={setInput}
+              title={t('changeSpeed.inputTitle')}
+            />
+            <AudioOptionStack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactAudioField
+                  label={t('changeSpeed.newAudioSpeed')}
+                  value={options.newSpeed}
+                  type="number"
+                  onChange={(value) =>
+                    updateOption('newSpeed', Number(value) || 0)
+                  }
+                />
+                <CompactAudioSelect
+                  label={t('changeSpeed.outputFormat')}
+                  value={options.outputFormat}
+                  options={AUDIO_FORMAT_OPTIONS}
+                  onChange={(value) => updateOption('outputFormat', value)}
+                />
+              </Stack>
+            </AudioOptionStack>
+          </Stack>
+        }
+        result={
           <ToolFileResult
-            title={t('changeSpeed.settingSpeed')}
-            value={null}
-            loading={true}
-          />
-        ) : (
-          <ToolFileResult
-            title={t('changeSpeed.resultTitle')}
+            title={
+              loading
+                ? t('changeSpeed.settingSpeed')
+                : t('changeSpeed.resultTitle')
+            }
             value={result}
+            loading={loading}
             extension={result ? result.name.split('.').pop() : undefined}
           />
-        )
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      setInput={setInput}
-      compute={compute}
-      toolInfo={{
-        title: t('changeSpeed.toolInfo.title', { title }),
-        description: longDescription
-      }}
-    />
+        }
+      />
+    </Box>
   );
 }

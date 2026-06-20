@@ -22,6 +22,10 @@
       "description": "Ferramentas para trabalhar com áudio – extrair áudio de vídeo, ajustar a velocidade do áudio, mesclar vários arquivos de áudio e muito mais.",
       "title": "Ferramentas de áudio"
     },
+    "converters": {
+      "description": "Convert files and data between common formats.",
+      "title": "Converter Tools"
+    },
     "csv": {
       "description": "Ferramentas para trabalhar com arquivos CSV - converta CSV para diferentes formatos, manipule dados CSV, valide a estrutura CSV e processe arquivos CSV com eficiência.",
       "title": "Ferramentas CSV"
@@ -45,6 +49,14 @@
     "number": {
       "description": "Ferramentas para trabalhar com números – gerar sequências numéricas, converter números em palavras e palavras em números, classificar, arredondar, fatorar números e muito mais.",
       "title": "Ferramentas numéricas"
+    },
+    "network": {
+      "description": "RDAP, DNS, SSL, IP, CIDR, and local API request tools.",
+      "title": "Network Tools"
+    },
+    "ops": {
+      "description": "Docker and Nginx formatters, validators, and match testers.",
+      "title": "Ops Tools"
     },
     "pdf": {
       "description": "Ferramentas para trabalhar com arquivos PDF - extraia texto de PDFs, converta PDFs para outros formatos, manipule PDFs e muito mais.",
@@ -81,8 +93,8 @@
     }
   },
   "hero": {
-    "brand": "OmniTools",
-    "description": "Aumente sua produtividade com o OmniTools, o kit de ferramentas definitivo para fazer as coisas rapidamente! Acesse milhares de utilitários fáceis de usar para editar imagens, textos, listas e dados, tudo diretamente do seu navegador.",
+    "brand": "Private Toolbox",
+    "description": "Local-first tools for text, files, media, data, and developer workflows.",
     "examples": {
       "calculateNumberSum": "Calcular soma numérica",
       "changeGifSpeed": "Alterar velocidade do GIF",
@@ -220,6 +232,9 @@
     "seeExamples": "Veja exemplos"
   },
   "toolLayout": {
+    "addBookmark": "Adicionar favorito",
+    "allTools": "Todas as ferramentas",
+    "removeBookmark": "Remover favorito",
     "allToolsTitle": "Todos {{type}}"
   },
   "toolMultiFileResult": {

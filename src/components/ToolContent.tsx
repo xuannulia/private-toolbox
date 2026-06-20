@@ -1,15 +1,22 @@
 import React, { ReactNode, useContext, useEffect } from 'react';
-import { Box } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Typography
+} from '@mui/material';
 import { Formik, FormikValues, useFormikContext } from 'formik';
 import ToolOptions, { GetGroupsType } from '@components/options/ToolOptions';
 import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolInfo from '@components/ToolInfo';
-import Separator from '@components/Separator';
 import ToolExamples, {
   CardExampleType
 } from '@components/examples/ToolExamples';
 import { ToolComponentProps } from '@tools/defineTool';
 import { CustomSnackBarContext } from '../contexts/CustomSnackBarContext';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useTranslation } from 'react-i18next';
 
 const FormikListenerComponent = <T,>({
   input,
@@ -79,6 +86,8 @@ export default function ToolContent<T extends FormikValues, I>({
   onValuesChange,
   verticalGroups
 }: ToolContentProps<T, I>) {
+  const { t } = useTranslation();
+
   return (
     <Box>
       <Formik
@@ -105,22 +114,55 @@ export default function ToolContent<T extends FormikValues, I>({
               <ToolOptions getGroups={getGroups} vertical={verticalGroups} />
 
               {toolInfo && toolInfo.title && toolInfo.description && (
-                <ToolInfo
-                  title={toolInfo.title}
-                  description={toolInfo.description}
-                />
+                <Accordion
+                  disableGutters
+                  TransitionProps={{ unmountOnExit: true }}
+                  sx={{
+                    mt: 3,
+                    border: 1,
+                    borderColor: 'divider',
+                    boxShadow: 'none',
+                    '&:before': { display: 'none' }
+                  }}
+                >
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography fontWeight={600}>{toolInfo.title}</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <ToolInfo
+                      title={toolInfo.title}
+                      description={toolInfo.description}
+                    />
+                  </AccordionDetails>
+                </Accordion>
               )}
 
               {exampleCards && exampleCards.length > 0 && (
-                <>
-                  <Separator backgroundColor="#5581b5" margin="50px" />
-                  <ToolExamples
-                    title={title}
-                    exampleCards={exampleCards}
-                    getGroups={getGroups}
-                    setInput={setInput}
-                  />
-                </>
+                <Accordion
+                  disableGutters
+                  TransitionProps={{ unmountOnExit: true }}
+                  sx={{
+                    mt: 2,
+                    border: 1,
+                    borderColor: 'divider',
+                    boxShadow: 'none',
+                    '&:before': { display: 'none' }
+                  }}
+                >
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography fontWeight={600}>
+                      {t('toolExamples.title', { title })}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <ToolExamples
+                      title={title}
+                      exampleCards={exampleCards}
+                      getGroups={getGroups}
+                      setInput={setInput}
+                    />
+                  </AccordionDetails>
+                </Accordion>
               )}
             </>
           );

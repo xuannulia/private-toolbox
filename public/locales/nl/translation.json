@@ -22,6 +22,10 @@
       "description": "Hulpmiddelen voor het werken met audio: audio uit video extraheren, de audiosnelheid aanpassen, meerdere audiobestanden samenvoegen en nog veel meer.",
       "title": "Audio-hulpmiddelen"
     },
+    "converters": {
+      "description": "Convert files and data between common formats.",
+      "title": "Converter Tools"
+    },
     "csv": {
       "description": "Hulpmiddelen voor het werken met CSV-bestanden: converteer CSV naar verschillende formaten, manipuleer CSV-gegevens, valideer de CSV-structuur en verwerk CSV-bestanden efficiënt.",
       "title": "CSV-hulpmiddelen"
@@ -45,6 +49,14 @@
     "number": {
       "description": "Hulpmiddelen voor het werken met getallen: genereer getallenreeksen, converteer getallen naar woorden en woorden naar getallen, sorteer, rond af, ontbind getallen en nog veel meer.",
       "title": "Getallenhulpmiddelen"
+    },
+    "network": {
+      "description": "RDAP, DNS, SSL, IP, CIDR, and local API request tools.",
+      "title": "Network Tools"
+    },
+    "ops": {
+      "description": "Docker and Nginx formatters, validators, and match testers.",
+      "title": "Ops Tools"
     },
     "pdf": {
       "description": "Hulpmiddelen voor het werken met PDF-bestanden: tekst uit PDF's extraheren, PDF's naar andere formaten converteren, PDF's bewerken en nog veel meer.",
@@ -81,8 +93,8 @@
     }
   },
   "hero": {
-    "brand": "OmniTools",
-    "description": "Verhoog je productiviteit met OmniTools, de ultieme toolkit om snel aan de slag te gaan! Krijg toegang tot duizenden gebruiksvriendelijke tools voor het bewerken van afbeeldingen, tekst, lijsten en gegevens, allemaal rechtstreeks vanuit je browser.",
+    "brand": "Private Toolbox",
+    "description": "Local-first tools for text, files, media, data, and developer workflows.",
     "examples": {
       "calculateNumberSum": "Bereken de getallensom",
       "changeGifSpeed": "GIF-snelheid wijzigen",
@@ -220,6 +232,9 @@
     "seeExamples": "Zie voorbeelden"
   },
   "toolLayout": {
+    "addBookmark": "Bladwijzer toevoegen",
+    "allTools": "Alle tools",
+    "removeBookmark": "Bladwijzer verwijderen",
     "allToolsTitle": "Alle {{type}}"
   },
   "toolMultiFileResult": {

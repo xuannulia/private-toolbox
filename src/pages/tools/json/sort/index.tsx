@@ -1,163 +1,128 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
+import { Box, MenuItem, Stack, TextField } from '@mui/material';
 import ToolCodeInput from '@components/input/ToolCodeInput';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { sortJson } from './service';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import SelectWithDesc from '@components/options/SelectWithDesc';
-import { ToolComponentProps } from '@tools/defineTool';
-import ToolContent from '@components/ToolContent';
-import { InitialValuesType } from './types';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import { getJsonHeaders } from '@utils/json';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getJsonHeaders } from '@utils/json';
+import { sortJson } from './service';
+import { type mode as SortMode, type order as SortOrder } from './types';
 
-const initialValues: InitialValuesType = {
-  mode: 'value',
-  key: '',
-  order: 'asc'
-};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Invalid JSON sort input';
 
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Sort by name ascending',
-    description:
-      'Sort a JSON array of objects alphabetically by the "name" key.',
-    sampleText: `[{"name":"Charlie","age":30},{"name":"Alice","age":25},{"name":"Bob","age":35}]`,
-    sampleResult: `[
-  {
-    "name": "Alice",
-    "age": 25
-  },
-  {
-    "name": "Bob",
-    "age": 35
-  },
-  {
-    "name": "Charlie",
-    "age": 30
-  }
-]`,
-    sampleOptions: { mode: 'value', key: 'name', order: 'asc' }
-  },
-  {
-    title: 'Sort object keys alphabetically',
-    description:
-      'Sort the keys of a JSON object alphabetically in ascending order.',
-    sampleText: `{"zebra":1,"apple":2,"mango":3}`,
-    sampleResult: `{
-  "apple": 2,
-  "mango": 3,
-  "zebra": 1
-}`,
-    sampleOptions: { mode: 'key', key: '', order: 'asc' }
-  }
-];
-
-export default function SortJson({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function SortJson() {
   const { t } = useTranslation('json');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [mode, setMode] = useState<SortMode>('key');
+  const [key, setKey] = useState('');
+  const [order, setOrder] = useState<SortOrder>('asc');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
+  const keys = useMemo(() => getJsonHeaders(input), [input]);
 
-  const compute = (values: InitialValuesType, input: string) => {
-    if (!input.trim()) return;
-    setResult(sortJson(input, values));
-  };
-
-  const keys = getJsonHeaders(input);
-  const keyOptions =
-    keys.length > 0
-      ? keys.map((item) => ({
-          label: item,
-          value: item
-        }))
-      : [];
-
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('sortJson.options.title'),
-      component: (
-        <Box>
-          <SelectWithDesc
-            selected={values.mode}
-            options={[
-              {
-                label: t('sortJson.options.sortByValue'),
-                value: 'value'
-              },
-              {
-                label: t('sortJson.options.sortByKey'),
-                value: 'key'
-              }
-            ]}
-            onChange={(value) => {
-              updateField('mode', value);
-              updateField('key', '');
-            }}
-            description={t('sortJson.options.modeDescription')}
-          />
-          {values.mode === 'value' && (
-            <SelectWithDesc
-              selected={values.key}
-              options={[
-                { label: 'Please select a key', value: '' },
-                ...keyOptions
-              ]}
-              onChange={(value) => updateField('key', value)}
-              description={t('sortJson.options.keyDescription')}
-            />
-          )}
-          <SelectWithDesc
-            selected={values.order}
-            options={[
-              {
-                label: t('sortJson.options.ascending'),
-                value: 'asc'
-              },
-              {
-                label: t('sortJson.options.descending'),
-                value: 'desc'
-              }
-            ]}
-            onChange={(value) => updateField('order', value)}
-            description={t('sortJson.options.orderDescription')}
-          />
-        </Box>
-      )
+  useEffect(() => {
+    if (!input.trim()) {
+      setResult('');
+      setError('');
+      return;
     }
-  ];
+
+    try {
+      setResult(sortJson(input, { mode, key, order }));
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [input, key, mode, order]);
+
+  const output = error ? t('sortJson.invalidInput', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      inputComponent={
-        <ToolCodeInput
-          title={t('sortJson.inputTitle')}
-          value={input}
-          onChange={setInput}
-          language={'json'}
-        />
-      }
-      resultComponent={
-        <ToolTextResult
-          title={t('sortJson.resultTitle')}
-          value={result}
-          extension={'json'}
-        />
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      compute={compute}
-      input={input}
-      setInput={setInput}
-      exampleCards={exampleCards}
-      toolInfo={{ title: `What is a ${title}?`, description: longDescription }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolCodeInput
+              title={t('sortJson.inputTitle')}
+              value={input}
+              onChange={setInput}
+              language="json"
+            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label={t('sortJson.options.mode')}
+                value={mode}
+                onChange={(event) => {
+                  const nextMode = event.target.value as SortMode;
+                  setMode(nextMode);
+                  if (nextMode === 'key') setKey('');
+                }}
+                sx={{ backgroundColor: 'background.paper' }}
+              >
+                <MenuItem value="key">
+                  {t('sortJson.options.sortByKey')}
+                </MenuItem>
+                <MenuItem value="value">
+                  {t('sortJson.options.sortByValue')}
+                </MenuItem>
+              </TextField>
+
+              {mode === 'value' && (
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label={t('sortJson.options.key')}
+                  value={key}
+                  onChange={(event) => setKey(event.target.value)}
+                  sx={{ backgroundColor: 'background.paper' }}
+                >
+                  <MenuItem value="">
+                    {t('sortJson.options.selectKey')}
+                  </MenuItem>
+                  {keys.map((item) => (
+                    <MenuItem key={item} value={item}>
+                      {item}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
+
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label={t('sortJson.options.order')}
+                value={order}
+                onChange={(event) => setOrder(event.target.value as SortOrder)}
+                sx={{ backgroundColor: 'background.paper' }}
+              >
+                <MenuItem value="asc">
+                  {t('sortJson.options.ascending')}
+                </MenuItem>
+                <MenuItem value="desc">
+                  {t('sortJson.options.descending')}
+                </MenuItem>
+              </TextField>
+            </Stack>
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            extension="json"
+            keepSpecialCharacters
+            monospace
+            title={t('sortJson.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

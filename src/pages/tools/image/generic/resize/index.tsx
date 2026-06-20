@@ -1,236 +1,188 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
-import * as Yup from 'yup';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import SimpleRadio from '@components/options/SimpleRadio';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
+import { Box, Stack } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ToolMultipleImageInput, {
   MultiImageInput
 } from '@components/input/ToolMultipleImageInput';
-import ToolMultiFileResult from '@components/result/ToolMultiFileResult';
 import ToolFileResult from '@components/result/ToolFileResult';
+import ToolMultiFileResult from '@components/result/ToolMultiFileResult';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import {
+  CompactImageCheckbox,
+  CompactImageField,
+  CompactImageToggle,
+  ImageOptionStack
+} from '../../ImageToolControls';
 import { resizeImages } from './service';
-import { InitialValuesType } from './types';
-import { useTranslation } from 'react-i18next';
+import { type InitialValuesType } from './types';
 
-const initialValues: InitialValuesType = {
-  resizeMethod: 'pixels' as 'pixels' | 'percentage',
-  dimensionType: 'width' as 'width' | 'height',
+const initialOptions: InitialValuesType = {
+  resizeMethod: 'pixels',
+  dimensionType: 'width',
   width: '800',
   height: '600',
   percentage: '50',
   maintainAspectRatio: true
 };
 
-const validationSchema = Yup.object({
-  width: Yup.number().when('resizeMethod', {
-    is: 'pixels',
-    then: (schema) =>
-      schema.min(1, 'Width must be at least 1px').required('Width is required')
-  }),
-  height: Yup.number().when('resizeMethod', {
-    is: 'pixels',
-    then: (schema) =>
-      schema
-        .min(1, 'Height must be at least 1px')
-        .required('Height is required')
-  }),
-  percentage: Yup.number().when('resizeMethod', {
-    is: 'percentage',
-    then: (schema) =>
-      schema
-        .min(1, 'Percentage must be at least 1%')
-        .max(1000, 'Percentage must be at most 1000%')
-        .required('Percentage is required')
-  })
-});
-
-export default function ResizeImage({ title }: ToolComponentProps) {
+export default function ResizeImage() {
   const { t } = useTranslation('image');
   const [input, setInput] = useState<MultiImageInput[]>([]);
+  const [options, setOptions] = useState<InitialValuesType>(initialOptions);
   const [results, setResults] = useState<File[]>([]);
   const [zipFile, setZipFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const compute = async (
-    optionsValues: InitialValuesType,
-    input: MultiImageInput[]
-  ) => {
-    if (!input) return;
-    try {
-      setIsProcessing(true);
+  useEffect(() => {
+    if (!input.length) {
+      setResults([]);
+      setZipFile(null);
+      setIsProcessing(false);
+      return;
+    }
 
-      const output = await resizeImages(
-        input.map((img) => img.file),
-        optionsValues
-      );
+    const files = input.map((image) => image.file);
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runResize() {
+        try {
+          setIsProcessing(true);
+          setResults([]);
+          setZipFile(null);
 
-      if (!output) {
-        return;
+          const output = await resizeImages(files, options);
+
+          if (!canceled && output) {
+            setResults(output.results);
+            setZipFile(output.zipFile);
+          }
+        } catch (error) {
+          console.error('Error in resizing:', error);
+          if (!canceled) {
+            setResults([]);
+            setZipFile(null);
+          }
+        } finally {
+          if (!canceled) setIsProcessing(false);
+        }
       }
 
-      setResults(output.results);
-      setZipFile(output.zipFile);
-    } catch (err) {
-      console.error('Error in resizing:', err);
-    } finally {
-      setIsProcessing(false);
-    }
+      void runResize();
+    }, 500);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options]);
+
+  const updateOptions = (nextOptions: Partial<InitialValuesType>) => {
+    setOptions((current) => ({ ...current, ...nextOptions }));
   };
 
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('resize.resizeMethod'),
-      component: (
-        <Box>
-          <SimpleRadio
-            onClick={() => updateField('resizeMethod', 'pixels')}
-            checked={values.resizeMethod === 'pixels'}
-            description={t('resize.resizeByPixelsDescription')}
-            title={t('resize.resizeByPixels')}
-          />
-          <SimpleRadio
-            onClick={() => updateField('resizeMethod', 'percentage')}
-            checked={values.resizeMethod === 'percentage'}
-            description={t('resize.resizeByPercentageDescription')}
-            title={t('resize.resizeByPercentage')}
-          />
-        </Box>
-      )
-    },
-    ...(values.resizeMethod === 'pixels'
-      ? [
-          {
-            title: t('resize.dimensionType'),
-            component: (
-              <Box>
-                <CheckboxWithDesc
-                  checked={values.maintainAspectRatio}
-                  onChange={(value) =>
-                    updateField('maintainAspectRatio', value)
-                  }
-                  description={t('resize.maintainAspectRatioDescription')}
-                  title={t('resize.maintainAspectRatio')}
-                />
-                {values.maintainAspectRatio && (
-                  <Box>
-                    <SimpleRadio
-                      onClick={() => updateField('dimensionType', 'width')}
-                      checked={values.dimensionType === 'width'}
-                      description={t('resize.setWidthDescription')}
-                      title={t('resize.setWidth')}
-                    />
-                    <SimpleRadio
-                      onClick={() => updateField('dimensionType', 'height')}
-                      checked={values.dimensionType === 'height'}
-                      description={t('resize.setHeightDescription')}
-                      title={t('resize.setHeight')}
-                    />
-                  </Box>
-                )}
-                <TextFieldWithDesc
-                  value={values.width}
-                  onOwnChange={(val) => updateField('width', val)}
-                  description={t('resize.widthDescription')}
-                  disabled={
-                    values.maintainAspectRatio &&
-                    values.dimensionType === 'height'
-                  }
-                  inputProps={{
-                    'data-testid': 'width-input',
-                    type: 'number',
-                    min: 1
-                  }}
-                />
-                <TextFieldWithDesc
-                  value={values.height}
-                  onOwnChange={(val) => updateField('height', val)}
-                  description={t('resize.heightDescription')}
-                  disabled={
-                    values.maintainAspectRatio &&
-                    values.dimensionType === 'width'
-                  }
-                  inputProps={{
-                    'data-testid': 'height-input',
-                    type: 'number',
-                    min: 1
-                  }}
-                />
-              </Box>
-            )
-          }
-        ]
-      : [
-          {
-            title: t('resize.percentage'),
-            component: (
-              <Box>
-                <TextFieldWithDesc
-                  value={values.percentage}
-                  onOwnChange={(val) => updateField('percentage', val)}
-                  description={t('resize.percentageDescription')}
-                  inputProps={{
-                    'data-testid': 'percentage-input',
-                    type: 'number',
-                    min: 1,
-                    max: 1000
-                  }}
-                />
-              </Box>
-            )
-          }
-        ])
-  ];
-
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={getGroups}
-      compute={compute}
-      input={input}
-      validationSchema={validationSchema}
-      inputComponent={
-        <ToolMultipleImageInput
-          value={input}
-          onChange={setInput}
-          type="image"
-          accept={[
-            'image/jpeg',
-            'image/png',
-            'image/svg+xml',
-            'image/gif',
-            'image/webp'
-          ]}
-          title={t('resize.inputTitle')}
-        />
-      }
-      resultComponent={
-        zipFile ? (
-          <ToolMultiFileResult
-            title={t('resize.resultTitle')}
-            value={results}
-            zipFile={zipFile}
-            loading={isProcessing}
-          />
-        ) : (
-          <ToolFileResult
-            title={t('resize.resultTitle')}
-            value={results[0] ?? null}
-            extension={results[0]?.name.split('.').pop() || 'png'}
-          />
-        )
-      }
-      toolInfo={{
-        title: t('resize.toolInfo.title'),
-        description: t('resize.toolInfo.description')
-      }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolMultipleImageInput
+              value={input}
+              onChange={setInput}
+              type="image"
+              accept={[
+                'image/jpeg',
+                'image/png',
+                'image/svg+xml',
+                'image/gif',
+                'image/webp'
+              ]}
+              title={t('resize.inputTitle')}
+            />
+            <ImageOptionStack>
+              <CompactImageToggle<InitialValuesType['resizeMethod']>
+                label={t('resize.resizeMethod')}
+                value={options.resizeMethod}
+                options={[
+                  { value: 'pixels', label: t('resize.resizeByPixels') },
+                  {
+                    value: 'percentage',
+                    label: t('resize.resizeByPercentage')
+                  }
+                ]}
+                onChange={(resizeMethod) => updateOptions({ resizeMethod })}
+              />
+              {options.resizeMethod === 'pixels' ? (
+                <>
+                  <CompactImageCheckbox
+                    checked={options.maintainAspectRatio}
+                    onChange={(maintainAspectRatio) =>
+                      updateOptions({ maintainAspectRatio })
+                    }
+                    label={t('resize.maintainAspectRatio')}
+                  />
+                  {options.maintainAspectRatio && (
+                    <CompactImageToggle<InitialValuesType['dimensionType']>
+                      label={t('resize.dimensionType')}
+                      value={options.dimensionType}
+                      options={[
+                        { value: 'width', label: t('resize.setWidth') },
+                        { value: 'height', label: t('resize.setHeight') }
+                      ]}
+                      onChange={(dimensionType) =>
+                        updateOptions({ dimensionType })
+                      }
+                    />
+                  )}
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                    <CompactImageField
+                      label={t('resize.width')}
+                      value={options.width}
+                      disabled={
+                        options.maintainAspectRatio &&
+                        options.dimensionType === 'height'
+                      }
+                      onChange={(width) => updateOptions({ width })}
+                    />
+                    <CompactImageField
+                      label={t('resize.height')}
+                      value={options.height}
+                      disabled={
+                        options.maintainAspectRatio &&
+                        options.dimensionType === 'width'
+                      }
+                      onChange={(height) => updateOptions({ height })}
+                    />
+                  </Stack>
+                </>
+              ) : (
+                <CompactImageField
+                  label={t('resize.percentage')}
+                  value={options.percentage}
+                  onChange={(percentage) => updateOptions({ percentage })}
+                />
+              )}
+            </ImageOptionStack>
+          </Stack>
+        }
+        result={
+          zipFile ? (
+            <ToolMultiFileResult
+              title={t('resize.resultTitle')}
+              value={results}
+              zipFile={zipFile}
+              loading={isProcessing}
+            />
+          ) : (
+            <ToolFileResult
+              title={t('resize.resultTitle')}
+              value={results[0] ?? null}
+              extension={results[0]?.name.split('.').pop() || 'png'}
+              loading={isProcessing}
+              loadingText={t('resize.loadingText')}
+            />
+          )
+        }
+      />
+    </Box>
   );
 }

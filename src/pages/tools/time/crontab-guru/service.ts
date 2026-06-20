@@ -1,5 +1,4 @@
-import cronstrue from 'cronstrue/i18n';
-import { isValidCron } from 'cron-validator';
+import { parseCronExpression, validateCronExpression } from '@private-toolbox/core';
 
 const LANG: Record<string, string> = {
   fr: 'fr',
@@ -19,11 +18,20 @@ const getLanguage = (): string => {
 };
 
 export function explainCrontab(expr: string): string {
-  return cronstrue.toString(expr, { locale: getLanguage() });
+  const result = parseCronExpression({
+    expression: expr,
+    locale: getLanguage()
+  });
+
+  if (!result.valid || result.description === null) {
+    throw new Error(result.error ?? 'Invalid crontab expression');
+  }
+
+  return result.description;
 }
 
 export function validateCrontab(expr: string): boolean {
-  return isValidCron(expr, { seconds: false, allowBlankDay: true });
+  return validateCronExpression({ expression: expr }).valid;
 }
 
 export function main(input: string): string {

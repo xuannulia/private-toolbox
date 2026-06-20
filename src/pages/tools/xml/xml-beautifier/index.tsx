@@ -1,64 +1,41 @@
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { Box } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { beautifyXml } from './service';
-import { InitialValuesType } from './types';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { beautifyXml } from './service';
 
-const initialValues: InitialValuesType = {};
-
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Beautify XML',
-    description: 'Beautify a compact XML string for readability.',
-    sampleText: '<root><item>1</item><item>2</item></root>',
-    sampleResult: `<root>\n  <item>1</item>\n  <item>2</item>\n</root>`,
-    sampleOptions: {}
-  }
-];
-
-export default function XmlBeautifier({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function XmlBeautifier() {
   const { t } = useTranslation('xml');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [result, setResult] = useState('');
 
-  const compute = (_values: InitialValuesType, input: string) => {
-    setResult(beautifyXml(input, {}));
-  };
+  useEffect(() => {
+    setResult(input.trim() ? beautifyXml(input, {}) : '');
+  }, [input]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolTextInput
-          title={t('xmlBeautifier.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult
-          title={t('xmlBeautifier.resultTitle')}
-          value={result}
-          extension="xml"
-        />
-      }
-      initialValues={initialValues}
-      exampleCards={exampleCards}
-      getGroups={null}
-      setInput={setInput}
-      compute={compute}
-      toolInfo={{
-        title: t('xmlBeautifier.toolInfo.title', { title }),
-        description: longDescription
-      }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <ToolTextInput
+            title={t('xmlBeautifier.inputTitle')}
+            value={input}
+            onChange={setInput}
+          />
+        }
+        result={
+          <ToolTextResult
+            disabled={!result}
+            extension="xml"
+            keepSpecialCharacters
+            monospace
+            title={t('xmlBeautifier.resultTitle')}
+            value={result}
+          />
+        }
+      />
+    </Box>
   );
 }

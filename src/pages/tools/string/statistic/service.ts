@@ -1,75 +1,23 @@
 import { InitialValuesType } from './types';
-import { TopItemsList } from '../../list/find-most-popular/service';
+import { getTextStats, type TextFrequencyItem } from '@private-toolbox/core';
 
-function countLines(text: string, options: InitialValuesType): number {
-  const numberofLines = options.emptyLines
-    ? text.split('\n').length
-    : text.split('\n').filter((line) => line.trim() !== '').length;
+const formatFrequency = (items: TextFrequencyItem[]): string =>
+  items
+    .map(
+      (item) =>
+        `${item.displayValue}: ${item.count} (${(item.percentage * 100).toFixed(
+          2
+        )}%)`
+    )
+    .join('\n');
 
-  return numberofLines;
-}
-
-function countCharacters(text: string): number {
-  return text.length;
-}
-
-function countSentences(text: string, options: InitialValuesType): number {
-  const sentenceDelimiters = options.sentenceDelimiters
-    ? options.sentenceDelimiters.split(',').map((s) => s.trim())
-    : ['.', '!', '?', '...'];
-
-  const regex = new RegExp(`[${sentenceDelimiters.join('')}]`, 'g');
-  const sentences = text
-    .split(regex)
-    .filter((sentence) => sentence.trim() !== '');
-  return sentences.length;
-}
-
-function wordsStats(
-  text: string,
-  options: InitialValuesType
-): [number, string] {
-  const defaultDelimiters = `\\s.,;:!?"“”«»()…`;
-  const wordDelimiters = options.wordDelimiters || defaultDelimiters;
-  const regex = new RegExp(`[${wordDelimiters}]`, 'gu');
-  const words = text.split(regex).filter((word) => word.trim() !== '');
-
-  const wordsFrequency = TopItemsList(
-    'regex',
-    'count',
-    'percentage',
-    '',
-    words,
-    false,
-    true,
-    false
-  );
-
-  return options.wordCount
-    ? [words.length, wordsFrequency]
-    : [words.length, ''];
-}
-
-function countParagraphs(text: string): number {
-  return text
-    .split(/\r?\n\s*\r?\n/)
-    .filter((paragraph) => paragraph.trim() !== '').length;
-}
-
-function charactersStatistic(text: string, options: InitialValuesType): string {
-  if (!options.characterCount) return '';
-  const result = TopItemsList(
-    'symbol',
-    'count',
-    'percentage',
-    '',
-    text,
-    true,
-    true,
-    false
-  );
-  return result;
-}
+const parseSentenceDelimiters = (value: string): string[] | undefined => {
+  if (!value.trim()) return undefined;
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
 
 export function textStatistics(
   input: string,
@@ -77,20 +25,25 @@ export function textStatistics(
 ): string {
   if (!input) return '';
 
-  const numberofLines = countLines(input, options);
-  const numberofCharacters = countCharacters(input);
-  const numberofSentences = countSentences(input, options);
-  const [numberofWords, wordsFrequency] = wordsStats(input, options);
-  const numberofParagraphs = countParagraphs(input);
-  const characterStats = charactersStatistic(input, options);
+  const statsResult = getTextStats({
+    text: input,
+    includeEmptyLines: options.emptyLines,
+    sentenceDelimiters: parseSentenceDelimiters(options.sentenceDelimiters),
+    wordDelimiters: options.wordDelimiters || undefined,
+    includeCharacterFrequency: options.characterCount,
+    includeWordFrequency: options.wordCount,
+    maxFrequencyItems: 10_000
+  });
+  const wordsFrequency = formatFrequency(statsResult.wordFrequency);
+  const characterStats = formatFrequency(statsResult.characterFrequency);
 
   const stats = `Text Statistics
 ==================
-Characters: ${numberofCharacters}
-Words: ${numberofWords}
-Lines: ${numberofLines}
-Sentences: ${numberofSentences}
-Paragraphs: ${numberofParagraphs}`;
+Characters: ${statsResult.characters}
+Words: ${statsResult.words}
+Lines: ${statsResult.lines}
+Sentences: ${statsResult.sentences}
+Paragraphs: ${statsResult.paragraphs}`;
 
   const charStats = `Characters Frequency
 ==================

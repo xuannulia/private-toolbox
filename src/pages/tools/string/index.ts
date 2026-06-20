@@ -14,12 +14,23 @@ import { tool as stringToMorse } from './to-morse/meta';
 import { tool as stringSplit } from './split/meta';
 import { tool as stringJoin } from './join/meta';
 import { tool as stringReplace } from './text-replacer/meta';
+import { tool as stringRegexToolkit } from './regex-toolkit/meta';
+import { tool as stringJwtInspector } from './jwt-inspector/meta';
+import { tool as stringAsciiBanner } from './ascii-banner/meta';
 import { tool as stringRepeat } from './repeat/meta';
 import { tool as stringTruncate } from './truncate/meta';
 import { tool as stringBase64 } from './base64/meta';
+import { tool as stringHex } from './hex/meta';
+import { tool as stringHash } from './hash/meta';
 import { tool as stringStatistic } from './statistic/meta';
 import { tool as stringCensor } from './censor/meta';
 import { tool as stringPasswordGenerator } from './password-generator/meta';
+import { tool as stringHtpasswdGenerator } from './htpasswd-generator/meta';
+import { tool as stringPemInspector } from './pem-inspector/meta';
+import { tool as stringRsaKeyPair } from './rsa-keypair/meta';
+import { tool as stringRsaPrivateKey } from './rsa-private-key/meta';
+import { tool as stringRsaCrypto } from './rsa-crypto/meta';
+import { tool as stringUuidGenerator } from './uuid-generator/meta';
 import { tool as stringEncodeUrl } from './url-encode/meta';
 import { tool as stringDecodeUrl } from './url-decode/meta';
 import { tool as stringCompare } from './text-compare/meta';
@@ -31,6 +42,9 @@ export const stringTools = [
   stringRemoveDuplicateLines,
   stringToMorse,
   stringReplace,
+  stringRegexToolkit,
+  stringJwtInspector,
+  stringAsciiBanner,
   stringRepeat,
   stringTruncate,
   stringReverse,
@@ -43,9 +57,17 @@ export const stringTools = [
   stringRotate,
   stringRot13,
   stringBase64,
+  stringHex,
+  stringHash,
   stringStatistic,
   stringCensor,
   stringPasswordGenerator,
+  stringHtpasswdGenerator,
+  stringPemInspector,
+  stringRsaKeyPair,
+  stringRsaPrivateKey,
+  stringRsaCrypto,
+  stringUuidGenerator,
   stringEncodeUrl,
   stringDecodeUrl,
   stringUnicode,

@@ -78,4 +78,22 @@ describe('UnixDateConverter', () => {
     const result = UnixDateConverter(input, createOptions());
     expect(result).toBe('\n2020-09-13 12:26:40.000 UTC');
   });
+
+  it('should convert UTC dates back to Unix timestamps', () => {
+    const result = UnixDateConverter(
+      '2009-02-13 23:31:30',
+      createOptions({ mode: 'date-to-unix' })
+    );
+
+    expect(result).toBe('1234567890');
+  });
+
+  it('should honor UTC offsets when converting dates back to Unix timestamps', () => {
+    const result = UnixDateConverter(
+      '2025-04-04 10:00:00 +08:00',
+      createOptions({ mode: 'date-to-unix' })
+    );
+
+    expect(result).toBe('1743732000');
+  });
 });

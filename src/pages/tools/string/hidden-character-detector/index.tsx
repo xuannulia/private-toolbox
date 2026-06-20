@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
-import { Alert, Box, Paper, Typography } from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { InitialValuesType } from './types';
-import { analyzeHiddenCharacters } from './service';
+import {
+  Alert,
+  Box,
+  FormControlLabel,
+  Stack,
+  Switch,
+  Typography
+} from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { InitialValuesType, AnalysisResult } from './types';
+import {
+  analyzeHiddenCharacters,
+  formatHiddenCharacterReport
+} from './service';
 
 const initialValues: InitialValuesType = {
   showUnicodeCodes: true,
@@ -15,111 +24,150 @@ const initialValues: InitialValuesType = {
   includeZeroWidthChars: true
 };
 
-export default function HiddenCharacterDetector({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function HiddenCharacterDetector() {
   const { t } = useTranslation('string');
   const [input, setInput] = useState('');
-  const [result, setResult] = useState<string>('');
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [showUnicodeCodes, setShowUnicodeCodes] = useState(
+    initialValues.showUnicodeCodes
+  );
+  const [highlightRTL, setHighlightRTL] = useState(initialValues.highlightRTL);
+  const [showInvisibleChars, setShowInvisibleChars] = useState(
+    initialValues.showInvisibleChars
+  );
+  const [includeZeroWidthChars, setIncludeZeroWidthChars] = useState(
+    initialValues.includeZeroWidthChars
+  );
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [result, setResult] = useState('');
 
-  const compute = (values: InitialValuesType, input: string) => {
-    if (!input.trim()) return;
-
-    try {
-      const analysisResult = analyzeHiddenCharacters(input, values);
-      setAnalysis(analysisResult);
-
-      if (analysisResult.totalHiddenChars === 0) {
-        setResult(t('hiddenCharacterDetector.noHiddenChars'));
-      } else {
-        let output = t('hiddenCharacterDetector.foundChars', {
-          count: analysisResult.totalHiddenChars
-        });
-
-        analysisResult.hiddenCharacters.forEach((char: any) => {
-          output += `${t('hiddenCharacterDetector.position')} ${
-            char.position
-          }: ${char.name} (${char.unicode})\n`;
-          if (values.showUnicodeCodes) {
-            output += `  ${t('hiddenCharacterDetector.unicode')}: ${
-              char.unicode
-            }\n`;
-          }
-          output += `  ${t('hiddenCharacterDetector.category')}: ${
-            char.category
-          }\n`;
-          if (char.isRTL)
-            output += `  ⚠️  ${t('hiddenCharacterDetector.rtlOverride')}\n`;
-          if (char.isInvisible)
-            output += `  👁️  ${t('hiddenCharacterDetector.invisibleChar')}\n`;
-          if (char.isZeroWidth)
-            output += `  📏  ${t('hiddenCharacterDetector.zeroWidthChar')}\n`;
-          output += '\n';
-        });
-
-        if (analysisResult.hasRTLOverride) {
-          output += `⚠️  ${t('hiddenCharacterDetector.rtlWarning')}\n`;
-        }
-
-        setResult(output);
-      }
-    } catch (error) {
-      setResult(`Error: ${error}`);
+  useEffect(() => {
+    if (!input.length) {
+      setAnalysis(null);
+      setResult('');
+      return;
     }
-  };
+
+    const options: InitialValuesType = {
+      showUnicodeCodes,
+      highlightRTL,
+      showInvisibleChars,
+      includeZeroWidthChars
+    };
+    const nextAnalysis = analyzeHiddenCharacters(input, options);
+    setAnalysis(nextAnalysis);
+    setResult(
+      formatHiddenCharacterReport(nextAnalysis, options, {
+        category: t('hiddenCharacterDetector.category'),
+        foundChars: (count) =>
+          t('hiddenCharacterDetector.foundChars', { count }),
+        invisibleChar: t('hiddenCharacterDetector.invisibleChar'),
+        noHiddenChars: t('hiddenCharacterDetector.noHiddenChars'),
+        position: t('hiddenCharacterDetector.position'),
+        rtlOverride: t('hiddenCharacterDetector.rtlOverride'),
+        rtlWarning: t('hiddenCharacterDetector.rtlWarning'),
+        truncated: t('hiddenCharacterDetector.truncated'),
+        unicode: t('hiddenCharacterDetector.unicode'),
+        zeroWidthChar: t('hiddenCharacterDetector.zeroWidthChar')
+      })
+    );
+  }, [
+    highlightRTL,
+    includeZeroWidthChars,
+    input,
+    showInvisibleChars,
+    showUnicodeCodes,
+    t
+  ]);
 
   return (
-    <ToolContent
-      title={title}
-      inputComponent={
-        <Box>
-          <ToolTextInput
-            value={input}
-            onChange={setInput}
-            title={t('hiddenCharacterDetector.inputTitle')}
-            placeholder={t('hiddenCharacterDetector.inputPlaceholder')}
-          />
-
-          {analysis && analysis.hasRTLOverride && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              {t('hiddenCharacterDetector.rtlAlert')}
-            </Alert>
-          )}
-
-          {analysis && analysis.totalHiddenChars > 0 && (
-            <Paper sx={{ p: 2, mt: 2, backgroundColor: '#fff3cd' }}>
-              <Typography variant="h6" gutterBottom>
-                {t('hiddenCharacterDetector.summary')}
-              </Typography>
-              <Typography variant="body2">
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              value={input}
+              onChange={setInput}
+              title={t('hiddenCharacterDetector.inputTitle')}
+              placeholder={t('hiddenCharacterDetector.inputPlaceholder')}
+            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Switch
+                    checked={highlightRTL}
+                    onChange={(event) => setHighlightRTL(event.target.checked)}
+                    size="small"
+                  />
+                }
+                label={t('hiddenCharacterDetector.rtlOption')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Switch
+                    checked={showInvisibleChars}
+                    onChange={(event) =>
+                      setShowInvisibleChars(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t('hiddenCharacterDetector.invisibleOption')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Switch
+                    checked={includeZeroWidthChars}
+                    onChange={(event) =>
+                      setIncludeZeroWidthChars(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t('hiddenCharacterDetector.zeroWidthOption')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Switch
+                    checked={showUnicodeCodes}
+                    onChange={(event) =>
+                      setShowUnicodeCodes(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t('hiddenCharacterDetector.unicodeOption')}
+              />
+            </Stack>
+          </Stack>
+        }
+        result={
+          <Stack spacing={2}>
+            {analysis?.hasRTLOverride && (
+              <Alert severity="warning">
+                {t('hiddenCharacterDetector.rtlAlert')}
+              </Alert>
+            )}
+            {analysis && (
+              <Typography variant="body2" color="text.secondary">
                 {t('hiddenCharacterDetector.totalChars', {
                   count: analysis.totalHiddenChars
                 })}
-                {analysis.hasRTLOverride &&
-                  ` • ${t('hiddenCharacterDetector.rtlFound')}`}
-                {analysis.hasInvisibleChars &&
-                  ` • ${t('hiddenCharacterDetector.invisibleFound')}`}
-                {analysis.hasZeroWidthChars &&
-                  ` • ${t('hiddenCharacterDetector.zeroWidthFound')}`}
               </Typography>
-            </Paper>
-          )}
-        </Box>
-      }
-      resultComponent={<ToolTextResult value={result} />}
-      initialValues={initialValues}
-      getGroups={null}
-      compute={compute}
-      input={input}
-      setInput={setInput}
-      toolInfo={{
-        title: `What is ${title}?`,
-        description:
-          longDescription ||
-          'A tool to detect hidden Unicode characters, especially RTL Override characters that could be used in attacks.'
-      }}
-    />
+            )}
+            <ToolTextResult
+              disabled={!result}
+              keepSpecialCharacters
+              monospace
+              title={t('hiddenCharacterDetector.resultTitle')}
+              value={result}
+            />
+          </Stack>
+        }
+      />
+    </Box>
   );
 }

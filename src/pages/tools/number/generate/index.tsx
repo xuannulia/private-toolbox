@@ -1,11 +1,16 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
+import { Box, Stack } from '@mui/material';
+import InputHeader from '@components/InputHeader';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { listOfIntegers } from './service';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import type { ToolComponentProps } from '@tools/defineTool';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  CompactNumberField,
+  NumberOptionStack,
+  normalizeNumberToken
+} from '../NumberToolControls';
+import { listOfIntegers } from './service';
 
 const initialValues = {
   firstValue: '1',
@@ -16,65 +21,66 @@ const initialValues = {
 
 export default function GenerateNumbers({ title }: ToolComponentProps) {
   const { t } = useTranslation('number');
-  const [result, setResult] = useState<string>('');
+  const [options, setOptions] = useState(initialValues);
+  const [result, setResult] = useState('');
 
-  const compute = (optionsValues: typeof initialValues) => {
-    const { firstValue, numberOfNumbers, separator, step } = optionsValues;
-    setResult(
-      listOfIntegers(
-        Number(firstValue),
-        Number(numberOfNumbers),
-        Number(step),
-        separator
-      )
-    );
+  const updateOption = <K extends keyof typeof initialValues>(
+    key: K,
+    value: (typeof initialValues)[K]
+  ) => {
+    setOptions((current) => ({ ...current, [key]: value }));
   };
 
+  useEffect(() => {
+    setResult(
+      listOfIntegers(
+        Number(options.firstValue),
+        Math.max(0, Number(options.numberOfNumbers)),
+        Number(options.step),
+        normalizeNumberToken(options.separator)
+      )
+    );
+  }, [options]);
+
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('generate.arithmeticSequenceOption'),
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                description={t('generate.startSequenceDescription')}
-                value={values.firstValue}
-                onOwnChange={(val) => updateField('firstValue', val)}
-                type={'number'}
-              />
-              <TextFieldWithDesc
-                description={t('generate.stepDescription')}
-                value={values.step}
-                onOwnChange={(val) => updateField('step', val)}
-                type={'number'}
-              />
-              <TextFieldWithDesc
-                description={t('generate.numberOfElementsDescription')}
-                value={values.numberOfNumbers}
-                onOwnChange={(val) => updateField('numberOfNumbers', val)}
-                type={'number'}
-              />
-            </Box>
-          )
-        },
-        {
-          title: t('generate.separator'),
-          component: (
-            <TextFieldWithDesc
-              description={t('generate.separatorDescription')}
-              value={values.separator}
-              onOwnChange={(val) => updateField('separator', val)}
-            />
-          )
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Box>
+            <InputHeader title={title} />
+            <NumberOptionStack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactNumberField
+                  label={t('generate.firstValue')}
+                  value={options.firstValue}
+                  onChange={(value) => updateOption('firstValue', value)}
+                />
+                <CompactNumberField
+                  label={t('generate.step')}
+                  value={options.step}
+                  onChange={(value) => updateOption('step', value)}
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactNumberField
+                  label={t('generate.numberOfNumbers')}
+                  value={options.numberOfNumbers}
+                  onChange={(value) => updateOption('numberOfNumbers', value)}
+                />
+                <CompactNumberField
+                  label={t('common.separator')}
+                  value={options.separator}
+                  type="text"
+                  onChange={(value) => updateOption('separator', value)}
+                />
+              </Stack>
+            </NumberOptionStack>
+          </Box>
         }
-      ]}
-      compute={compute}
-      resultComponent={
-        <ToolTextResult title={t('generate.resultTitle')} value={result} />
-      }
-    />
+        result={
+          <ToolTextResult title={t('generate.resultTitle')} value={result} />
+        }
+      />
+    </Box>
   );
 }

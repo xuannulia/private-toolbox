@@ -1,4 +1,33 @@
 {
+  "addAudio": {
+    "audioFile": "音频文件",
+    "audioInputTitle": "输入音频",
+    "description": "为视频添加或替换音轨，可选择替换原音频或与原音频混合，并调整音量、循环和播放时间范围。",
+    "durationMode": "时间范围",
+    "endTime": "结束时间",
+    "endTimeDesc": "新音频停止播放的时间（HH:MM:SS.mm）。",
+    "loadingText": "正在添加音频...",
+    "loop": "循环音频",
+    "loopOption": "循环选项",
+    "mode": "音频模式",
+    "modeMix": "混合原音频",
+    "modeReplace": "替换原音频",
+    "noLoop": "不循环",
+    "resultTitle": "处理后视频",
+    "shortDescription": "为视频添加或替换音轨",
+    "startTime": "开始时间",
+    "startTimeDesc": "新音频开始播放的时间（HH:MM:SS.mm）。",
+    "timing": "音频时间",
+    "timingDefault": "默认（完整视频）",
+    "timingEnd": "设置结束时间",
+    "timingModeDesc": "选择新音频在视频时间线中的播放位置。",
+    "timingStart": "设置开始时间",
+    "timingStartEnd": "设置开始和结束时间",
+    "title": "视频添加音频",
+    "videoInputTitle": "输入视频",
+    "volume": "新音频音量",
+    "volumeDesc": "新音轨的音量。"
+  },
   "changeSpeed": {
     "defaultMultiplier": "默认乘数：2 表示速度快 2 倍",
     "description": "更改视频文件的播放速度。在保持音频同步的同时，加快或减慢视频速度。支持各种倍速器和常见视频格式。",
@@ -19,15 +48,15 @@
     "loadingText": "正在压缩视频...",
     "lossless": "无损",
     "quality": "质量（CRF）",
-    "resolution": "解决",
+    "resolution": "分辨率",
     "resultTitle": "压缩视频",
     "shortDescription": "通过缩放到不同的分辨率来压缩视频",
     "title": "压缩视频",
     "worst": "最差"
   },
   "cropVideo": {
-    "cropCoordinates": "作物坐标",
-    "croppingVideo": "裁剪视频",
+    "cropCoordinates": "裁剪区域",
+    "croppingVideo": "正在裁剪视频...",
     "description": "裁剪视频以删除不需要的区域。",
     "errorBeyondHeight": "裁剪区域超出视频高度（{{height}}像素）",
     "errorBeyondWidth": "裁剪区域超出视频宽度（{{width}}像素）",
@@ -39,7 +68,7 @@
     "inputTitle": "输入视频",
     "loadVideoForDimensions": "加载视频以查看尺寸",
     "longDescription": "此工具可让您裁剪视频文件，去除不需要的区域或聚焦视频的特定部分。它可用于去除黑条、调整宽高比或聚焦重要内容。支持多种视频格式，包括 MP4、MOV 和 AVI。",
-    "resultTitle": "裁剪视频",
+    "resultTitle": "裁剪后视频",
     "shortDescription": "裁剪视频以删除不需要的区域",
     "title": "裁剪视频",
     "toolInfo": {
@@ -65,7 +94,12 @@
   },
   "gif": {
     "changeSpeed": {
+      "defaultMultiplier": "默认倍速：2 表示加快到 2 倍",
       "description": "更改 GIF 动画的播放速度。在保持动画流畅的情况下，加快或减慢 GIF 的速度。",
+      "inputTitle": "输入 GIF",
+      "loadingText": "正在调整 GIF 速度...",
+      "newGifSpeed": "新的 GIF 速度",
+      "resultTitle": "调整后 GIF",
       "shortDescription": "更改 GIF 动画速度",
       "title": "更改 GIF 速度"
     }
@@ -86,7 +120,10 @@
   },
   "mergeVideo": {
     "description": "将多个视频文件合并为一个连续的视频。",
+    "inputTitle": "输入视频",
+    "loadingText": "正在合并视频...",
     "longDescription": "此工具允许您将多个视频文件合并或附加为一个连续的视频。只需上传您的视频文件，按所需顺序排列，然后将它们合并为一个文件，即可轻松共享或编辑。",
+    "resultTitle": "合并后视频",
     "shortDescription": "轻松附加和合并视频。",
     "title": "合并视频"
   },
@@ -106,15 +143,26 @@
     "description": "通过指定开始和结束时间来修剪视频文件。从视频的开头或结尾删除不需要的部分。",
     "endTime": "结束时间",
     "inputTitle": "输入视频",
-    "resultTitle": "修剪的视频",
+    "resultTitle": "裁剪后视频",
     "shortDescription": "通过删除不需要的部分来修剪视频",
     "startTime": "开始时间",
     "timestamps": "时间戳",
-    "title": "修剪视频"
+    "title": "修剪视频",
+    "trimmingVideo": "正在修剪视频..."
   },
   "videoToGif": {
     "description": "将视频文件转换为 GIF 动画格式。提取特定时间范围并创建可共享的动画图像。",
+    "endTime": "结束时间",
+    "high": "高",
+    "inputTitle": "输入视频",
+    "loadingText": "正在转换为 GIF...",
+    "low": "低",
+    "mid": "中",
+    "quality": "质量",
+    "resultTitle": "转换后 GIF",
     "shortDescription": "将视频转换为动画 GIF",
-    "title": "视频转GIF"
+    "startTime": "开始时间",
+    "title": "视频转 GIF",
+    "ultra": "超高"
   }
 }

@@ -1,14 +1,18 @@
-import { Alert, Box } from '@mui/material';
-import { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { Alert, Box, Stack } from '@mui/material';
+import InputHeader from '@components/InputHeader';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import { formatNumbers, generateRandomNumbers, validateInput } from './service';
-import { InitialValuesType, RandomNumberResult } from './types';
+import type { ToolComponentProps } from '@tools/defineTool';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
+import {
+  CompactNumberCheckbox,
+  CompactNumberField,
+  NumberOptionStack,
+  normalizeNumberToken
+} from '../NumberToolControls';
+import { formatNumbers, generateRandomNumbers, validateInput } from './service';
+import type { InitialValuesType } from './types';
 
 const initialValues: InitialValuesType = {
   minValue: 1,
@@ -20,181 +24,113 @@ const initialValues: InitialValuesType = {
   separator: ', '
 };
 
-export default function RandomNumberGenerator({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function RandomNumberGenerator({ title }: ToolComponentProps) {
   const { t } = useTranslation('number');
-  const [result, setResult] = useState<RandomNumberResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [formattedResult, setFormattedResult] = useState<string>('');
+  const [options, setOptions] = useState<InitialValuesType>(initialValues);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const compute = (values: InitialValuesType) => {
+  const updateOption = <K extends keyof InitialValuesType>(
+    key: K,
+    value: InitialValuesType[K]
+  ) => {
+    setOptions((current) => ({ ...current, [key]: value }));
+  };
+
+  useEffect(() => {
     try {
-      setError(null);
-      setResult(null);
-      setFormattedResult('');
-
-      // Validate input
-      const validationError = validateInput(values);
+      const validationError = validateInput(options);
       if (validationError) {
         setError(validationError);
+        setResult('');
         return;
       }
 
-      // Generate random numbers
-      const randomResult = generateRandomNumbers(values);
-      setResult(randomResult);
-
-      // Format for display
-      const formatted = formatNumbers(
-        randomResult.numbers,
-        values.separator,
-        values.allowDecimals
+      const generated = generateRandomNumbers({
+        ...options,
+        separator: normalizeNumberToken(options.separator)
+      });
+      setResult(
+        formatNumbers(
+          generated.numbers,
+          normalizeNumberToken(options.separator),
+          options.allowDecimals
+        )
       );
-      setFormattedResult(formatted);
-    } catch (err) {
-      console.error('Random number generation failed:', err);
+      setError('');
+    } catch (error) {
+      console.error('Random number generation failed:', error);
+      setResult('');
       setError(t('randomNumberGenerator.error.generationFailed'));
     }
-  };
-
-  const getGroups: GetGroupsType<InitialValuesType> | null = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('randomNumberGenerator.options.range.title'),
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            value={values.minValue.toString()}
-            onOwnChange={(value) =>
-              updateField('minValue', parseInt(value) || 1)
-            }
-            description={t(
-              'randomNumberGenerator.options.range.minDescription'
-            )}
-            inputProps={{
-              type: 'number',
-              'data-testid': 'min-value-input'
-            }}
-          />
-          <TextFieldWithDesc
-            value={values.maxValue.toString()}
-            onOwnChange={(value) =>
-              updateField('maxValue', parseInt(value) || 100)
-            }
-            description={t(
-              'randomNumberGenerator.options.range.maxDescription'
-            )}
-            inputProps={{
-              type: 'number',
-              'data-testid': 'max-value-input'
-            }}
-          />
-        </Box>
-      )
-    },
-    {
-      title: t('randomNumberGenerator.options.generation.title'),
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            value={values.count.toString()}
-            onOwnChange={(value) => updateField('count', parseInt(value) || 10)}
-            description={t(
-              'randomNumberGenerator.options.generation.countDescription'
-            )}
-            inputProps={{
-              type: 'number',
-              min: 1,
-              max: 10000,
-              'data-testid': 'count-input'
-            }}
-          />
-
-          <CheckboxWithDesc
-            title={t(
-              'randomNumberGenerator.options.generation.allowDecimals.title'
-            )}
-            checked={values.allowDecimals}
-            onChange={(value) => updateField('allowDecimals', value)}
-            description={t(
-              'randomNumberGenerator.options.generation.allowDecimals.description'
-            )}
-          />
-
-          <CheckboxWithDesc
-            title={t(
-              'randomNumberGenerator.options.generation.allowDuplicates.title'
-            )}
-            checked={values.allowDuplicates}
-            onChange={(value) => updateField('allowDuplicates', value)}
-            description={t(
-              'randomNumberGenerator.options.generation.allowDuplicates.description'
-            )}
-          />
-
-          <CheckboxWithDesc
-            title={t(
-              'randomNumberGenerator.options.generation.sortResults.title'
-            )}
-            checked={values.sortResults}
-            onChange={(value) => updateField('sortResults', value)}
-            description={t(
-              'randomNumberGenerator.options.generation.sortResults.description'
-            )}
-          />
-        </Box>
-      )
-    },
-    {
-      title: t('randomNumberGenerator.options.output.title'),
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            value={values.separator}
-            onOwnChange={(value) => updateField('separator', value)}
-            description={t(
-              'randomNumberGenerator.options.output.separatorDescription'
-            )}
-            inputProps={{
-              'data-testid': 'separator-input'
-            }}
-          />
-        </Box>
-      )
-    }
-  ];
+  }, [options, t]);
 
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      compute={compute}
-      getGroups={getGroups}
-      resultComponent={
-        <Box>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {result && (
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Box>
+            <InputHeader title={title} />
+            <NumberOptionStack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactNumberField
+                  label={t('common.minValue')}
+                  value={options.minValue}
+                  onChange={(value) => updateOption('minValue', Number(value))}
+                />
+                <CompactNumberField
+                  label={t('common.maxValue')}
+                  value={options.maxValue}
+                  onChange={(value) => updateOption('maxValue', Number(value))}
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactNumberField
+                  label={t('common.count')}
+                  value={options.count}
+                  onChange={(value) => updateOption('count', Number(value))}
+                />
+                <CompactNumberField
+                  label={t('common.separator')}
+                  value={options.separator}
+                  type="text"
+                  onChange={(value) => updateOption('separator', value)}
+                />
+              </Stack>
+              <CompactNumberCheckbox
+                checked={options.allowDecimals}
+                label={t(
+                  'randomNumberGenerator.options.generation.allowDecimals.title'
+                )}
+                onChange={(value) => updateOption('allowDecimals', value)}
+              />
+              <CompactNumberCheckbox
+                checked={options.allowDuplicates}
+                label={t(
+                  'randomNumberGenerator.options.generation.allowDuplicates.title'
+                )}
+                onChange={(value) => updateOption('allowDuplicates', value)}
+              />
+              <CompactNumberCheckbox
+                checked={options.sortResults}
+                label={t(
+                  'randomNumberGenerator.options.generation.sortResults.title'
+                )}
+                onChange={(value) => updateOption('sortResults', value)}
+              />
+            </NumberOptionStack>
+          </Box>
+        }
+        result={
+          <Stack spacing={2}>
+            {error && <Alert severity="error">{error}</Alert>}
             <ToolTextResult
               title={t('randomNumberGenerator.result.title')}
-              value={formattedResult}
+              value={result}
             />
-          )}
-        </Box>
-      }
-      toolInfo={{
-        title: t('randomNumberGenerator.info.title'),
-        description:
-          longDescription || t('randomNumberGenerator.info.description')
-      }}
-    />
+          </Stack>
+        }
+      />
+    </Box>
   );
 }

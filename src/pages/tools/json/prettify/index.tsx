@@ -1,183 +1,92 @@
-import { Box } from '@mui/material';
-import React, { useRef, useState } from 'react';
+import { Box, MenuItem, Stack, TextField } from '@mui/material';
 import ToolCodeInput from '@components/input/ToolCodeInput';
-import ToolTextResult from '@components/result/ToolTextResult';
-import { beautifyJson } from './service';
-import ToolInfo from '@components/ToolInfo';
-import Separator from '@components/Separator';
-import ToolExamples, {
-  CardExampleType
-} from '@components/examples/ToolExamples';
-import { FormikProps } from 'formik';
-import { ToolComponentProps } from '@tools/defineTool';
-import RadioWithTextField from '@components/options/RadioWithTextField';
-import SimpleRadio from '@components/options/SimpleRadio';
-import { isNumber, updateNumberField } from '../../../../utils/string';
-import ToolContent from '@components/ToolContent';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { beautifyJson } from './service';
+import JsonResultView from './JsonResultView';
 
-type InitialValuesType = {
-  indentationType: 'tab' | 'space';
-  spacesCount: number;
-};
+type IndentationType = 'tab' | 'space';
 
-const initialValues: InitialValuesType = {
-  indentationType: 'space',
-  spacesCount: 2
-};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Invalid JSON string';
 
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Beautify an Ugly JSON Array',
-    description:
-      'In this example, we prettify an ugly JSON array. The input data is a one-dimensional array of numbers [1,2,3] but they are all over the place. This array gets cleaned up and transformed into a more readable format where each element is on a new line with an appropriate indentation using four spaces.',
-    sampleText: `[
- 1,
-2,3
-]`,
-    sampleResult: `[
-    1,
-    2,
-    3
-]`,
-    sampleOptions: {
-      indentationType: 'space',
-      spacesCount: 4
-    }
-  },
-  {
-    title: 'Prettify a Complex JSON Object',
-    description:
-      'In this example, we prettify a complex JSON data structure consisting of arrays and objects. The input data is a minified JSON object with multiple data structure depth levels. To make it neat and readable, we add two spaces for indentation to each depth level, making the JSON structure clear and easy to understand.',
-    sampleText: `{"names":["jack","john","alex"],"hobbies":{"jack":["programming","rock climbing"],"john":["running","racing"],"alex":["dancing","fencing"]}}`,
-    sampleResult: `{
-  "names": [
-    "jack",
-    "john",
-    "alex"
-  ],
-  "hobbies": {
-    "jack": [
-      "programming",
-      "rock climbing"
-    ],
-    "john": [
-      "running",
-      "racing"
-    ],
-    "alex": [
-      "dancing",
-      "fencing"
-    ]
-  }
-}`,
-    sampleOptions: {
-      indentationType: 'space',
-      spacesCount: 2
-    }
-  },
-  {
-    title: 'Beautify a JSON with Excessive Whitespace',
-    description:
-      "In this example, we show how the JSON prettify tool can handle code with excessive whitespace. The input file has many leading and trailing spaces as well as spaces within the objects. The excessive whitespace makes the file bulky and hard to read and leads to a bad impression of the programmer who wrote it. The program removes all these unnecessary spaces and creates a proper data hierarchy that's easy to work with by adding indentation via tabs.",
-    sampleText: `
-{
-     "name":  "The Name of the Wind",
- "author"  : "Patrick Rothfuss",
-     "genre"  :  "Fantasy",
-     "published"   : 2007,
-   "rating"    :  {
- "average"   :   4.6,
- "goodreads"         :   4.58,
-      "amazon"   :  4.4
- },
-      "is_fiction" : true
-    }
-
-
-`,
-    sampleResult: `{
-\t"name": "The Name of the Wind",
-\t"author": "Patrick Rothfuss",
-\t"genre": "Fantasy",
-\t"published": 2007,
-\t"rating": {
-\t\t"average": 4.6,
-\t\t"goodreads": 4.58,
-\t\t"amazon": 4.4
-\t},
-\t"is_fiction": true
-}`,
-    sampleOptions: {
-      indentationType: 'tab',
-      spacesCount: 0
-    }
-  }
-];
-
-export default function PrettifyJson({ title }: ToolComponentProps) {
+export default function PrettifyJson() {
   const { t } = useTranslation('json');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [indentationType, setIndentationType] =
+    useState<IndentationType>('space');
+  const [spacesCount, setSpacesCount] = useState('2');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const compute = (optionsValues: InitialValuesType, input: any) => {
-    const { indentationType, spacesCount } = optionsValues;
-    if (input) setResult(beautifyJson(input, indentationType, spacesCount));
-  };
+  useEffect(() => {
+    if (!input.trim()) {
+      setResult('');
+      setError('');
+      return;
+    }
+
+    try {
+      const normalizedSpacesCount =
+        spacesCount.trim() === '' ? 2 : Number(spacesCount);
+      setResult(beautifyJson(input, indentationType, normalizedSpacesCount));
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [indentationType, input, spacesCount]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolCodeInput
-          title={t('prettify.inputTitle')}
-          value={input}
-          onChange={setInput}
-          language="json"
-        />
-      }
-      resultComponent={
-        <ToolTextResult
-          title={t('prettify.resultTitle')}
-          value={result}
-          extension={'json'}
-        />
-      }
-      initialValues={initialValues}
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('prettify.indentation'),
-          component: (
-            <Box>
-              <RadioWithTextField
-                checked={values.indentationType === 'space'}
-                title={t('prettify.useSpaces')}
-                fieldName={'indentationType'}
-                description={t('prettify.useSpacesDescription')}
-                value={values.spacesCount.toString()}
-                onRadioClick={() => updateField('indentationType', 'space')}
-                onTextChange={(val) =>
-                  updateNumberField(val, 'spacesCount', updateField)
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolCodeInput
+              title={t('prettify.inputTitle')}
+              value={input}
+              onChange={setInput}
+              language="json"
+            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label={t('prettify.indentation')}
+                value={indentationType}
+                onChange={(event) =>
+                  setIndentationType(event.target.value as IndentationType)
                 }
-              />
-              <SimpleRadio
-                onClick={() => updateField('indentationType', 'tab')}
-                checked={values.indentationType === 'tab'}
-                description={t('prettify.useTabsDescription')}
-                title={t('prettify.useTabs')}
-              />
-            </Box>
-          )
+                sx={{ backgroundColor: 'background.paper' }}
+              >
+                <MenuItem value="space">{t('prettify.useSpaces')}</MenuItem>
+                <MenuItem value="tab">{t('prettify.useTabs')}</MenuItem>
+              </TextField>
+              {indentationType === 'space' && (
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label={t('prettify.spacesCount')}
+                  value={spacesCount}
+                  onChange={(event) => setSpacesCount(event.target.value)}
+                  inputProps={{ min: 1, max: 8, step: 1 }}
+                  sx={{ backgroundColor: 'background.paper' }}
+                />
+              )}
+            </Stack>
+          </Stack>
         }
-      ]}
-      compute={compute}
-      setInput={setInput}
-      exampleCards={exampleCards}
-      toolInfo={{
-        title: t('prettify.toolInfo.title'),
-        description: t('prettify.toolInfo.description')
-      }}
-    />
+        result={
+          <JsonResultView
+            title={t('prettify.resultTitle')}
+            value={result}
+            error={error}
+          />
+        }
+      />
+    </Box>
   );
 }

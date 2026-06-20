@@ -16,7 +16,9 @@ export const validNamespaces = [
   'xml',
   'translation',
   'image',
-  'converters'
+  'converters',
+  'network',
+  'ops'
 ] as const satisfies readonly Namespace[];
 
 export type I18nNamespaces = (typeof validNamespaces)[number];
@@ -29,7 +31,8 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    supportedLngs: ['en', 'de', 'es', 'fr', 'pt', 'ja', 'hi', 'nl', 'ru', 'zh'],
+    supportedLngs: ['en', 'zh'],
+    load: 'languageOnly',
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false // react already safes from xss => https://www.i18next.com/translation-function/interpolation#unescape

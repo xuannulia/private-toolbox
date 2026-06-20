@@ -94,7 +94,12 @@
   },
   "gif": {
     "changeSpeed": {
+      "defaultMultiplier": "Default multiplier: 2 means 2x faster",
       "description": "Change the playback speed of GIF animations. Speed up or slow down GIFs while maintaining smooth animation.",
+      "inputTitle": "Input GIF",
+      "loadingText": "Changing GIF speed...",
+      "newGifSpeed": "New GIF Speed",
+      "resultTitle": "GIF with New Speed",
       "shortDescription": "Change GIF animation speed",
       "title": "Change GIF Speed"
     }
@@ -115,7 +120,10 @@
   },
   "mergeVideo": {
     "description": "Combine multiple video files into one continuous video.",
+    "inputTitle": "Input Videos",
+    "loadingText": "Merging videos...",
     "longDescription": "This tool allows you to merge or append multiple video files into a single continuous video. Simply upload your video files, arrange them in the desired order, and merge them into one file for easy sharing or editing.",
+    "resultTitle": "Merged Video",
     "shortDescription": "Append and merge videos easily.",
     "title": "Merge videos"
   },
@@ -139,11 +147,22 @@
     "shortDescription": "Trim video by removing unwanted sections",
     "startTime": "Start Time",
     "timestamps": "Timestamps",
-    "title": "Trim Video"
+    "title": "Trim Video",
+    "trimmingVideo": "Trimming video..."
   },
   "videoToGif": {
     "description": "Convert video files to animated GIF format. Extract specific time ranges and create shareable animated images.",
+    "endTime": "End Time",
+    "high": "High",
+    "inputTitle": "Input Video",
+    "loadingText": "Converting to GIF...",
+    "low": "Low",
+    "mid": "Mid",
+    "quality": "Quality",
+    "resultTitle": "Converted GIF",
     "shortDescription": "Convert video to animated GIF",
-    "title": "Video to GIF"
+    "startTime": "Start Time",
+    "title": "Video to GIF",
+    "ultra": "Ultra"
   }
 }

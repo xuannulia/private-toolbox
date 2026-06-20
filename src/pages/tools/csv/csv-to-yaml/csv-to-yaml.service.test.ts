@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { main } from './service';
 import { InitialValuesType } from './types';
-
-// filepath: c:\CODE\omni-tools\src\pages\tools\csv\csv-to-yaml\csv-to-yaml.service.test.ts
 describe('main', () => {
   const defaultOptions: InitialValuesType = {
     csvSeparator: ',',

@@ -15,15 +15,35 @@
     "useTabs": "Use Tabs",
     "useTabsDescription": "Indent output with tabs."
   },
+  "xmlMinifier": {
+    "description": "Minify XML by removing formatting whitespace.",
+    "inputTitle": "Input XML",
+    "resultTitle": "Minified XML",
+    "shortDescription": "Minify XML code",
+    "title": "XML Minifier"
+  },
   "xmlValidator": {
     "description": "Validate XML syntax and structure.",
+    "inputTitle": "Input XML",
     "placeholder": "Paste or import XML here...",
+    "resultTitle": "Validation Result",
     "shortDescription": "Validate XML code for errors",
     "title": "XML Validator",
     "toolInfo": {
       "description": "This tool allows you to validate XML syntax and structure. It checks if the XML is well-formed and provides detailed error messages for any issues found.",
       "title": "XML Validator"
     }
+  },
+  "xpathEvaluator": {
+    "description": "Evaluate XPath expressions against XML and return structured matches.",
+    "expression": "XPath expression",
+    "includeXml": "Include XML snippets",
+    "inputTitle": "Input XML",
+    "maxResults": "Max results",
+    "namespaces": "Namespaces",
+    "resultTitle": "Query result",
+    "shortDescription": "Test XPath expressions",
+    "title": "XPath Evaluator"
   },
   "xmlViewer": {
     "description": "View and explore XML structure in a tree format.",

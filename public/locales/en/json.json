@@ -1,47 +1,146 @@
 {
   "comparison": {
-    "description": "Compare two JSON objects to identify differences in structure and values.",
-    "shortDescription": "Find differences between two JSON objects",
+    "description": "Compare two JSON documents.",
+    "invalidInput": "Compare failed: {{error}}",
+    "leftTitle": "Left JSON",
+    "noDifferences": "No differences",
+    "resultTitle": "Differences",
+    "rightTitle": "Right JSON",
+    "shortDescription": "Find JSON differences",
     "title": "Compare JSON"
   },
   "escapeJson": {
-    "description": "Escape special characters in JSON strings. Convert JSON data to properly escaped format for safe transmission or storage.",
-    "shortDescription": "Escape special characters in JSON",
-    "title": "Escape JSON"
+    "description": "Escape JSON text.",
+    "inputTitle": "Input JSON",
+    "resultTitle": "Escaped JSON",
+    "shortDescription": "Escape JSON text",
+    "title": "Escape JSON",
+    "wrapInQuotes": "Wrap in quotes"
   },
   "jsonToCsv": {
     "delimiterOption": "Delimiter",
-    "description": "Convert JSON data to CSV format. Supports nested objects and arrays, automatic header detection, and configurable delimiters and quoting — ready for Excel, Google Sheets, or any spreadsheet application.",
+    "description": "Convert JSON data to CSV.",
     "headerOption": "Headers",
     "inputTitle": "Input JSON",
+    "invalidInput": "Conversion failed: {{error}}",
     "options": {
       "alwaysQuote": {
-        "description": "Wrap every cell in double-quotes, regardless of its content.",
+        "description": "Wrap every cell in double-quotes.",
         "label": "Always quote"
       },
       "autoQuote": {
-        "description": "Only quote cells that contain the delimiter, a double-quote, or a newline. Keeps output clean and minimal.",
-        "label": "Auto (recommended)"
+        "description": "Quote only when needed.",
+        "label": "Auto"
       },
-      "delimiter": "Character used to separate values in each row (e.g. comma, semicolon, tab)",
+      "delimiter": "Delimiter",
       "header": {
-        "description": "Use JSON keys as column names in the first row. Recommended for readability and import compatibility.",
-        "label": "Include header row"
+        "description": "Use JSON keys as the first row.",
+        "label": "Header row"
       }
     },
     "outputTitle": "Output CSV",
-    "quotingOption": "String Quoting",
-    "shortDescription": "Convert JSON to CSV format",
+    "quotingOption": "Quoting",
+    "shortDescription": "Convert JSON to CSV",
     "title": "JSON to CSV"
   },
+  "jsonToExcel": {
+    "description": "Convert a JSON object or array of objects to an XLSX file.",
+    "errorTitle": "Error",
+    "fileName": "File name",
+    "includeHeaders": "Include headers",
+    "inputTitle": "Input JSON",
+    "resultTitle": "Excel File ({{rows}} rows / {{columns}} columns)",
+    "sheetName": "Sheet",
+    "shortDescription": "Convert JSON to an Excel file",
+    "title": "JSON to Excel"
+  },
   "jsonToXml": {
-    "description": "Convert JSON data to XML format. Transform structured JSON objects into well-formed XML documents.",
-    "shortDescription": "Convert JSON to XML format",
-    "title": "JSON to XML"
+    "addMetaTag": "XML declaration",
+    "description": "Convert JSON data to XML.",
+    "indentation": "Indentation",
+    "inputTitle": "Input JSON",
+    "invalidInput": "Conversion failed: {{error}}",
+    "noIndentation": "None",
+    "resultTitle": "Output XML",
+    "shortDescription": "Convert JSON to XML",
+    "title": "JSON to XML",
+    "useSpaces": "Spaces",
+    "useTabs": "Tabs"
+  },
+  "jsonToYaml": {
+    "description": "Convert JSON data to YAML.",
+    "inputTitle": "JSON",
+    "resultTitle": "YAML",
+    "shortDescription": "Convert JSON to YAML",
+    "title": "JSON to YAML"
+  },
+  "yamlToJson": {
+    "description": "Convert YAML data to formatted JSON.",
+    "inputTitle": "YAML",
+    "resultTitle": "JSON",
+    "shortDescription": "Convert YAML to JSON",
+    "title": "YAML to JSON"
+  },
+  "jsonToQuery": {
+    "description": "Convert a JSON object to URL query parameters.",
+    "inputTitle": "JSON",
+    "resultTitle": "Query String",
+    "shortDescription": "Convert JSON to query parameters",
+    "title": "JSON to Query String"
+  },
+  "queryToJson": {
+    "description": "Convert URL query parameters to formatted JSON.",
+    "inputTitle": "Query String",
+    "resultTitle": "JSON",
+    "shortDescription": "Convert query parameters to JSON",
+    "title": "Query String to JSON"
+  },
+  "jsonSchemaValidator": {
+    "dataTitle": "JSON Data",
+    "description": "Validate JSON data against a JSON Schema.",
+    "resultTitle": "Validation Result",
+    "schemaTitle": "JSON Schema",
+    "shortDescription": "Validate data with JSON Schema",
+    "title": "JSON Schema Validator"
+  },
+  "jsonSchemaFromJson": {
+    "description": "Infer a JSON Schema from example JSON data.",
+    "inputTitle": "Example JSON",
+    "resultTitle": "Generated Schema",
+    "shortDescription": "Generate JSON Schema from JSON",
+    "title": "JSON to JSON Schema"
+  },
+  "jsonSchemaMock": {
+    "arrayItemCount": "Array items",
+    "arrayItemCountDescription": "Array item count for generated arrays, from 0 to 20",
+    "arrayItemCountPlaceholder": "e.g. 2",
+    "description": "Generate mock JSON from a JSON Schema.",
+    "includeOptionalProperties": "Include optional properties",
+    "invalidInput": "Mock failed: {{error}}",
+    "resultTitle": "Mock JSON",
+    "schemaTitle": "JSON Schema",
+    "shortDescription": "Generate mock JSON from JSON Schema",
+    "title": "JSON Schema Mock"
+  },
+  "jsonToTypes": {
+    "description": "Generate TypeScript, Java, Go, or C# entity types from example JSON.",
+    "inputTitle": "Example JSON",
+    "language": "Language",
+    "languages": {
+      "csharp": "C#",
+      "go": "Go",
+      "java": "Java",
+      "typescript": "TypeScript"
+    },
+    "resultTitle": "Entity Types",
+    "rootName": "Root type",
+    "shortDescription": "Generate entity types from JSON",
+    "title": "JSON to Types"
   },
   "minify": {
     "description": "Remove all unnecessary whitespace from JSON.",
     "inputTitle": "Input JSON",
+    "invalidJson": "Invalid JSON",
     "resultTitle": "Minified JSON",
     "shortDescription": "Minify JSON by removing whitespace",
     "title": "Minify JSON",
@@ -52,24 +151,37 @@
   },
   "prettify": {
     "description": "Format JSON with proper indentation and spacing.",
+    "emptyTree": "No JSON",
     "indentation": "Indentation",
     "inputTitle": "Input JSON",
+    "invalidTree": "Invalid JSON",
     "resultTitle": "Prettified JSON",
     "shortDescription": "Format and beautify JSON code",
+    "spacesCount": "Spaces",
+    "textView": "Text",
     "title": "Prettify JSON",
     "toolInfo": {
       "description": "This tool allows you to format JSON data with proper indentation and spacing, making it more readable and easier to work with.",
       "title": "Prettify JSON"
     },
-    "useSpaces": "Use Spaces",
+    "treeView": "Tree",
+    "useSpaces": "Spaces",
     "useSpacesDescription": "Indent output with spaces",
-    "useTabs": "Use Tabs",
+    "useTabs": "Tabs",
     "useTabsDescription": "Indent output with tabs."
   },
   "stringify": {
-    "description": "Convert JavaScript objects to JSON string format. Serialize data structures into JSON strings for storage or transmission.",
-    "shortDescription": "Convert objects to JSON string",
-    "title": "Stringify JSON"
+    "description": "Convert JavaScript object-like text to JSON.",
+    "escapeHtml": "Escape HTML",
+    "indentation": "Indentation",
+    "inputTitle": "Input Object / JSON",
+    "invalidInput": "Stringify failed: {{error}}",
+    "resultTitle": "JSON String",
+    "shortDescription": "Convert objects to JSON",
+    "spacesCount": "Spaces",
+    "title": "Stringify JSON",
+    "useSpaces": "Spaces",
+    "useTabs": "Tabs"
   },
   "tsvToJson": {
     "description": "Convert TSV (Tab-Separated Values) data to JSON format. Transform tabular data into structured JSON objects.",
@@ -79,7 +191,7 @@
   "validateJson": {
     "description": "Check if JSON is valid and well-formed.",
     "inputTitle": "Input JSON",
-    "invalidJson": "❌ {{error}}",
+    "invalidJson": "Invalid JSON: {{error}}",
     "resultTitle": "Validation Result",
     "shortDescription": "Validate JSON code for errors",
     "title": "Validate JSON",
@@ -87,24 +199,29 @@
       "description": "JSON (JavaScript Object Notation) is a lightweight data-interchange format. JSON validation ensures that the structure of the data conforms to the JSON standard. A valid JSON object must have: - Property names enclosed in double quotes. - Properly balanced curly braces {}. - No trailing commas after the last key-value pair. - Proper nesting of objects and arrays. This tool checks the input JSON and provides feedback to help identify and fix common errors.",
       "title": "What is JSON Validation?"
     },
-    "validJson": "✅ Valid JSON"
+    "validJson": "Valid JSON"
   },
   "sortJson": {
     "title": "Sort JSON",
-    "description": "Sort JSON data by organizing arrays of objects based on a selected key in ascending or descending order, or alphabetically sort the keys of a JSON object.",
-    "shortDescription": "Sort JSON arrays by value or object keys alphabetically",
+    "description": "Sort object keys or array items in JSON.",
+    "shortDescription": "Sort JSON keys or arrays",
     "longDescription": "This tool allows you to easily sort JSON data in a structured and predictable way. You can sort an array of objects by any key, choosing either ascending or descending order, which is useful for organizing data such as lists of users, products, or records. Alternatively, you can sort the keys of a JSON object alphabetically to improve readability and consistency. The tool supports flexible sorting modes and handles common JSON structures, making it ideal for developers, data analysts, and anyone working with JSON data who needs clean, ordered output.",
     "inputTitle": "Input JSON",
+    "invalidInput": "Sort failed: {{error}}",
     "resultTitle": "Sorted JSON",
     "options": {
-      "title": "Sorting Options",
-      "sortByKey": "Sort object keys alphabetically",
-      "sortByValue": "Sort array by key value",
-      "ascending": "Ascending (A → Z)",
-      "descending": "Descending (Z → A)",
+      "ascending": "Ascending",
+      "descending": "Descending",
+      "key": "Sort key",
+      "mode": "Mode",
       "modeDescription": "Choose whether to sort array items by a key's value, or sort the keys of an object alphabetically",
       "keyDescription": "Select the key to sort by",
-      "orderDescription": "Choose the sort order"
+      "order": "Order",
+      "orderDescription": "Choose the sort order",
+      "selectKey": "Select key",
+      "sortByKey": "Object keys",
+      "sortByValue": "Array by key",
+      "title": "Sorting Options"
     }
   }
 }

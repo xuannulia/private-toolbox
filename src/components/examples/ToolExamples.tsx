@@ -38,12 +38,12 @@ export default function ToolExamples<T>({
   }
 
   return (
-    <Box id={'examples'} mt={4}>
-      <Box mt={4} display="flex" gap={1} alignItems="center">
-        <Typography mb={2} fontSize={30} color={'primary'}>
+    <Box id={'examples'}>
+      <Box mb={2} display="flex" gap={1} alignItems="center">
+        <Typography fontSize={18} fontWeight={600} color={'primary'}>
           {t('toolExamples.title', { title })}
         </Typography>
-        <Typography mb={2} fontSize={30} color={'secondary'}>
+        <Typography fontSize={18} fontWeight={600} color={'secondary'}>
           {subtitle ?? t('toolExamples.subtitle')}
         </Typography>
       </Box>

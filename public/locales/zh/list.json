@@ -1,8 +1,56 @@
 {
+  "common": {
+    "direction": "方向",
+    "errorFallback": "错误：{{error}}",
+    "joinSeparator": "输出分隔符",
+    "order": "顺序",
+    "outputFormat": "输出格式",
+    "regexMode": "正则",
+    "splitSeparator": "输入分隔符",
+    "symbolMode": "符号"
+  },
+  "chunk": {
+    "deleteEmptyItems": "删除空项",
+    "deleteEmptyItemsDescription": "忽略空项，不输出到结果中。",
+    "description": "把列表按固定数量分组。",
+    "emptyItemsAndPadding": "空项和补齐",
+    "groupNumberDescription": "每组包含的项目数",
+    "groupNumberLabel": "每组数量",
+    "groupSeparatorDescription": "组与组之间的分隔符",
+    "groupSeparatorLabel": "组分隔符",
+    "groupSizeAndSeparators": "分组和输出格式",
+    "inputItemSeparator": "输入项分隔符",
+    "inputTitle": "输入列表",
+    "itemSeparatorDescription": "组内项目之间的分隔符",
+    "itemSeparatorLabel": "项目分隔符",
+    "leftWrapDescription": "每组前添加的符号",
+    "leftWrapLabel": "左包裹",
+    "padNonFullGroups": "补齐不足分组",
+    "padNonFullGroupsDescription": "最后一组数量不足时自动补齐。",
+    "paddingCharDescription": "用于补齐不足分组的内容。",
+    "paddingCharLabel": "补齐内容",
+    "resultTitle": "分组结果",
+    "rightWrapDescription": "每组后添加的符号",
+    "rightWrapLabel": "右包裹",
+    "shortDescription": "把列表拆成固定大小的分组",
+    "splitOperators": {
+      "regex": {
+        "description": "使用正则表达式拆分输入项。",
+        "title": "按正则拆分"
+      },
+      "symbol": {
+        "description": "使用字符拆分输入项。",
+        "title": "按符号拆分"
+      }
+    },
+    "splitSeparatorDescription": "用于拆分输入项的符号或正则表达式。",
+    "title": "列表分组"
+  },
   "duplicate": {
     "concatenate": "连接",
     "concatenateDescription": "连接副本（如果未选中，则项目将交织在一起）",
     "copyDescription": "份数（可以是分数）",
+    "copyLabel": "份数",
     "description": "世界上最简单的基于浏览器的列表项复制实用程序。输入您的列表并指定复制条件即可创建项目副本。非常适合数据扩展、测试或创建重复模式。",
     "duplicationOptions": "复制选项",
     "error": "错误",
@@ -35,7 +83,7 @@
     "inputTitle": "输入列表",
     "joinSeparatorDescription": "用于连接重复列表的分隔符",
     "resultTitle": "重复列表",
-    "reverse": "撤销",
+    "reverse": "反向",
     "reverseDescription": "反转重复项",
     "shortDescription": "按照指定条件复制列表项",
     "splitByRegex": "按正则表达式拆分",
@@ -72,7 +120,7 @@
     "outputFormat": "顶级项目输出格式",
     "removeEmptyItems": "删除空项目",
     "removeEmptyItemsDescription": "从比较中忽略空项。",
-    "resultTitle": "最受欢迎的商品",
+    "resultTitle": "高频项目",
     "shortDescription": "查找最常出现的项目",
     "sortOptions": {
       "alphabetic": "按字母顺序排序",
@@ -90,8 +138,8 @@
       }
     },
     "splitSeparatorDescription": "设置分隔符号或正则表达式。",
-    "title": "查找最受欢迎的",
-    "trimItems": "修剪顶部列表项",
+    "title": "查找高频项",
+    "trimItems": "修剪项目",
     "trimItemsDescription": "在比较项目之前删除前导空格和尾随空格"
   },
   "findUnique": {
@@ -99,16 +147,16 @@
     "caseSensitiveItemsDescription": "将具有不同大小写的项目作为列表中的唯一元素输出。",
     "delimiterDescription": "设置分隔符号或正则表达式。",
     "description": "世界上最简单的基于浏览器的实用程序，用于在列表中查找唯一项。输入您的列表，即可立即获取所有唯一值（已删除重复项）。非常适合数据清理、重复数据删除或查找不同元素。",
-    "findAbsolutelyUniqueItems": "寻找绝对独特的物品",
+    "findAbsolutelyUniqueItems": "仅保留只出现一次的项目",
     "findAbsolutelyUniqueItemsDescription": "仅显示列表中存在于单个副本中的项目。",
     "inputListDelimiter": "输入列表分隔符",
     "inputTitle": "输入列表",
     "outputListDelimiter": "输出列表分隔符",
-    "resultTitle": "独特物品",
+    "resultTitle": "唯一项",
     "shortDescription": "在列表中查找唯一项",
     "skipEmptyItems": "跳过空项目",
     "skipEmptyItemsDescription": "不要在输出中包含空列表项。",
-    "title": "寻找独特的",
+    "title": "查找唯一项",
     "trimItems": "修剪列表项",
     "trimItemsDescription": "比较项目之前删除前导和尾随空格。",
     "uniqueItemOptions": "独特物品选项"
@@ -133,7 +181,7 @@
       }
     },
     "splitterMode": "分离器模式",
-    "title": "撤销",
+    "title": "反转",
     "toolInfo": {
       "description": "使用此实用程序，您可以反转列表中项目的顺序。该实用程序首先将输入列表拆分成单个项目，然后从最后一个项目到第一个项目进行迭代，并在迭代过程中将每个项目打印到输出中。输入列表可以包含任何可以表示为文本数据的内容，包括数字、数值、字符串、单词、句子等。输入项分隔符也可以是正则表达式。例如，正则表达式 /[;,]/ 允许您使用逗号或分号分隔的项目。输入和输出列表项分隔符可以在选项中自定义。默认情况下，输入和输出列表均以逗号分隔。Listabulous！",
       "title": "什么是列表反转器？"
@@ -141,7 +189,12 @@
   },
   "rotate": {
     "description": "世界上最简单的基于浏览器的列表项旋转工具。输入您的列表并指定旋转量，即可将列表项移动指定的位置。非常适合数据操作、循环移动或列表重新排序。",
+    "directionLeft": "向左",
+    "directionRight": "向右",
+    "inputTitle": "输入列表",
+    "resultTitle": "旋转结果",
     "shortDescription": "按指定位置旋转列表项",
+    "stepLabel": "步数",
     "title": "旋转"
   },
   "shuffle": {
@@ -150,12 +203,14 @@
     "inputListSeparator": "输入列表分隔符",
     "inputTitle": "输入列表",
     "joinSeparatorDescription": "在随机列表中使用此分隔符。",
+    "lengthLabel": "输出数量",
     "outputLengthDescription": "输出这么多的随机物品",
     "resultTitle": "随机列表",
     "shortDescription": "随机化列表项的顺序",
+    "shuffleAgain": "重新随机",
     "shuffledListLength": "打乱列表长度",
     "shuffledListSeparator": "随机列表分隔符",
-    "title": "随机播放"
+    "title": "随机排序"
   },
   "sort": {
     "caseSensitive": "区分大小写排序",
@@ -166,8 +221,8 @@
     "joinSeparatorDescription": "使用此符号作为排序列表中项目之间的连接符。",
     "orderDescription": "选择排序顺序。",
     "orderOptions": {
-      "decreasing": "降序排列",
-      "increasing": "增加订单"
+      "decreasing": "降序",
+      "increasing": "升序"
     },
     "removeDuplicates": "删除重复项",
     "removeDuplicatesDescription": "删除重复的列表项。",
@@ -192,32 +247,47 @@
       }
     },
     "splitSeparatorDescription": "设置分隔符号或正则表达式。",
-    "title": "种类"
+    "title": "排序"
   },
   "truncate": {
     "description": "世界上最简单的基于浏览器的列表截断工具。输入您的列表并指定要保留的最大项目数。非常适合数据处理、列表管理或限制内容长度。",
+    "inputTitle": "输入列表",
+    "keepEnd": "末尾",
+    "keepFromLabel": "保留位置",
+    "keepStart": "开头",
+    "lengthLabel": "保留数量",
+    "resultTitle": "截断结果",
     "shortDescription": "将列表截断为指定数量的项目",
-    "title": "截短"
+    "title": "截断"
   },
   "unwrap": {
     "description": "世界上最简单的基于浏览器的列表项展开工具。输入已展开的列表，并指定展开条件以展平有序的列表项。非常适合数据处理、文本操作或从结构化列表中提取内容。",
+    "inputTitle": "输入列表",
+    "leftTextLabel": "左包裹",
+    "multiLevel": "移除多层包裹",
+    "removeEmptyItems": "删除空项",
+    "resultTitle": "解包结果",
+    "rightTextLabel": "右包裹",
     "shortDescription": "从结构化格式中解开列表项",
-    "title": "展开"
+    "title": "列表解包",
+    "trimItems": "修剪项目"
   },
   "wrap": {
     "description": "在每个列表项之前和之后添加文本。",
     "inputTitle": "输入列表",
     "joinSeparatorDescription": "用于连接包装列表的分隔符",
     "leftTextDescription": "每个项目前添加的文本",
-    "removeEmptyItems": "删除空项目",
-    "resultTitle": "包装列表",
+    "leftTextLabel": "左包裹",
+    "removeEmptyItems": "删除空项",
+    "resultTitle": "包裹结果",
     "rightTextDescription": "每项后添加的文本",
+    "rightTextLabel": "右包裹",
     "shortDescription": "使用指定条件包装列表项",
     "splitByRegex": "按正则表达式拆分",
     "splitBySymbol": "按符号拆分",
     "splitOptions": "拆分选项",
     "splitSeparatorDescription": "用于分割列表的分隔符",
-    "title": "裹",
+    "title": "列表包裹",
     "toolInfo": {
       "description": "此工具允许您在列表中每个项目前后添加文本。您可以为左右两侧指定不同的文本，并控制列表的处理方式。它适用于为列表项添加引号、括号或其他格式，准备不同格式的数据，或创建结构化文本。",
       "title": "列表包装"

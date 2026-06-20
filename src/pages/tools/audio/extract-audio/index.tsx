@@ -1,101 +1,91 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { extractAudioFromVideo } from './service';
-import { InitialValuesType } from './types';
-import ToolVideoInput from '@components/input/ToolVideoInput';
-import { GetGroupsType } from '@components/options/ToolOptions';
+import { Box, Stack } from '@mui/material';
 import ToolFileResult from '@components/result/ToolFileResult';
-import SelectWithDesc from '@components/options/SelectWithDesc';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import ToolVideoInput from '@components/input/ToolVideoInput';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  AUDIO_FORMAT_OPTIONS,
+  AudioOptionStack,
+  CompactAudioSelect,
+  type AudioOutputFormat
+} from '../AudioToolControls';
+import { extractAudioFromVideo } from './service';
+import type { InitialValuesType } from './types';
 
 const initialValues: InitialValuesType = {
   outputFormat: 'aac'
 };
 
-export default function ExtractAudio({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function ExtractAudio() {
   const { t } = useTranslation('audio');
-  const [file, setFile] = useState<File | null>(null);
-  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [input, setInput] = useState<File | null>(null);
+  const [options, setOptions] = useState<InitialValuesType>(initialValues);
+  const [result, setResult] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => {
-    return [
-      {
-        title: t('extractAudio.outputFormat'),
-        component: (
-          <Box>
-            <SelectWithDesc
-              selected={values.outputFormat}
-              onChange={(value) => {
-                updateField('outputFormat', value.toString());
-              }}
-              options={[
-                { label: 'AAC', value: 'aac' },
-                { label: 'MP3', value: 'mp3' },
-                { label: 'WAV', value: 'wav' }
-              ]}
-              description={t('extractAudio.outputFormatDescription')}
-            />
-          </Box>
-        )
-      }
-    ];
-  };
-
-  const compute = async (values: InitialValuesType, input: File | null) => {
-    if (!input) return;
-    try {
-      setLoading(true);
-      const audioFileObj = await extractAudioFromVideo(input, values);
-      setAudioFile(audioFileObj);
-    } catch (err) {
-      console.error(err);
-    } finally {
+  useEffect(() => {
+    if (!input) {
+      setResult(null);
       setLoading(false);
+      return;
     }
-  };
+
+    const inputFile = input;
+    let canceled = false;
+
+    async function runExtraction() {
+      try {
+        setLoading(true);
+        const audioFile = await extractAudioFromVideo(inputFile, options);
+        if (!canceled) setResult(audioFile);
+      } catch (error) {
+        console.error('Audio extraction failed:', error);
+        if (!canceled) setResult(null);
+      } finally {
+        if (!canceled) setLoading(false);
+      }
+    }
+
+    void runExtraction();
+
+    return () => {
+      canceled = true;
+    };
+  }, [input, options]);
 
   return (
-    <ToolContent
-      title={title}
-      input={file}
-      inputComponent={
-        <ToolVideoInput
-          value={file}
-          onChange={setFile}
-          title={t('extractAudio.inputTitle')}
-        />
-      }
-      resultComponent={
-        loading ? (
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolVideoInput
+              value={input}
+              onChange={setInput}
+              title={t('extractAudio.inputTitle')}
+            />
+            <AudioOptionStack>
+              <CompactAudioSelect<AudioOutputFormat>
+                label={t('extractAudio.outputFormat')}
+                value={options.outputFormat as AudioOutputFormat}
+                options={AUDIO_FORMAT_OPTIONS}
+                onChange={(outputFormat) => setOptions({ outputFormat })}
+              />
+            </AudioOptionStack>
+          </Stack>
+        }
+        result={
           <ToolFileResult
-            title={t('extractAudio.extractingAudio')}
-            value={null}
-            loading={true}
+            title={
+              loading
+                ? t('extractAudio.extractingAudio')
+                : t('extractAudio.resultTitle')
+            }
+            value={result}
+            loading={loading}
           />
-        ) : (
-          <ToolFileResult
-            title={t('extractAudio.resultTitle')}
-            value={audioFile}
-          />
-        )
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      compute={compute}
-      toolInfo={{
-        title: t('extractAudio.toolInfo.title', { title }),
-        description: longDescription
-      }}
-      setInput={setFile}
-    />
+        }
+      />
+    </Box>
   );
 }

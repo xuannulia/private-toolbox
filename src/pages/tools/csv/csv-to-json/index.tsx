@@ -1,221 +1,119 @@
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { convertCsvToJson } from './service';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
-import { Box } from '@mui/material';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  CompactCheckbox,
+  CsvFormatFields,
+  normalizeCsvToken
+} from '../CsvToolControls';
+import { convertCsvToJson } from './service';
 
-type InitialValuesType = {
-  delimiter: string;
-  quote: string;
-  comment: string;
-  useHeaders: boolean;
-  skipEmptyLines: boolean;
-  dynamicTypes: boolean;
-  indentationType: 'tab' | 'space';
-  spacesCount: number;
-};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Invalid CSV format';
 
-const initialValues: InitialValuesType = {
-  delimiter: ',',
-  quote: '"',
-  comment: '#',
-  useHeaders: true,
-  skipEmptyLines: true,
-  dynamicTypes: true,
-  indentationType: 'space',
-  spacesCount: 2
-};
-
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Basic CSV to JSON Array',
-    description: 'Convert a simple CSV file into a JSON array structure.',
-    sampleText: 'name,age,city\nJohn,30,New York\nAlice,25,London',
-    sampleResult: `[
-  {
-    "name": "John",
-    "age": 30,
-    "city": "New York"
-  },
-  {
-    "name": "Alice",
-    "age": 25,
-    "city": "London"
-  }
-]`,
-    sampleOptions: {
-      ...initialValues,
-      useHeaders: true,
-      dynamicTypes: true
-    }
-  },
-  {
-    title: 'CSV with Custom Delimiter',
-    description: 'Convert a CSV file that uses semicolons as separators.',
-    sampleText: 'product;price;quantity\nApple;1.99;50\nBanana;0.99;100',
-    sampleResult: `[
-  {
-    "product": "Apple",
-    "price": 1.99,
-    "quantity": 50
-  },
-  {
-    "product": "Banana",
-    "price": 0.99,
-    "quantity": 100
-  }
-]`,
-    sampleOptions: {
-      ...initialValues,
-      delimiter: ';'
-    }
-  },
-  {
-    title: 'CSV with Comments and Empty Lines',
-    description: 'Process CSV data while handling comments and empty lines.',
-    sampleText: `# This is a comment
-id,name,active
-1,John,true
-
-# Another comment
-2,Jane,false
-
-3,Bob,true`,
-    sampleResult: `[
-  {
-    "id": 1,
-    "name": "John",
-    "active": true
-  },
-  {
-    "id": 2,
-    "name": "Jane",
-    "active": false
-  },
-  {
-    "id": 3,
-    "name": "Bob",
-    "active": true
-  }
-]`,
-    sampleOptions: {
-      ...initialValues,
-      skipEmptyLines: true,
-      comment: '#'
-    }
-  }
-];
-
-export default function CsvToJson({ title }: ToolComponentProps) {
+export default function CsvToJson() {
   const { t } = useTranslation('csv');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [delimiter, setDelimiter] = useState(',');
+  const [quote, setQuote] = useState('"');
+  const [comment, setComment] = useState('#');
+  const [useHeaders, setUseHeaders] = useState(true);
+  const [skipEmptyLines, setSkipEmptyLines] = useState(true);
+  const [dynamicTypes, setDynamicTypes] = useState(true);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const compute = (values: InitialValuesType, input: string) => {
-    if (input) {
-      try {
-        const jsonResult = convertCsvToJson(input, {
-          delimiter: values.delimiter,
-          quote: values.quote,
-          comment: values.comment,
-          useHeaders: values.useHeaders,
-          skipEmptyLines: values.skipEmptyLines,
-          dynamicTypes: values.dynamicTypes
-        });
-        setResult(jsonResult);
-      } catch (error) {
-        setResult(
-          `${t('csvToJson.error')}: ${
-            error instanceof Error
-              ? error.message
-              : t('csvToJson.invalidCsvFormat')
-          }`
-        );
-      }
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
     }
-  };
+
+    try {
+      setResult(
+        convertCsvToJson(input, {
+          delimiter: normalizeCsvToken(delimiter),
+          quote: normalizeCsvToken(quote),
+          comment: normalizeCsvToken(comment),
+          useHeaders,
+          skipEmptyLines,
+          dynamicTypes
+        })
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [
+    comment,
+    delimiter,
+    dynamicTypes,
+    input,
+    quote,
+    skipEmptyLines,
+    useHeaders
+  ]);
+
+  const output = error ? t('common.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      setInput={setInput}
-      initialValues={initialValues}
-      compute={compute}
-      exampleCards={exampleCards}
-      inputComponent={
-        <ToolTextInput
-          title={t('csvToJson.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult
-          title={t('csvToJson.resultTitle')}
-          value={result}
-          extension={'json'}
-        />
-      }
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('csvToJson.inputCsvFormat'),
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                description={t('csvToJson.columnSeparator')}
-                value={values.delimiter}
-                onOwnChange={(val) => updateField('delimiter', val)}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('csvToJson.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <CsvFormatFields
+              delimiter={delimiter}
+              quote={quote}
+              comment={comment}
+              labels={{
+                delimiter: t('common.inputDelimiter'),
+                quote: t('common.quote'),
+                comment: t('common.comment')
+              }}
+              onDelimiterChange={setDelimiter}
+              onQuoteChange={setQuote}
+              onCommentChange={setComment}
+            />
+            <Stack spacing={0.5}>
+              <CompactCheckbox
+                checked={useHeaders}
+                label={t('csvToJson.useHeaders')}
+                onChange={setUseHeaders}
               />
-              <TextFieldWithDesc
-                description={t('csvToJson.fieldQuote')}
-                onOwnChange={(val) => updateField('quote', val)}
-                value={values.quote}
+              <CompactCheckbox
+                checked={skipEmptyLines}
+                label={t('csvToJson.skipEmptyLines')}
+                onChange={setSkipEmptyLines}
               />
-              <TextFieldWithDesc
-                description={t('csvToJson.commentSymbol')}
-                value={values.comment}
-                onOwnChange={(val) => updateField('comment', val)}
+              <CompactCheckbox
+                checked={dynamicTypes}
+                label={t('csvToJson.dynamicTypes')}
+                onChange={setDynamicTypes}
               />
-            </Box>
-          )
-        },
-        {
-          title: t('csvToJson.conversionOptions'),
-          component: (
-            <Box>
-              <CheckboxWithDesc
-                checked={values.useHeaders}
-                onChange={(value) => updateField('useHeaders', value)}
-                title={t('csvToJson.useHeaders')}
-                description={t('csvToJson.useHeadersDescription')}
-              />
-              <CheckboxWithDesc
-                checked={values.skipEmptyLines}
-                onChange={(value) => updateField('skipEmptyLines', value)}
-                title={t('csvToJson.skipEmptyLines')}
-                description={t('csvToJson.skipEmptyLinesDescription')}
-              />
-              <CheckboxWithDesc
-                checked={values.dynamicTypes}
-                onChange={(value) => updateField('dynamicTypes', value)}
-                title={t('csvToJson.dynamicTypes')}
-                description={t('csvToJson.dynamicTypesDescription')}
-              />
-            </Box>
-          )
+            </Stack>
+          </Stack>
         }
-      ]}
-      toolInfo={{
-        title: t('csvToJson.toolInfo.title'),
-        description: t('csvToJson.toolInfo.description')
-      }}
-    />
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            extension="json"
+            keepSpecialCharacters
+            monospace
+            title={t('csvToJson.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

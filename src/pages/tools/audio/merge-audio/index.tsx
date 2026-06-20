@@ -1,121 +1,94 @@
-import { Box, FormControlLabel, Radio, RadioGroup } from '@mui/material';
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import { InitialValuesType } from './types';
-import ToolMultipleAudioInput, {
-  MultiAudioInput
-} from '@components/input/ToolMultipleAudioInput';
+import { Box, Stack } from '@mui/material';
 import ToolFileResult from '@components/result/ToolFileResult';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import ToolMultipleAudioInput from '@components/input/ToolMultipleAudioInput';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  AUDIO_FORMAT_OPTIONS,
+  AudioOptionStack,
+  CompactAudioSelect
+} from '../AudioToolControls';
 import { mergeAudioFiles } from './service';
+import type { MultiAudioInput } from '@components/input/ToolMultipleAudioInput';
+import type { InitialValuesType } from './types';
 
 const initialValues: InitialValuesType = {
   outputFormat: 'mp3'
 };
 
-const formatOptions = [
-  { label: 'MP3', value: 'mp3' },
-  { label: 'AAC', value: 'aac' },
-  { label: 'WAV', value: 'wav' }
-];
-
-export default function MergeAudio({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function MergeAudio() {
   const { t } = useTranslation('audio');
   const [input, setInput] = useState<MultiAudioInput[]>([]);
+  const [options, setOptions] = useState<InitialValuesType>(initialValues);
   const [result, setResult] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const compute = async (
-    optionsValues: InitialValuesType,
-    input: MultiAudioInput[]
-  ) => {
-    if (input.length === 0) return;
-    setLoading(true);
-    try {
-      const files = input.map((item) => item.file);
-      const mergedFile = await mergeAudioFiles(files, optionsValues);
-      setResult(mergedFile);
-    } catch (err) {
-      console.error(`Failed to merge audio: ${err}`);
+  useEffect(() => {
+    if (input.length === 0) {
       setResult(null);
-    } finally {
       setLoading(false);
+      return;
     }
-  };
 
-  const getGroups: GetGroupsType<InitialValuesType> | null = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('mergeAudio.outputFormat'),
-      component: (
-        <Box mt={2}>
-          <RadioGroup
-            row
-            value={values.outputFormat}
-            onChange={(e) =>
-              updateField(
-                'outputFormat',
-                e.target.value as 'mp3' | 'aac' | 'wav'
-              )
-            }
-          >
-            {formatOptions.map((opt) => (
-              <FormControlLabel
-                key={opt.value}
-                value={opt.value}
-                control={<Radio />}
-                label={opt.label}
-              />
-            ))}
-          </RadioGroup>
-        </Box>
-      )
+    const inputFiles = input.map((item) => item.file);
+    let canceled = false;
+
+    async function runMerge() {
+      try {
+        setLoading(true);
+        const mergedFile = await mergeAudioFiles(inputFiles, options);
+        if (!canceled) setResult(mergedFile);
+      } catch (error) {
+        console.error('Audio merge failed:', error);
+        if (!canceled) setResult(null);
+      } finally {
+        if (!canceled) setLoading(false);
+      }
     }
-  ];
+
+    void runMerge();
+
+    return () => {
+      canceled = true;
+    };
+  }, [input, options]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolMultipleAudioInput
-          value={input}
-          onChange={setInput}
-          accept={['audio/*', '.mp3', '.wav', '.aac']}
-          title={t('mergeAudio.inputTitle')}
-          type="audio"
-        />
-      }
-      resultComponent={
-        loading ? (
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolMultipleAudioInput
+              value={input}
+              onChange={setInput}
+              accept={['audio/*', '.mp3', '.wav', '.aac']}
+              title={t('mergeAudio.inputTitle')}
+              type="audio"
+            />
+            <AudioOptionStack>
+              <CompactAudioSelect
+                label={t('mergeAudio.outputFormat')}
+                value={options.outputFormat}
+                options={AUDIO_FORMAT_OPTIONS}
+                onChange={(outputFormat) => setOptions({ outputFormat })}
+              />
+            </AudioOptionStack>
+          </Stack>
+        }
+        result={
           <ToolFileResult
-            title={t('mergeAudio.mergingAudio')}
-            value={null}
-            loading={true}
-          />
-        ) : (
-          <ToolFileResult
-            title={t('mergeAudio.resultTitle')}
+            title={
+              loading
+                ? t('mergeAudio.mergingAudio')
+                : t('mergeAudio.resultTitle')
+            }
             value={result}
+            loading={loading}
             extension={result ? result.name.split('.').pop() : undefined}
           />
-        )
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      setInput={setInput}
-      compute={compute}
-      toolInfo={{
-        title: t('mergeAudio.toolInfo.title', { title }),
-        description: longDescription
-      }}
-    />
+        }
+      />
+    </Box>
   );
 }

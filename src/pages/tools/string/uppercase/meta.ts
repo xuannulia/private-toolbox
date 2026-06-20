@@ -5,7 +5,7 @@ export const tool = defineTool('string', {
   path: 'uppercase',
   icon: 'material-symbols-light:format-textdirection-l-to-r',
 
-  keywords: ['uppercase'],
+  keywords: ['uppercase', 'lowercase', 'title case', 'capitalize', 'case'],
   component: lazy(() => import('./index')),
   i18n: {
     name: 'string:uppercase.title',

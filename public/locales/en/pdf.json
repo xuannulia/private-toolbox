@@ -70,27 +70,39 @@
     }
   },
   "pdfToEpub": {
+    "convertingPdf": "Converting PDF to EPUB...",
     "description": "Transform PDF documents into EPUB files for better e-reader compatibility.",
+    "inputTitle": "Input PDF",
+    "resultTitle": "EPUB Output",
     "shortDescription": "Convert PDF files to EPUB format",
     "title": "PDF to EPUB"
   },
   "pdfToPng": {
     "description": "Transform PDF documents into PNG panels.",
+    "inputTitle": "Input PDF",
+    "loadingText": "Converting PDF pages",
     "longDescription": "Upload a PDF and convert each page into a high-quality PNG image directly in your browser. This tool is ideal for extracting visual content or sharing individual pages. No data is uploaded — everything runs locally.",
+    "resultTitle": "PNG Pages",
     "shortDescription": "Convert PDF into PNG images",
     "title": "PDF to PNG"
   },
   "protectPdf": {
+    "confirmPassword": "Confirm password",
     "description": "Add password protection to your PDF files securely in your browser",
+    "errorProtectingPdf": "Failed to protect PDF: {{error}}",
+    "inputTitle": "Input PDF",
+    "loadingText": "Protecting PDF",
+    "password": "Password",
+    "resultTitle": "Protected PDF",
     "shortDescription": "Password protect PDF files securely",
     "title": "Protect PDF"
   },
   "rotatePdf": {
     "allPagesWillBeRotated": "All {{count}} pages will be rotated",
     "angleOptions": {
-      "clockwise90": "90° Clockwise",
-      "counterClockwise270": "270° (90° Counter-clockwise)",
-      "upsideDown180": "180° (Upside down)"
+      "clockwise90": "90° CW",
+      "counterClockwise270": "90° CCW",
+      "upsideDown180": "180°"
     },
     "applyToAllPages": "Apply to all pages",
     "description": "Rotate pages in a PDF document.",
@@ -98,8 +110,11 @@
     "longDescription": "Change the orientation of PDF pages by rotating them 90, 180, or 270 degrees. Useful for fixing incorrectly scanned documents or preparing PDFs for printing.",
     "pageRangesDescription": "Enter page numbers or ranges separated by commas (e.g., 1,3,5-7)",
     "pageRangesPlaceholder": "e.g., 1,5-8",
+    "pageRanges": "Page ranges",
     "pagesWillBeRotated": "{{count}} page{{plural}} will be rotated",
     "pdfPageCount": "PDF has {{count}} page{{plural}}",
+    "pdfPageCountLabel": "Pages",
+    "previewLabel": "Preview",
     "resultTitle": "Rotated PDF",
     "rotatingPages": "Rotating pages",
     "rotationAngle": "Rotation Angle",
@@ -115,11 +130,14 @@
     "description": "Extract specific pages from a PDF document.",
     "extractingPages": "Extracting pages",
     "inputTitle": "Input PDF",
-    "pageExtractionPreview": "{{count}} page{{ plural }} will be extracted",
+    "pageExtractionPreview": "{{count}} page{{plural}} will be extracted",
     "pageRangesDescription": "Enter page numbers or ranges separated by commas (e.g., 1,3,5-7)",
     "pageRangesPlaceholder": "e.g., 1,5-8",
+    "pageRanges": "Page ranges",
     "pageSelection": "Page Selection",
     "pdfPageCount": "PDF has {{count}} page{{plural}}",
+    "pdfPageCountLabel": "Pages",
+    "previewLabel": "Preview",
     "resultTitle": "Extracted PDF",
     "shortDescription": "Extract specific pages from a PDF file",
     "title": "Split PDF",

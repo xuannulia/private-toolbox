@@ -1,74 +1,84 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import ToolFileResult from '@components/result/ToolFileResult';
+import { Box, Stack } from '@mui/material';
 import ToolMultipleVideoInput, {
   MultiVideoInput
 } from '@components/input/ToolMultipleVideoInput';
+import ToolFileResult from '@components/result/ToolFileResult';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { mergeVideos } from './service';
-import { InitialValuesType } from './types';
+import type { InitialValuesType } from './types';
 
-const initialValues: InitialValuesType = {};
+const initialOptions: InitialValuesType = {};
 
-export default function MergeVideo({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function MergeVideo() {
+  const { t } = useTranslation('video');
   const [input, setInput] = useState<MultiVideoInput[]>([]);
   const [result, setResult] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const compute = async (
-    _values: InitialValuesType,
-    input: MultiVideoInput[]
-  ) => {
-    if (!input || input.length < 2) {
+  useEffect(() => {
+    if (input.length < 2) {
+      setResult(null);
+      setLoading(false);
       return;
     }
-    setLoading(true);
-    try {
-      const files = input.map((item) => item.file);
-      const mergedBlob = await mergeVideos(files, initialValues);
-      const mergedFile = new File([mergedBlob], 'merged-video.mp4', {
-        type: 'video/mp4'
-      });
-      setResult(mergedFile);
-    } catch (err) {
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+
+    const files = [...input]
+      .sort((left, right) => left.order - right.order)
+      .map((item) => item.file);
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runMerge() {
+        try {
+          setLoading(true);
+          const mergedBlob = await mergeVideos(files, initialOptions);
+          const mergedFile = new File([mergedBlob], 'merged-video.mp4', {
+            type: 'video/mp4'
+          });
+
+          if (!canceled) setResult(mergedFile);
+        } catch (error) {
+          console.error('Error merging videos:', error);
+          if (!canceled) setResult(null);
+        } finally {
+          if (!canceled) setLoading(false);
+        }
+      }
+
+      void runMerge();
+    }, 500);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolMultipleVideoInput
-          value={input}
-          onChange={(newInput) => {
-            setInput(newInput);
-          }}
-          accept={['video/*', '.mp4', '.avi', '.mov', '.mkv']}
-          title="Input Videos"
-          type="video"
-        />
-      }
-      resultComponent={
-        <ToolFileResult
-          value={result}
-          title={loading ? 'Merging Videos...' : 'Merged Video'}
-          loading={loading}
-          extension={'mp4'}
-        />
-      }
-      initialValues={initialValues}
-      getGroups={null}
-      setInput={setInput}
-      compute={compute}
-      toolInfo={{ title: `What is a ${title}?`, description: longDescription }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolMultipleVideoInput
+              value={input}
+              onChange={setInput}
+              accept={['video/*', '.mp4', '.avi', '.mov', '.mkv']}
+              title={t('mergeVideo.inputTitle')}
+              type="video"
+            />
+          </Stack>
+        }
+        result={
+          <ToolFileResult
+            value={result}
+            title={t('mergeVideo.resultTitle')}
+            loading={loading}
+            loadingText={t('mergeVideo.loadingText')}
+            extension="mp4"
+          />
+        }
+      />
+    </Box>
   );
 }

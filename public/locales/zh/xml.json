@@ -15,15 +15,35 @@
     "useTabs": "使用标签",
     "useTabsDescription": "使用制表符缩进输出。"
   },
+  "xmlMinifier": {
+    "description": "压缩 XML，移除格式化空白。",
+    "inputTitle": "输入 XML",
+    "resultTitle": "压缩 XML",
+    "shortDescription": "压缩 XML 代码",
+    "title": "XML 压缩"
+  },
   "xmlValidator": {
     "description": "验证 XML 语法和结构。",
+    "inputTitle": "输入 XML",
     "placeholder": "在此处粘贴或导入 XML...",
+    "resultTitle": "校验结果",
     "shortDescription": "验证 XML 代码是否存在错误",
     "title": "XML验证器",
     "toolInfo": {
       "description": "此工具可用于验证 XML 的语法和结构。它会检查 XML 格式是否正确，并针对发现的任何问题提供详细的错误消息。",
       "title": "XML验证器"
     }
+  },
+  "xpathEvaluator": {
+    "description": "对 XML 执行 XPath 表达式并返回结构化匹配结果。",
+    "expression": "XPath 表达式",
+    "includeXml": "包含 XML 片段",
+    "inputTitle": "输入 XML",
+    "maxResults": "最大结果",
+    "namespaces": "命名空间",
+    "resultTitle": "查询结果",
+    "shortDescription": "测试 XPath 表达式",
+    "title": "XPath 解析测试"
   },
   "xmlViewer": {
     "description": "以树状格式查看和探索 XML 结构。",

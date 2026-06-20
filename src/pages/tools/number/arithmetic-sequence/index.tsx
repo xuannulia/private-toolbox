@@ -1,144 +1,93 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
+import { Box, Stack } from '@mui/material';
+import InputHeader from '@components/InputHeader';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextResult from '@components/result/ToolTextResult';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import { generateArithmeticSequence } from './service';
-import * as Yup from 'yup';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
+import type { ToolComponentProps } from '@tools/defineTool';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  CompactNumberField,
+  NumberOptionStack,
+  normalizeNumberToken
+} from '../NumberToolControls';
+import { generateArithmeticSequence } from './service';
 
-type InitialValuesType = {
+type Options = {
   firstTerm: string;
   commonDifference: string;
   numberOfTerms: string;
   separator: string;
 };
 
-const initialValues: InitialValuesType = {
+const initialValues: Options = {
   firstTerm: '1',
   commonDifference: '2',
   numberOfTerms: '10',
   separator: ', '
 };
 
-const validationSchema = Yup.object({
-  firstTerm: Yup.number().required('First term is required'),
-  commonDifference: Yup.number().required('Common difference is required'),
-  numberOfTerms: Yup.number()
-    .min(1, 'Must generate at least 1 term')
-    .max(1000, 'Maximum 1000 terms allowed')
-    .required('Number of terms is required'),
-  separator: Yup.string().required('Separator is required')
-});
-
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Basic Arithmetic Sequence',
-    description:
-      'Generate a sequence starting at 1, increasing by 2, for 5 terms',
-    sampleOptions: {
-      firstTerm: '1',
-      commonDifference: '2',
-      numberOfTerms: '5',
-      separator: ', '
-    },
-    sampleResult: '1, 3, 5, 7, 9'
-  },
-  {
-    title: 'Negative Sequence',
-    description: 'Generate a decreasing sequence starting at 10',
-    sampleOptions: {
-      firstTerm: '10',
-      commonDifference: '-3',
-      numberOfTerms: '4',
-      separator: ' → '
-    },
-    sampleResult: '10 → 7 → 4 → 1'
-  },
-  {
-    title: 'Decimal Sequence',
-    description: 'Generate a sequence with decimal numbers',
-    sampleOptions: {
-      firstTerm: '0.5',
-      commonDifference: '0.5',
-      numberOfTerms: '6',
-      separator: ' '
-    },
-    sampleResult: '0.5 1 1.5 2 2.5 3'
-  }
-];
-
 export default function ArithmeticSequence({ title }: ToolComponentProps) {
   const { t } = useTranslation('number');
-  const [result, setResult] = useState<string>('');
+  const [options, setOptions] = useState<Options>(initialValues);
+  const [result, setResult] = useState('');
+
+  const updateOption = <K extends keyof Options>(key: K, value: Options[K]) => {
+    setOptions((current) => ({ ...current, [key]: value }));
+  };
+
+  useEffect(() => {
+    setResult(
+      generateArithmeticSequence(
+        Number(options.firstTerm),
+        Number(options.commonDifference),
+        Math.max(0, Number(options.numberOfTerms)),
+        normalizeNumberToken(options.separator)
+      )
+    );
+  }, [options]);
 
   return (
-    <ToolContent
-      title={title}
-      inputComponent={null}
-      resultComponent={
-        <ToolTextResult
-          title={t('arithmeticSequence.resultTitle')}
-          value={result}
-        />
-      }
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      exampleCards={exampleCards}
-      toolInfo={{
-        title: t('arithmeticSequence.toolInfo.title'),
-        description: t('arithmeticSequence.toolInfo.description')
-      }}
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('arithmeticSequence.sequenceParameters'),
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                description={t('arithmeticSequence.firstTermDescription')}
-                value={values.firstTerm}
-                onOwnChange={(val) => updateField('firstTerm', val)}
-                type="number"
-              />
-              <TextFieldWithDesc
-                description={t(
-                  'arithmeticSequence.commonDifferenceDescription'
-                )}
-                value={values.commonDifference}
-                onOwnChange={(val) => updateField('commonDifference', val)}
-                type="number"
-              />
-              <TextFieldWithDesc
-                description={t('arithmeticSequence.numberOfTermsDescription')}
-                value={values.numberOfTerms}
-                onOwnChange={(val) => updateField('numberOfTerms', val)}
-                type="number"
-              />
-            </Box>
-          )
-        },
-        {
-          title: t('arithmeticSequence.outputFormat'),
-          component: (
-            <TextFieldWithDesc
-              description={t('arithmeticSequence.separatorDescription')}
-              value={values.separator}
-              onOwnChange={(val) => updateField('separator', val)}
-            />
-          )
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Box>
+            <InputHeader title={title} />
+            <NumberOptionStack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactNumberField
+                  label={t('arithmeticSequence.firstTerm')}
+                  value={options.firstTerm}
+                  onChange={(value) => updateOption('firstTerm', value)}
+                />
+                <CompactNumberField
+                  label={t('arithmeticSequence.commonDifference')}
+                  value={options.commonDifference}
+                  onChange={(value) => updateOption('commonDifference', value)}
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactNumberField
+                  label={t('arithmeticSequence.numberOfTerms')}
+                  value={options.numberOfTerms}
+                  onChange={(value) => updateOption('numberOfTerms', value)}
+                />
+                <CompactNumberField
+                  label={t('common.separator')}
+                  value={options.separator}
+                  type="text"
+                  onChange={(value) => updateOption('separator', value)}
+                />
+              </Stack>
+            </NumberOptionStack>
+          </Box>
         }
-      ]}
-      compute={(values) => {
-        const sequence = generateArithmeticSequence(
-          Number(values.firstTerm),
-          Number(values.commonDifference),
-          Number(values.numberOfTerms),
-          values.separator
-        );
-        setResult(sequence);
-      }}
-    />
+        result={
+          <ToolTextResult
+            title={t('arithmeticSequence.resultTitle')}
+            value={result}
+          />
+        }
+      />
+    </Box>
   );
 }

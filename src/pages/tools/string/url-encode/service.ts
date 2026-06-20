@@ -1,3 +1,4 @@
+import { encodeUrlComponent } from '@private-toolbox/core';
 import { InitialValuesType } from './types';
 
 export function encodeString(
@@ -5,14 +6,8 @@ export function encodeString(
   options: InitialValuesType
 ): string {
   if (!input) return '';
-  if (!options.nonSpecialChar) {
-    return encodeURIComponent(input);
-  }
-
-  let result = '';
-  for (const char of input) {
-    const hex = char.codePointAt(0)!.toString(16).toUpperCase();
-    result += '%' + hex.padStart(2, '0');
-  }
-  return result;
+  return encodeUrlComponent({
+    text: input,
+    encodeEveryCharacter: options.nonSpecialChar
+  });
 }

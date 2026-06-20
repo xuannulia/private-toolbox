@@ -1,145 +1,114 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { rotateList, SplitOperatorType } from './service';
-import SimpleRadio from '@components/options/SimpleRadio';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import { formatNumber } from '../../../../utils/number';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  CompactSelect,
+  CompactTextField,
+  ListSplitMode,
+  SplitOptions,
+  normalizeListSeparator
+} from '../ListToolControls';
+import { rotateList } from './service';
 
-const initialValues = {
-  splitOperatorType: 'symbol' as SplitOperatorType,
-  input: '',
-  splitSeparator: ',',
-  joinSeparator: ',',
-  right: true,
-  step: 1
-};
-const splitOperators: {
-  title: string;
-  description: string;
-  type: SplitOperatorType;
-}[] = [
-  {
-    title: 'Use a Symbol for Splitting',
-    description: 'Delimit input list items with a character.',
-    type: 'symbol'
-  },
-  {
-    title: 'Use a Regex for Splitting',
-    type: 'regex',
-    description: 'Delimit input list items with a regular expression.'
-  }
-];
-const rotationDirections: {
-  title: string;
-  description: string;
-  value: boolean;
-}[] = [
-  {
-    title: 'Rotate forward',
-    description:
-      'Rotate list items to the right. (Down if a vertical column list.)',
-    value: true
-  },
-  {
-    title: 'Rotate backward',
-    description:
-      'Rotate list items to the left. (Up if a vertical column list.)',
-    value: false
-  }
-];
+type RotateDirection = 'right' | 'left';
 
-export default function Rotate({ title }: ToolComponentProps) {
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
-  const compute = (optionsValues: typeof initialValues, input: any) => {
-    const { splitOperatorType, splitSeparator, joinSeparator, right, step } =
-      optionsValues;
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Rotate list failed';
 
-    setResult(
-      rotateList(
-        splitOperatorType,
-        input,
-        splitSeparator,
-        joinSeparator,
-        right,
-        step
-      )
-    );
-  };
+export default function Rotate() {
+  const { t } = useTranslation('list');
+  const [input, setInput] = useState('');
+  const [splitMode, setSplitMode] = useState<ListSplitMode>('symbol');
+  const [splitSeparator, setSplitSeparator] = useState(',');
+  const [joinSeparator, setJoinSeparator] = useState(',');
+  const [direction, setDirection] = useState<RotateDirection>('right');
+  const [step, setStep] = useState('1');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
+    }
+
+    try {
+      setResult(
+        rotateList(
+          splitMode,
+          input,
+          normalizeListSeparator(splitSeparator),
+          normalizeListSeparator(joinSeparator),
+          direction === 'right',
+          Number(step)
+        )
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [direction, input, joinSeparator, splitMode, splitSeparator, step]);
+
+  const output = error ? t('common.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolTextInput title={'Input list'} value={input} onChange={setInput} />
-      }
-      resultComponent={<ToolTextResult title={'Rotated list'} value={result} />}
-      initialValues={initialValues}
-      getGroups={({ values, updateField }) => [
-        {
-          title: 'Item split mode',
-          component: (
-            <Box>
-              {splitOperators.map(({ title, description, type }) => (
-                <SimpleRadio
-                  key={type}
-                  onClick={() => updateField('splitOperatorType', type)}
-                  title={title}
-                  description={description}
-                  checked={values.splitOperatorType === type}
-                />
-              ))}
-              <TextFieldWithDesc
-                description={'Set a delimiting symbol or regular expression.'}
-                value={values.splitSeparator}
-                onOwnChange={(val) => updateField('splitSeparator', val)}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('rotate.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <SplitOptions
+              splitMode={splitMode}
+              splitSeparator={splitSeparator}
+              joinSeparator={joinSeparator}
+              labels={{
+                symbol: t('common.symbolMode'),
+                regex: t('common.regexMode'),
+                splitSeparator: t('common.splitSeparator'),
+                joinSeparator: t('common.joinSeparator')
+              }}
+              onSplitModeChange={setSplitMode}
+              onSplitSeparatorChange={setSplitSeparator}
+              onJoinSeparatorChange={setJoinSeparator}
+            />
+            <Stack spacing={1.5}>
+              <CompactSelect
+                label={t('common.direction')}
+                value={direction}
+                options={[
+                  { label: t('rotate.directionRight'), value: 'right' },
+                  { label: t('rotate.directionLeft'), value: 'left' }
+                ]}
+                onChange={setDirection}
               />
-            </Box>
-          )
-        },
-        {
-          title: 'Rotation Direction and Count',
-          component: (
-            <Box>
-              {rotationDirections.map(({ title, description, value }) => (
-                <SimpleRadio
-                  key={`${value}`}
-                  onClick={() => updateField('right', value)}
-                  title={title}
-                  description={description}
-                  checked={values.right === value}
-                />
-              ))}
-              <TextFieldWithDesc
-                description={'Number of items to rotate'}
-                value={values.step}
-                onOwnChange={(val) => updateField('step', formatNumber(val, 1))}
+              <CompactTextField
+                label={t('rotate.stepLabel')}
+                type="number"
+                value={step}
+                onChange={setStep}
               />
-            </Box>
-          )
-        },
-        {
-          title: 'Rotated List Joining Symbol',
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                value={values.joinSeparator}
-                onOwnChange={(value) => updateField('joinSeparator', value)}
-                description={
-                  'Enter the character that goes between items in the rotated list.'
-                }
-              />
-            </Box>
-          )
+            </Stack>
+          </Stack>
         }
-      ]}
-      compute={compute}
-      setInput={setInput}
-    />
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('rotate.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

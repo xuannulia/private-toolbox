@@ -1,8 +1,22 @@
 {
+  "common": {
+    "count": "Count",
+    "maxValue": "Max",
+    "minValue": "Min",
+    "noSolution": "No solution found",
+    "result": "Result",
+    "selectSolveTarget": "Select target",
+    "separator": "Separator",
+    "solveError": "Calculation failed",
+    "solveFor": "Solve for"
+  },
   "arithmeticSequence": {
+    "commonDifference": "Difference",
     "commonDifferenceDescription": "Common difference between terms (d)",
     "description": "Generate arithmetic sequences with customizable parameters.",
+    "firstTerm": "First term",
     "firstTermDescription": "First term of the sequence (a₁)",
+    "numberOfTerms": "Terms",
     "numberOfTermsDescription": "Number of terms to generate (n)",
     "outputFormat": "Output Format",
     "resultTitle": "Generated Sequence",
@@ -15,12 +29,33 @@
       "title": "What is an Arithmetic Sequence?"
     }
   },
+  "baseConverter": {
+    "binary": "Binary",
+    "decimal": "Decimal",
+    "description": "Convert integers between bases 2 through 36.",
+    "fromBase": "From base",
+    "hexadecimal": "Hexadecimal",
+    "inputTitle": "Input",
+    "octal": "Octal",
+    "outputPrefix": "Add output prefix",
+    "outputValue": "Output",
+    "resultTitle": "Converted Result",
+    "shortDescription": "Convert binary, decimal, hex, and other bases.",
+    "title": "Base Converter",
+    "toBase": "To base",
+    "uppercase": "Uppercase output",
+    "value": "Value",
+    "valuePlaceholder": "e.g. ff, 0b101010, 12345"
+  },
   "byteConverter": {
     "description": "Convert data values between different byte units, supporting both SI (decimal) and IEC (binary) systems. It supports multiple lines conversion.",
+    "fromUnit": "From",
     "inputTitle": "Input Values",
     "outputTitle": "Converted Output",
+    "precision": "Precision",
     "shortDescription": "Quickly convert values between byte units",
     "title": "Byte Converter",
+    "toUnit": "To",
     "unit": {
       "from": "Select the unit of the input values you are providing (e.g., KB, MB, GiB).",
       "precision": "Number of decimal places to display in the converted output.",
@@ -28,15 +63,28 @@
       "to": "Select the unit you want the input values to be converted into."
     }
   },
+  "colorConverter": {
+    "color": "Color",
+    "colorPlaceholder": "e.g. #336699, rgb(51, 102, 153), rgba(51 102 153 / 50%)",
+    "description": "Convert HEX, RGB, and RGBA color values.",
+    "previewTitle": "Preview",
+    "resultTitle": "Color Result",
+    "shortDescription": "Convert HEX, RGB, and RGBA colors.",
+    "title": "Color Converter",
+    "uppercase": "Uppercase HEX output"
+  },
   "generate": {
     "arithmeticSequenceOption": "Arithmetic sequence option",
     "description": "Generate a sequence of numbers with customizable parameters.",
+    "firstValue": "Start",
+    "numberOfNumbers": "Count",
     "numberOfElementsDescription": "Number of elements in sequence.",
     "resultTitle": "Generated numbers",
     "separator": "Separator",
     "separatorDescription": "Separate elements in the arithmetic sequence by this character.",
     "shortDescription": "Generate random numbers in specified ranges",
     "startSequenceDescription": "Start sequence from this number.",
+    "step": "Step",
     "stepDescription": "Increase each element by this amount",
     "title": "Generate",
     "toolInfo": {
@@ -107,6 +155,8 @@
       "title": "What is a Random Port Generator?"
     },
     "longDescription": "Generate random network ports within specified ranges (well-known, registered, dynamic, or custom). Perfect for development, testing, and network configuration. Includes port service identification for common ports.",
+    "maxPort": "Max port",
+    "minPort": "Min port",
     "options": {
       "generation": {
         "allowDuplicates": {

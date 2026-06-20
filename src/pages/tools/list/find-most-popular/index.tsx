@@ -1,167 +1,118 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  DisplayFormat,
-  SortingMethod,
-  SplitOperatorType,
-  TopItemsList
-} from './service';
-import SimpleRadio from '@components/options/SimpleRadio';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import SelectWithDesc from '@components/options/SelectWithDesc';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { ParseKeys } from 'i18next';
+  CompactCheckbox,
+  CompactSelect,
+  ListSplitMode,
+  SplitOptions,
+  normalizeListSeparator
+} from '../ListToolControls';
+import { DisplayFormat, SortingMethod, TopItemsList } from './service';
 
-const initialValues = {
-  splitSeparatorType: 'symbol' as SplitOperatorType,
-  sortingMethod: 'alphabetic' as SortingMethod,
-  displayFormat: 'count' as DisplayFormat,
-  splitSeparator: ',',
-  deleteEmptyItems: false,
-  ignoreItemCase: false,
-  trimItems: false
-};
-const splitOperators: {
-  title: ParseKeys<'list'>;
-  description: ParseKeys<'list'>;
-  type: SplitOperatorType;
-}[] = [
-  {
-    title: 'findMostPopular.splitOperators.symbol.title',
-    description: 'findMostPopular.splitOperators.symbol.description',
-    type: 'symbol'
-  },
-  {
-    title: 'findMostPopular.splitOperators.regex.title',
-    type: 'regex',
-    description: 'findMostPopular.splitOperators.regex.description'
-  }
-];
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Find popular items failed';
 
-export default function FindMostPopular({ title }: ToolComponentProps) {
+export default function FindMostPopular() {
   const { t } = useTranslation('list');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
-  const compute = (optionsValues: typeof initialValues, input: any) => {
-    const {
-      splitSeparatorType,
-      splitSeparator,
-      displayFormat,
-      sortingMethod,
-      deleteEmptyItems,
-      ignoreItemCase,
-      trimItems
-    } = optionsValues;
+  const [input, setInput] = useState('');
+  const [splitMode, setSplitMode] = useState<ListSplitMode>('symbol');
+  const [splitSeparator, setSplitSeparator] = useState(',');
+  const [displayFormat, setDisplayFormat] = useState<DisplayFormat>('count');
+  const [sortingMethod, setSortingMethod] =
+    useState<SortingMethod>('alphabetic');
+  const [deleteEmptyItems, setDeleteEmptyItems] = useState(false);
+  const [ignoreItemCase, setIgnoreItemCase] = useState(false);
+  const [trimItems, setTrimItems] = useState(false);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-    setResult(
-      TopItemsList(
-        splitSeparatorType,
-        sortingMethod,
-        displayFormat,
-        splitSeparator,
-        input,
-        deleteEmptyItems,
-        ignoreItemCase,
-        trimItems
-      )
-    );
-  };
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
+    }
+
+    try {
+      setResult(
+        TopItemsList(
+          splitMode,
+          sortingMethod,
+          displayFormat,
+          normalizeListSeparator(splitSeparator),
+          input,
+          deleteEmptyItems,
+          ignoreItemCase,
+          trimItems
+        )
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [
+    deleteEmptyItems,
+    displayFormat,
+    ignoreItemCase,
+    input,
+    sortingMethod,
+    splitMode,
+    splitSeparator,
+    trimItems
+  ]);
+
+  const output = error ? t('common.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolTextInput
-          title={t('findMostPopular.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult
-          title={t('findMostPopular.resultTitle')}
-          value={result}
-        />
-      }
-      initialValues={initialValues}
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('findMostPopular.extractListItems'),
-          component: (
-            <Box>
-              {splitOperators.map(({ title, description, type }) => (
-                <SimpleRadio
-                  key={type}
-                  onClick={() => updateField('splitSeparatorType', type)}
-                  title={t(title)}
-                  description={t(description)}
-                  checked={values.splitSeparatorType === type}
-                />
-              ))}
-              <TextFieldWithDesc
-                description={t('findMostPopular.splitSeparatorDescription')}
-                value={values.splitSeparator}
-                onOwnChange={(val) => updateField('splitSeparator', val)}
-              />
-            </Box>
-          )
-        },
-        {
-          title: t('findMostPopular.itemComparison'),
-          component: (
-            <Box>
-              <CheckboxWithDesc
-                title={t('findMostPopular.removeEmptyItems')}
-                description={t('findMostPopular.removeEmptyItemsDescription')}
-                checked={values.deleteEmptyItems}
-                onChange={(value) => updateField('deleteEmptyItems', value)}
-              />
-              <CheckboxWithDesc
-                title={t('findMostPopular.trimItems')}
-                description={t('findMostPopular.trimItemsDescription')}
-                checked={values.trimItems}
-                onChange={(value) => updateField('trimItems', value)}
-              />
-              <CheckboxWithDesc
-                title={t('findMostPopular.ignoreItemCase')}
-                description={t('findMostPopular.ignoreItemCaseDescription')}
-                checked={values.ignoreItemCase}
-                onChange={(value) => updateField('ignoreItemCase', value)}
-              />
-            </Box>
-          )
-        },
-        {
-          title: t('findMostPopular.outputFormat'),
-          component: (
-            <Box>
-              <SelectWithDesc
-                selected={values.displayFormat}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('findMostPopular.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <SplitOptions
+              splitMode={splitMode}
+              splitSeparator={splitSeparator}
+              labels={{
+                symbol: t('common.symbolMode'),
+                regex: t('common.regexMode'),
+                splitSeparator: t('common.splitSeparator'),
+                joinSeparator: t('common.joinSeparator')
+              }}
+              onSplitModeChange={setSplitMode}
+              onSplitSeparatorChange={setSplitSeparator}
+            />
+            <Stack spacing={1.5}>
+              <CompactSelect
+                label={t('common.outputFormat')}
+                value={displayFormat}
                 options={[
-                  {
-                    label: t('findMostPopular.displayOptions.percentage'),
-                    value: 'percentage'
-                  },
                   {
                     label: t('findMostPopular.displayOptions.count'),
                     value: 'count'
+                  },
+                  {
+                    label: t('findMostPopular.displayOptions.percentage'),
+                    value: 'percentage'
                   },
                   {
                     label: t('findMostPopular.displayOptions.total'),
                     value: 'total'
                   }
                 ]}
-                onChange={(value) => updateField('displayFormat', value)}
-                description={t('findMostPopular.displayFormatDescription')}
+                onChange={setDisplayFormat}
               />
-              <SelectWithDesc
-                selected={values.sortingMethod}
+              <CompactSelect
+                label={t('common.order')}
+                value={sortingMethod}
                 options={[
                   {
                     label: t('findMostPopular.sortOptions.alphabetic'),
@@ -172,15 +123,36 @@ export default function FindMostPopular({ title }: ToolComponentProps) {
                     value: 'count'
                   }
                 ]}
-                onChange={(value) => updateField('sortingMethod', value)}
-                description={t('findMostPopular.sortingMethodDescription')}
+                onChange={setSortingMethod}
               />
-            </Box>
-          )
+              <CompactCheckbox
+                checked={deleteEmptyItems}
+                label={t('findMostPopular.removeEmptyItems')}
+                onChange={setDeleteEmptyItems}
+              />
+              <CompactCheckbox
+                checked={trimItems}
+                label={t('findMostPopular.trimItems')}
+                onChange={setTrimItems}
+              />
+              <CompactCheckbox
+                checked={ignoreItemCase}
+                label={t('findMostPopular.ignoreItemCase')}
+                onChange={setIgnoreItemCase}
+              />
+            </Stack>
+          </Stack>
         }
-      ]}
-      compute={compute}
-      setInput={setInput}
-    />
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('findMostPopular.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

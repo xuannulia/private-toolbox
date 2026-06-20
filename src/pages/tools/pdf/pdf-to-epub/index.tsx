@@ -1,58 +1,71 @@
-import { useState, useEffect } from 'react';
-import ToolFileResult from '@components/result/ToolFileResult';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { Box } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolPdfInput from '@components/input/ToolPdfInput';
+import ToolFileResult from '@components/result/ToolFileResult';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { convertPdfToEpub } from './service';
 
-export default function PdfToEpub({ title }: ToolComponentProps) {
+export default function PdfToEpub() {
+  const { t } = useTranslation('pdf');
   const [input, setInput] = useState<File | null>(null);
   const [result, setResult] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
-  const compute = async (options: {}, input: File | null) => {
-    if (!input) return;
-    try {
-      setIsProcessing(true);
+  useEffect(() => {
+    if (!input) {
       setResult(null);
-      const epub = await convertPdfToEpub(input);
-      setResult(epub);
-    } catch (error) {
-      console.error('Failed to convert PDF to EPUB:', error);
-    } finally {
-      setIsProcessing(false);
+      setLoading(false);
+      return;
     }
-  };
+
+    const inputFile = input;
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runConversion() {
+        try {
+          setLoading(true);
+          const epub = await convertPdfToEpub(inputFile);
+
+          if (!canceled) setResult(epub);
+        } catch (error) {
+          console.error('Failed to convert PDF to EPUB:', error);
+          if (!canceled) setResult(null);
+        } finally {
+          if (!canceled) setLoading(false);
+        }
+      }
+
+      void runConversion();
+    }, 300);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      setInput={setInput}
-      initialValues={{}}
-      compute={compute}
-      inputComponent={
-        <ToolPdfInput
-          value={input}
-          onChange={(file) => setInput(file)}
-          accept={['application/pdf']}
-          title={'Input PDF'}
-        />
-      }
-      getGroups={null}
-      resultComponent={
-        <ToolFileResult
-          title={'EPUB Output'}
-          value={result}
-          extension={'epub'}
-          loading={isProcessing}
-          loadingText={'Converting PDF to EPUB...'}
-        />
-      }
-      toolInfo={{
-        title: 'How to Use PDF to EPUB?',
-        description: `Upload a PDF file and this tool will convert it into an EPUB format, suitable for most e-reader devices.`
-      }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <ToolPdfInput
+            value={input}
+            onChange={setInput}
+            accept={['application/pdf']}
+            title={t('pdfToEpub.inputTitle')}
+          />
+        }
+        result={
+          <ToolFileResult
+            title={t('pdfToEpub.resultTitle')}
+            value={result}
+            extension="epub"
+            loading={loading}
+            loadingText={t('pdfToEpub.convertingPdf')}
+          />
+        }
+      />
+    </Box>
   );
 }

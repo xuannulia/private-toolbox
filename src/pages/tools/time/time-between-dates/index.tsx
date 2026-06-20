@@ -1,28 +1,22 @@
-import { Box, Paper, Typography } from '@mui/material';
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import SelectWithDesc from '@components/options/SelectWithDesc';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import ToolTextResult from '@components/result/ToolTextResult';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  CompactSelect,
+  CompactTextField,
+  OptionStack
+} from '../TimeToolControls';
 import {
   calculateTimeBetweenDates,
   formatTimeWithLargestUnit,
   getTimeWithTimezone,
+  type TimeUnit,
   unitHierarchy
 } from './service';
-import * as Yup from 'yup';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { useTranslation } from 'react-i18next';
 
-type TimeUnit =
-  | 'milliseconds'
-  | 'seconds'
-  | 'minutes'
-  | 'hours'
-  | 'days'
-  | 'months'
-  | 'years';
-
-type InitialValuesType = {
+type TimeBetweenState = {
   startDate: string;
   startTime: string;
   endDate: string;
@@ -31,23 +25,7 @@ type InitialValuesType = {
   endTimezone: string;
 };
 
-const initialValues: InitialValuesType = {
-  startDate: new Date().toISOString().split('T')[0],
-  startTime: '00:00',
-  endDate: new Date().toISOString().split('T')[0],
-  endTime: '12:00',
-  startTimezone: 'local',
-  endTimezone: 'local'
-};
-
-const validationSchema = Yup.object({
-  startDate: Yup.string().required('Start date is required'),
-  startTime: Yup.string().required('Start time is required'),
-  endDate: Yup.string().required('End date is required'),
-  endTime: Yup.string().required('End time is required'),
-  startTimezone: Yup.string(),
-  endTimezone: Yup.string()
-});
+const today = new Date().toISOString().split('T')[0];
 
 const timezoneOptions = [
   { value: 'local', label: 'Local Time' },
@@ -67,7 +45,7 @@ const timezoneOptions = [
         const value = offset.replace('UTC', 'GMT');
 
         return [
-          value, // key for Map to ensure uniqueness
+          value,
           {
             value,
             label: `${value} (${tz})`
@@ -78,179 +56,113 @@ const timezoneOptions = [
   ).sort((a, b) => a.value.localeCompare(b.value, undefined, { numeric: true }))
 ];
 
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'One Year Difference',
-    description: 'Calculate the time between dates that are one year apart',
-    sampleOptions: {
-      startDate: '2023-01-01',
-      startTime: '12:00',
-      endDate: '2024-01-01',
-      endTime: '12:00',
-      startTimezone: 'local',
-      endTimezone: 'local'
-    },
-    sampleResult: '1 year'
-  },
-  {
-    title: 'Different Timezones',
-    description: 'Calculate the time difference between New York and London',
-    sampleOptions: {
-      startDate: '2023-01-01',
-      startTime: '12:00',
-      endDate: '2023-01-01',
-      endTime: '12:00',
-      startTimezone: 'GMT-5',
-      endTimezone: 'GMT'
-    },
-    sampleResult: '5 hours'
-  },
-  {
-    title: 'Detailed Time Breakdown',
-    description: 'Show a detailed breakdown of a time difference',
-    sampleOptions: {
-      startDate: '2023-01-01',
-      startTime: '09:30',
-      endDate: '2023-01-03',
-      endTime: '14:45',
-      startTimezone: 'local',
-      endTimezone: 'local'
-    },
-    sampleResult: '2 days, 5 hours, 15 minutes'
-  }
-];
+const createInitialState = (): TimeBetweenState => ({
+  startDate: today,
+  startTime: '00:00',
+  endDate: today,
+  endTime: '12:00',
+  startTimezone: 'local',
+  endTimezone: 'local'
+});
+
+const formatError = (error: unknown): string =>
+  error instanceof Error
+    ? error.message
+    : 'Failed to calculate time difference';
 
 export default function TimeBetweenDates() {
   const { t } = useTranslation('time');
-  const [result, setResult] = useState<string>('');
+  const [values, setValues] = useState<TimeBetweenState>(createInitialState);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
+
+  const updateField = (field: keyof TimeBetweenState, value: string) => {
+    setValues((current) => ({ ...current, [field]: value }));
+  };
+
+  useEffect(() => {
+    try {
+      const startDateTime = getTimeWithTimezone(
+        values.startDate,
+        values.startTime,
+        values.startTimezone
+      );
+      const endDateTime = getTimeWithTimezone(
+        values.endDate,
+        values.endTime,
+        values.endTimezone
+      );
+      const difference = calculateTimeBetweenDates(startDateTime, endDateTime);
+      const bestUnit: TimeUnit =
+        unitHierarchy.find((unit) => difference[unit] > 0) || 'milliseconds';
+
+      setResult(formatTimeWithLargestUnit(difference, bestUnit));
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [values]);
+
+  const output = error ? t('common.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={t('timeBetweenDates.title')}
-      inputComponent={null}
-      resultComponent={
-        result ? (
-          <Paper
-            elevation={3}
-            sx={{
-              p: 3,
-              borderLeft: '5px solid',
-              borderColor: 'primary.main',
-              bgcolor: 'background.paper',
-              maxWidth: '100%',
-              mx: 'auto'
-            }}
-          >
-            <Typography
-              variant="h4"
-              align="center"
-              sx={{ fontWeight: 'bold', color: 'primary.main' }}
-            >
-              {result}
-            </Typography>
-          </Paper>
-        ) : null
-      }
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      exampleCards={exampleCards}
-      toolInfo={{
-        title: t('timeBetweenDates.toolInfo.title'),
-        description: t('timeBetweenDates.toolInfo.description')
-      }}
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('timeBetweenDates.startDateTime'),
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                description={t('timeBetweenDates.startDate')}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <OptionStack>
+              <CompactTextField
+                label={t('timeBetweenDates.startDate')}
+                type="date"
                 value={values.startDate}
-                onOwnChange={(val) => updateField('startDate', val)}
-                type="date"
+                onChange={(value) => updateField('startDate', value)}
               />
-              <TextFieldWithDesc
-                description={t('timeBetweenDates.startTime')}
+              <CompactTextField
+                label={t('timeBetweenDates.startTime')}
+                type="time"
                 value={values.startTime}
-                onOwnChange={(val) => updateField('startTime', val)}
-                type="time"
+                onChange={(value) => updateField('startTime', value)}
               />
-              <SelectWithDesc
-                description={t('timeBetweenDates.startTimezone')}
-                selected={values.startTimezone}
-                onChange={(val: string) => updateField('startTimezone', val)}
+              <CompactSelect
+                label={t('timeBetweenDates.startTimezone')}
+                value={values.startTimezone}
                 options={timezoneOptions}
+                onChange={(value) => updateField('startTimezone', value)}
               />
-            </Box>
-          )
-        },
-        {
-          title: t('timeBetweenDates.endDateTime'),
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                description={t('timeBetweenDates.endDate')}
-                value={values.endDate}
-                onOwnChange={(val) => updateField('endDate', val)}
+            </OptionStack>
+            <OptionStack>
+              <CompactTextField
+                label={t('timeBetweenDates.endDate')}
                 type="date"
+                value={values.endDate}
+                onChange={(value) => updateField('endDate', value)}
               />
-              <TextFieldWithDesc
-                description={t('timeBetweenDates.endTime')}
-                value={values.endTime}
-                onOwnChange={(val) => updateField('endTime', val)}
+              <CompactTextField
+                label={t('timeBetweenDates.endTime')}
                 type="time"
+                value={values.endTime}
+                onChange={(value) => updateField('endTime', value)}
               />
-              <SelectWithDesc
-                description={t('timeBetweenDates.endTimezone')}
-                selected={values.endTimezone}
-                onChange={(val: string) => updateField('endTimezone', val)}
+              <CompactSelect
+                label={t('timeBetweenDates.endTimezone')}
+                value={values.endTimezone}
                 options={timezoneOptions}
+                onChange={(value) => updateField('endTimezone', value)}
               />
-            </Box>
-          )
+            </OptionStack>
+          </Stack>
         }
-      ]}
-      compute={(values) => {
-        try {
-          const startDateTime = getTimeWithTimezone(
-            values.startDate,
-            values.startTime,
-            values.startTimezone
-          );
-
-          const endDateTime = getTimeWithTimezone(
-            values.endDate,
-            values.endTime,
-            values.endTimezone
-          );
-
-          // Calculate time difference
-          const difference = calculateTimeBetweenDates(
-            startDateTime,
-            endDateTime
-          );
-
-          // Auto-determine the best unit to display based on the time difference
-          const bestUnit: TimeUnit =
-            unitHierarchy.find((unit) => difference[unit] > 0) ||
-            'milliseconds';
-
-          const formattedDifference = formatTimeWithLargestUnit(
-            difference,
-            bestUnit
-          );
-
-          setResult(formattedDifference);
-        } catch (error) {
-          setResult(
-            `Error: ${
-              error instanceof Error
-                ? error.message
-                : 'Failed to calculate time difference'
-            }`
-          );
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('timeBetweenDates.resultTitle')}
+            value={output}
+          />
         }
-      }}
-    />
+      />
+    </Box>
   );
 }

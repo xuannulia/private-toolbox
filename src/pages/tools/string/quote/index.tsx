@@ -1,156 +1,133 @@
-import React, { useState } from 'react';
-import { Box } from '@mui/material';
-import ToolContent from '@components/ToolContent';
+import {
+  Box,
+  Checkbox,
+  FormControlLabel,
+  Stack,
+  TextField
+} from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { stringQuoter } from './service';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { stringQuoter } from './service';
 
-interface InitialValuesType {
-  leftQuote: string;
-  rightQuote: string;
-  doubleQuotation: boolean;
-  emptyQuoting: boolean;
-  multiLine: boolean;
-}
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Quote text failed';
 
-const initialValues: InitialValuesType = {
-  leftQuote: '"',
-  rightQuote: '"',
-  doubleQuotation: false,
-  emptyQuoting: true,
-  multiLine: true
-};
-
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Quote text with double quotes',
-    description: 'This example shows how to quote text with double quotes.',
-    sampleText: 'Hello World',
-    sampleResult: '"Hello World"',
-    sampleOptions: {
-      leftQuote: '"',
-      rightQuote: '"',
-      doubleQuotation: false,
-      emptyQuoting: true,
-      multiLine: false
-    }
-  },
-  {
-    title: 'Quote multi-line text with single quotes',
-    description:
-      'This example shows how to quote multi-line text with single quotes.',
-    sampleText: 'Hello\nWorld',
-    sampleResult: "'Hello'\n'World'",
-    sampleOptions: {
-      leftQuote: "'",
-      rightQuote: "'",
-      doubleQuotation: false,
-      emptyQuoting: true,
-      multiLine: true
-    }
-  },
-  {
-    title: 'Quote with custom quotes',
-    description: 'This example shows how to quote text with custom quotes.',
-    sampleText: 'Hello World',
-    sampleResult: '<<Hello World>>',
-    sampleOptions: {
-      leftQuote: '<<',
-      rightQuote: '>>',
-      doubleQuotation: false,
-      emptyQuoting: true,
-      multiLine: false
-    }
-  }
-];
-
-export default function Quote({ title }: ToolComponentProps) {
+export default function Quote() {
   const { t } = useTranslation('string');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [leftQuote, setLeftQuote] = useState('"');
+  const [rightQuote, setRightQuote] = useState('"');
+  const [doubleQuotation, setDoubleQuotation] = useState(false);
+  const [emptyQuoting, setEmptyQuoting] = useState(true);
+  const [multiLine, setMultiLine] = useState(true);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const compute = (optionsValues: InitialValuesType, input: string) => {
-    if (input) {
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
+    }
+
+    try {
       setResult(
         stringQuoter(
           input,
-          optionsValues.leftQuote,
-          optionsValues.rightQuote,
-          optionsValues.doubleQuotation,
-          optionsValues.emptyQuoting,
-          optionsValues.multiLine
+          leftQuote,
+          rightQuote,
+          doubleQuotation,
+          emptyQuoting,
+          multiLine
         )
       );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
     }
-  };
+  }, [doubleQuotation, emptyQuoting, input, leftQuote, multiLine, rightQuote]);
 
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('quote.quoteOptions'),
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            value={values.leftQuote}
-            onOwnChange={(val) => updateField('leftQuote', val)}
-            description={t('quote.leftQuoteDescription')}
-          />
-          <TextFieldWithDesc
-            value={values.rightQuote}
-            onOwnChange={(val) => updateField('rightQuote', val)}
-            description={t('quote.rightQuoteDescription')}
-          />
-          <CheckboxWithDesc
-            checked={values.doubleQuotation}
-            onChange={(checked) => updateField('doubleQuotation', checked)}
-            title={t('quote.allowDoubleQuotation')}
-          />
-          <CheckboxWithDesc
-            checked={values.emptyQuoting}
-            onChange={(checked) => updateField('emptyQuoting', checked)}
-            title={t('quote.quoteEmptyLines')}
-          />
-          <CheckboxWithDesc
-            checked={values.multiLine}
-            onChange={(checked) => updateField('multiLine', checked)}
-            title={t('quote.processAsMultiLine')}
-          />
-        </Box>
-      )
-    }
-  ];
+  const output = error ? t('quote.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      inputComponent={
-        <ToolTextInput
-          title={t('quote.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult title={t('quote.resultTitle')} value={result} />
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      toolInfo={{
-        title: t('quote.toolInfo.title'),
-        description: t('quote.toolInfo.description')
-      }}
-      exampleCards={exampleCards}
-      input={input}
-      setInput={setInput}
-      compute={compute}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('quote.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                fullWidth
+                label={t('quote.leftQuoteLabel')}
+                size="small"
+                value={leftQuote}
+                onChange={(event) => setLeftQuote(event.target.value)}
+              />
+              <TextField
+                fullWidth
+                label={t('quote.rightQuoteLabel')}
+                size="small"
+                value={rightQuote}
+                onChange={(event) => setRightQuote(event.target.value)}
+              />
+            </Stack>
+            <Stack spacing={0.5}>
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={doubleQuotation}
+                    onChange={(event) =>
+                      setDoubleQuotation(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label={t('quote.allowDoubleQuotation')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={emptyQuoting}
+                    onChange={(event) => setEmptyQuoting(event.target.checked)}
+                    size="small"
+                  />
+                }
+                label={t('quote.quoteEmptyLines')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={multiLine}
+                    onChange={(event) => setMultiLine(event.target.checked)}
+                    size="small"
+                  />
+                }
+                label={t('quote.processAsMultiLine')}
+              />
+            </Stack>
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('quote.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

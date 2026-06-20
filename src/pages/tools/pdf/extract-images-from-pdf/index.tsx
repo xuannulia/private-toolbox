@@ -1,76 +1,88 @@
-import { useState } from 'react';
-import ToolFileResult from '@components/result/ToolFileResult';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { Box } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolPdfInput from '@components/input/ToolPdfInput';
-import { processPDF } from './service';
+import ToolFileResult from '@components/result/ToolFileResult';
 import ToolMultiFileResult from '@components/result/ToolMultiFileResult';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { processPDF } from './service';
 
-export default function PdfToEpub({ title }: ToolComponentProps) {
+export default function ExtractImagesFromPdf() {
   const { t } = useTranslation('pdf');
   const [input, setInput] = useState<File | null>(null);
   const [result, setResult] = useState<File[]>([]);
   const [zipFile, setZipFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
-  const compute = async (
-    _options: Record<string, never>,
-    input: File | null
-  ) => {
-    if (!input) return;
-
-    setIsProcessing(true);
-    setResult([]);
-    setZipFile(null);
-    try {
-      const returnedImages = await processPDF(input);
-      setResult(returnedImages?.extractedImages ?? []);
-      setZipFile(returnedImages?.zipFile ?? null);
-    } catch (error) {
-      console.error('Failed to extract images from PDF:', error);
-    } finally {
-      setIsProcessing(false);
+  useEffect(() => {
+    if (!input) {
+      setResult([]);
+      setZipFile(null);
+      setLoading(false);
+      return;
     }
-  };
+
+    const inputFile = input;
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runExtraction() {
+        try {
+          setLoading(true);
+          const output = await processPDF(inputFile);
+
+          if (!canceled) {
+            setResult(output?.extractedImages ?? []);
+            setZipFile(output?.zipFile ?? null);
+          }
+        } catch (error) {
+          console.error('Failed to extract images from PDF:', error);
+          if (!canceled) {
+            setResult([]);
+            setZipFile(null);
+          }
+        } finally {
+          if (!canceled) setLoading(false);
+        }
+      }
+
+      void runExtraction();
+    }, 300);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      setInput={setInput}
-      initialValues={{}}
-      compute={compute}
-      inputComponent={
-        <ToolPdfInput
-          value={input}
-          onChange={setInput}
-          accept={['application/pdf']}
-          title={t('extractImagesFromPdf.inputTitle')}
-        />
-      }
-      getGroups={null}
-      resultComponent={
-        zipFile ? (
-          <ToolMultiFileResult
-            title={t('extractImagesFromPdf.resultTitle')}
-            value={result}
-            zipFile={zipFile}
-            loading={isProcessing}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <ToolPdfInput
+            value={input}
+            onChange={setInput}
+            accept={['application/pdf']}
+            title={t('extractImagesFromPdf.inputTitle')}
           />
-        ) : (
-          <ToolFileResult
-            title={t('extractImagesFromPdf.resultTitle')}
-            value={result[0] ?? null}
-            extension={'png'}
-            loading={isProcessing}
-          />
-        )
-      }
-      toolInfo={{
-        title: t('extractImagesFromPdf.title'),
-        description: t('extractImagesFromPdf.longDescription')
-      }}
-    />
+        }
+        result={
+          zipFile ? (
+            <ToolMultiFileResult
+              title={t('extractImagesFromPdf.resultTitle')}
+              value={result}
+              zipFile={zipFile}
+              loading={loading}
+            />
+          ) : (
+            <ToolFileResult
+              title={t('extractImagesFromPdf.resultTitle')}
+              value={result[0] ?? null}
+              extension="png"
+              loading={loading}
+            />
+          )
+        }
+      />
+    </Box>
   );
 }

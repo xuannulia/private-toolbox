@@ -7,10 +7,12 @@ export type InitialValuesType = {
 
 export interface HiddenCharacter {
   char: string;
+  displayValue: string;
   unicode: string;
   name: string;
   category: string;
   position: number;
+  codePointIndex: number;
   isRTL: boolean;
   isInvisible: boolean;
   isZeroWidth: boolean;
@@ -22,5 +24,7 @@ export interface AnalysisResult {
   hasRTLOverride: boolean;
   hasInvisibleChars: boolean;
   hasZeroWidthChars: boolean;
+  hasControlChars: boolean;
   totalHiddenChars: number;
+  truncated: boolean;
 }

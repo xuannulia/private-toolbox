@@ -1,203 +1,169 @@
-import { Box } from '@mui/material';
-import React, { useRef, useState } from 'react';
+import { Box, MenuItem, Stack, TextField } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { compute, SplitOperatorType } from './service';
-import RadioWithTextField from '@components/options/RadioWithTextField';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import ToolExamples, {
-  CardExampleType
-} from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
-import { FormikProps } from 'formik';
-import ToolContent from '@components/ToolContent';
+import { replaceSpecialCharacters } from '@utils/string';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ParseKeys } from 'i18next';
+import { compute, SplitOperatorType } from './service';
 
-const initialValues = {
-  splitSeparatorType: 'symbol' as SplitOperatorType,
-  symbolValue: ' ',
-  regexValue: '/\\s+/',
-  lengthValue: '16',
-  chunksValue: '4',
+const splitModes: SplitOperatorType[] = ['symbol', 'regex', 'length', 'chunks'];
 
-  outputSeparator: '\\n',
-  charBeforeChunk: '',
-  charAfterChunk: ''
-};
-const splitOperators: {
-  title: ParseKeys<'string'>;
-  description: ParseKeys<'string'>;
-  type: SplitOperatorType;
-}[] = [
-  {
-    title: 'split.symbolTitle',
-    description: 'split.symbolDescription',
-    type: 'symbol'
-  },
-  {
-    title: 'split.regexTitle',
-    type: 'regex',
-    description: 'split.regexDescription'
-  },
-  {
-    title: 'split.lengthTitle',
-    description: 'split.lengthDescription',
-    type: 'length'
-  },
-  {
-    title: 'split.chunksTitle',
-    description: 'split.chunksDescription',
-    type: 'chunks'
-  }
-];
-const outputOptions: {
-  description: ParseKeys<'string'>;
-  accessor: keyof typeof initialValues;
-}[] = [
-  {
-    description: 'split.outputSeparatorDescription',
-    accessor: 'outputSeparator'
-  },
-  {
-    description: 'split.charBeforeChunkDescription',
-    accessor: 'charBeforeChunk'
-  },
-  {
-    description: 'split.charAfterChunkDescription',
-    accessor: 'charAfterChunk'
-  }
-];
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Split text failed';
 
-const exampleCards: CardExampleType<typeof initialValues>[] = [
-  {
-    title: 'Split German Numbers',
-    description:
-      'In this example, we break the text into pieces by two characters – a comma and space. As a result, we get a column of numbers from 1 to 10 in German.',
-    sampleText: `1 - eins, 2 - zwei, 3 - drei, 4 - vier, 5 - fünf, 6 - sechs, 7 - sieben, 8 - acht, 9 - neun, 10 - zehn`,
-    sampleResult: `1 - eins
-2 - zwei
-3 - drei
-4 - vier
-5 - fünf
-6 - sechs
-7 - sieben
-8 - acht
-9 - neun
-10 - zehn`,
-    sampleOptions: {
-      ...initialValues,
-      symbolValue: ',',
-      splitSeparatorType: 'symbol',
-      outputSeparator: '\n'
-    }
-  },
-  {
-    title: 'Text Cleanup via a Regular Expression',
-    description:
-      'In this example, we use a super smart regular expression trick to clean-up the text. This regexp finds all non-alphabetic characters and splits the text into pieces by these non-alphabetic chars. As a result, we extract only those parts of the text that contain Latin letters and words.',
-    sampleText: `Finding%№1.65*;?words()is'12#easy_`,
-    sampleResult: `Finding
-words
-is
-easy`,
-    sampleOptions: {
-      ...initialValues,
-      regexValue: '[^a-zA-Z]+',
-      splitSeparatorType: 'regex',
-      outputSeparator: '\n'
-    }
-  },
-  {
-    title: 'Three-dot Output Separator',
-    description:
-      'This example splits the text by spaces and then places three dots between the words.',
-    sampleText: `If you started with $0.01 and doubled your money every day, it would take 27 days to become a millionaire.`,
-    sampleResult: `If...you...started...with...$0.01...and...doubled...your...money...every...day,...it...would...take...27...days...to...become...a...millionaire.!`,
-    sampleOptions: {
-      ...initialValues,
-      symbolValue: '',
-      splitSeparatorType: 'symbol',
-      outputSeparator: '...'
-    }
-  }
-];
-
-export default function SplitText({ title }: ToolComponentProps) {
+export default function SplitText() {
   const { t } = useTranslation('string');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [splitSeparatorType, setSplitSeparatorType] =
+    useState<SplitOperatorType>('symbol');
+  const [symbolValue, setSymbolValue] = useState(' ');
+  const [regexValue, setRegexValue] = useState('\\s+');
+  const [lengthValue, setLengthValue] = useState('16');
+  const [chunksValue, setChunksValue] = useState('4');
+  const [outputSeparator, setOutputSeparator] = useState('\\n');
+  const [charBeforeChunk, setCharBeforeChunk] = useState('');
+  const [charAfterChunk, setCharAfterChunk] = useState('');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const computeExternal = (
-    optionsValues: typeof initialValues,
-    input: string
-  ) => {
-    const {
-      splitSeparatorType,
-      outputSeparator,
-      charBeforeChunk,
-      charAfterChunk,
-      chunksValue,
-      symbolValue,
-      regexValue,
-      lengthValue
-    } = optionsValues;
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
+    }
 
-    setResult(
-      compute(
-        splitSeparatorType,
-        input,
-        symbolValue,
-        regexValue,
-        Number(lengthValue),
-        Number(chunksValue),
-        charBeforeChunk,
-        charAfterChunk,
-        outputSeparator
-      )
-    );
-  };
+    try {
+      setResult(
+        compute(
+          splitSeparatorType,
+          input,
+          replaceSpecialCharacters(symbolValue),
+          regexValue,
+          Number(lengthValue),
+          Number(chunksValue),
+          replaceSpecialCharacters(charBeforeChunk),
+          replaceSpecialCharacters(charAfterChunk),
+          replaceSpecialCharacters(outputSeparator)
+        )
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [
+    charAfterChunk,
+    charBeforeChunk,
+    chunksValue,
+    input,
+    lengthValue,
+    outputSeparator,
+    regexValue,
+    splitSeparatorType,
+    symbolValue
+  ]);
+
+  const output = error ? t('split.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={<ToolTextInput value={input} onChange={setInput} />}
-      resultComponent={
-        <ToolTextResult title={t('split.resultTitle')} value={result} />
-      }
-      initialValues={initialValues}
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('split.splitSeparatorOptions'),
-          component: splitOperators.map(({ title, description, type }) => (
-            <RadioWithTextField
-              key={type}
-              checked={type === values.splitSeparatorType}
-              title={t(title)}
-              fieldName={'splitSeparatorType'}
-              description={t(description)}
-              value={values[`${type}Value`]}
-              onRadioClick={() => updateField('splitSeparatorType', type)}
-              onTextChange={(val) => updateField(`${type}Value`, val)}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('split.inputTitle')}
+              value={input}
+              onChange={setInput}
             />
-          ))
-        },
-        {
-          title: t('split.outputSeparatorOptions'),
-          component: outputOptions.map((option) => (
-            <TextFieldWithDesc
-              key={option.accessor}
-              value={values[option.accessor]}
-              onOwnChange={(value) => updateField(option.accessor, value)}
-              description={t(option.description)}
+            <TextField
+              select
+              fullWidth
+              label={t('split.modeLabel')}
+              size="small"
+              value={splitSeparatorType}
+              onChange={(event) =>
+                setSplitSeparatorType(event.target.value as SplitOperatorType)
+              }
+              sx={{ backgroundColor: 'background.paper' }}
+            >
+              {splitModes.map((mode) => (
+                <MenuItem key={mode} value={mode}>
+                  {t(`split.${mode}Title`)}
+                </MenuItem>
+              ))}
+            </TextField>
+            {splitSeparatorType === 'symbol' && (
+              <TextField
+                label={t('split.separatorLabel')}
+                size="small"
+                value={symbolValue}
+                onChange={(event) => setSymbolValue(event.target.value)}
+              />
+            )}
+            {splitSeparatorType === 'regex' && (
+              <TextField
+                label={t('split.regexLabel')}
+                size="small"
+                value={regexValue}
+                onChange={(event) => setRegexValue(event.target.value)}
+              />
+            )}
+            {splitSeparatorType === 'length' && (
+              <TextField
+                label={t('split.lengthLabel')}
+                size="small"
+                type="number"
+                value={lengthValue}
+                onChange={(event) => setLengthValue(event.target.value)}
+              />
+            )}
+            {splitSeparatorType === 'chunks' && (
+              <TextField
+                label={t('split.chunksLabel')}
+                size="small"
+                type="number"
+                value={chunksValue}
+                onChange={(event) => setChunksValue(event.target.value)}
+              />
+            )}
+            <TextField
+              label={t('split.outputSeparatorLabel')}
+              size="small"
+              value={outputSeparator}
+              onChange={(event) => setOutputSeparator(event.target.value)}
             />
-          ))
+            {splitSeparatorType === 'chunks' && (
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <TextField
+                  fullWidth
+                  label={t('split.prefixLabel')}
+                  size="small"
+                  value={charBeforeChunk}
+                  onChange={(event) => setCharBeforeChunk(event.target.value)}
+                />
+                <TextField
+                  fullWidth
+                  label={t('split.suffixLabel')}
+                  size="small"
+                  value={charAfterChunk}
+                  onChange={(event) => setCharAfterChunk(event.target.value)}
+                />
+              </Stack>
+            )}
+          </Stack>
         }
-      ]}
-      compute={computeExternal}
-      setInput={setInput}
-      exampleCards={exampleCards}
-    />
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('split.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

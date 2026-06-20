@@ -1,71 +1,60 @@
-import React, { useState } from 'react';
+import { Box, MenuItem, Stack, TextField } from '@mui/material';
 import ToolTextInput from '@components/input/ToolTextInput';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { UppercaseInput } from './service';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
-import ToolContent from '@components/ToolContent';
+import { changeTextCase, type TextCaseMode } from '@private-toolbox/core';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const initialValues = {};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Text case conversion failed';
 
-const exampleCards: CardExampleType<typeof initialValues>[] = [
-  {
-    title: 'Convert Text to Uppercase',
-    description: 'This example transforms any text to ALL UPPERCASE format.',
-    sampleText: 'The quick brown fox jumps over the lazy dog.',
-    sampleResult: 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.',
-    sampleOptions: {}
-  },
-  {
-    title: 'Uppercase Code',
-    description:
-      'Convert code to uppercase format. Note that this is for display only and would not maintain code functionality.',
-    sampleText: 'function example() { return "hello world"; }',
-    sampleResult: 'FUNCTION EXAMPLE() { RETURN "HELLO WORLD"; }',
-    sampleOptions: {}
-  },
-  {
-    title: 'Mixed Case to Uppercase',
-    description:
-      'Transform text with mixed casing to consistent all uppercase format.',
-    sampleText: 'ThIs Is MiXeD CaSe TeXt!',
-    sampleResult: 'THIS IS MIXED CASE TEXT!',
-    sampleOptions: {}
-  }
-];
-
-export default function Uppercase({ title }: ToolComponentProps) {
+export default function Uppercase() {
   const { t } = useTranslation('string');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [mode, setMode] = useState<TextCaseMode>('uppercase');
+  const [result, setResult] = useState('');
 
-  const computeExternal = (
-    _optionsValues: typeof initialValues,
-    input: string
-  ) => {
-    setResult(UppercaseInput(input));
-  };
+  useEffect(() => {
+    try {
+      setResult(changeTextCase(input, mode).output);
+    } catch (error) {
+      setResult(formatError(error));
+    }
+  }, [input, mode]);
 
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={null}
-      compute={computeExternal}
-      input={input}
-      setInput={setInput}
-      inputComponent={
-        <ToolTextInput
-          title={t('uppercase.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult title={t('uppercase.resultTitle')} value={result} />
-      }
-      exampleCards={exampleCards}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('uppercase.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label={t('uppercase.modeTitle')}
+              value={mode}
+              onChange={(event) => setMode(event.target.value as TextCaseMode)}
+              sx={{ backgroundColor: 'background.paper' }}
+            >
+              <MenuItem value="uppercase">{t('uppercase.uppercase')}</MenuItem>
+              <MenuItem value="lowercase">{t('uppercase.lowercase')}</MenuItem>
+              <MenuItem value="title_case">{t('uppercase.titleCase')}</MenuItem>
+              <MenuItem value="capitalize">
+                {t('uppercase.capitalize')}
+              </MenuItem>
+            </TextField>
+          </Stack>
+        }
+        result={
+          <ToolTextResult title={t('uppercase.resultTitle')} value={result} />
+        }
+      />
+    </Box>
   );
 }

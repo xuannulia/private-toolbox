@@ -1,27 +1,19 @@
 import { Box } from '@mui/material';
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import ToolHeader from './ToolHeader';
-import Separator from './Separator';
-import AllTools from './allTools/AllTools';
-import { getToolsByCategory } from '@tools/index';
-import {
-  capitalizeFirstLetter,
-  getI18nNamespaceFromToolCategory
-} from '../utils/string';
-import { IconifyIcon } from '@iconify/react';
+import { getI18nNamespaceFromToolCategory } from '../utils/string';
 import { useTranslation } from 'react-i18next';
 import { ToolCategory } from '@tools/defineTool';
 import { FullI18nKey } from '../i18n';
+import { recordRecentTool } from '@utils/recentTools';
 
 export default function ToolLayout({
   children,
-  icon,
   i18n,
   type,
   fullPath
 }: {
-  icon?: IconifyIcon | string;
   type: ToolCategory;
   fullPath: string;
   children: ReactNode;
@@ -36,22 +28,13 @@ export default function ToolLayout({
     getI18nNamespaceFromToolCategory(type)
   ]);
 
+  useEffect(() => {
+    recordRecentTool(fullPath);
+  }, [fullPath]);
+
   // Use i18n keys if available, otherwise fall back to provided strings
   //@ts-ignore
   const toolTitle: string = t(i18n.name);
-  //@ts-ignore
-  const toolDescription: string = t(i18n.description);
-
-  const otherCategoryTools =
-    getToolsByCategory([], t)
-      .find((category) => category.type === type)
-      ?.tools.filter((tool) => t(tool.name) !== toolTitle)
-      .map((tool) => ({
-        title: tool.name,
-        description: tool.shortDescription,
-        link: '/' + tool.path,
-        icon: tool.icon
-      })) ?? [];
 
   return (
     <Box
@@ -62,28 +45,16 @@ export default function ToolLayout({
       sx={{ backgroundColor: 'background.default' }}
     >
       <Helmet>
-        <title>{`${toolTitle} - OmniTools`}</title>
+        <title>{`${toolTitle} - Private Toolbox`}</title>
       </Helmet>
-      <Box width={'85%'}>
-        <ToolHeader
-          title={toolTitle}
-          description={toolDescription}
-          icon={icon}
-          type={type}
-          path={fullPath}
-        />
+      <Box
+        sx={{
+          width: { xs: 'calc(100% - 24px)', md: '85%' },
+          maxWidth: 1440
+        }}
+      >
+        <ToolHeader title={toolTitle} type={type} path={fullPath} />
         {children}
-        <Separator backgroundColor="#5581b5" margin="50px" />
-        <AllTools
-          title={t('translation:toolLayout.allToolsTitle', '', {
-            type: capitalizeFirstLetter(
-              getToolsByCategory([], t).find(
-                (category) => category.type === type
-              )!.title
-            )
-          })}
-          toolCards={otherCategoryTools}
-        />
       </Box>
     </Box>
   );

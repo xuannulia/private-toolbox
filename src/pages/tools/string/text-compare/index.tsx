@@ -1,96 +1,71 @@
-import { Box } from '@mui/material';
-import { useState, useEffect } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { GetGroupsType } from '@components/options/ToolOptions';
+import {
+  Box,
+  Grid,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup
+} from '@mui/material';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolDiffResult from '@components/result/ToolDiffResult';
-import SelectWithDesc from '@components/options/SelectWithDesc';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { compareTextsHtml } from './service';
-import { level, InitialValuesType } from './types';
+import { level } from './types';
 
-const initialValues: InitialValuesType = {
-  level: 'word'
-};
-
-export default function TextCompare({ title }: ToolComponentProps) {
+export default function TextCompare() {
   const { t } = useTranslation('string');
-  const [inputA, setInputA] = useState<string>('');
-  const [inputB, setInputB] = useState<string>('');
+  const [inputA, setInputA] = useState('');
+  const [inputB, setInputB] = useState('');
   const [level, setLevel] = useState<level>('word');
-  const [result, setResult] = useState<string>('');
-
-  const compute = () => {
-    setResult(compareTextsHtml(inputA, inputB, level));
-  };
+  const [result, setResult] = useState('');
 
   useEffect(() => {
-    compute();
+    setResult(inputA || inputB ? compareTextsHtml(inputA, inputB, level) : '');
   }, [inputA, inputB, level]);
 
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('textCompare.options.title'),
-      component: (
-        <Box>
-          <SelectWithDesc
-            selected={values.level}
-            options={[
-              { label: t('textCompare.options.wordLevel'), value: 'word' },
-              { label: t('textCompare.options.charLevel'), value: 'char' }
-            ]}
-            onChange={(value) => {
-              updateField('level', value);
-              setLevel(value);
-            }}
-            description={t('textCompare.options.levelDesc')}
-          />
-        </Box>
-      )
-    }
-  ];
-
   return (
-    <ToolContent
-      title={title}
-      input={inputA}
-      inputComponent={
-        <Box display="flex" flexDirection="column" gap={2}>
-          <ToolTextInput
-            value={inputA}
-            onChange={setInputA}
-            title={t('textCompare.inputTitle')}
-          />
-          <ToolTextInput
-            value={inputB}
-            onChange={setInputB}
-            title={t('textCompare.inputTitle')}
-          />
-        </Box>
-      }
-      resultComponent={
+    <Box>
+      <Stack spacing={2}>
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={level}
+          onChange={(_, nextLevel: level | null) => {
+            if (nextLevel) {
+              setLevel(nextLevel);
+            }
+          }}
+        >
+          <ToggleButton value="word">
+            {t('textCompare.options.wordLevel')}
+          </ToggleButton>
+          <ToggleButton value="char">
+            {t('textCompare.options.charLevel')}
+          </ToggleButton>
+        </ToggleButtonGroup>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={6}>
+            <ToolTextInput
+              title={t('textCompare.leftTitle')}
+              value={inputA}
+              onChange={setInputA}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <ToolTextInput
+              title={t('textCompare.rightTitle')}
+              value={inputB}
+              onChange={setInputB}
+            />
+          </Grid>
+        </Grid>
         <ToolDiffResult
-          value={result}
-          title={t('textCompare.resultTitle')}
+          disabled={!result}
           isHtml
+          title={t('textCompare.resultTitle')}
+          value={result}
         />
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      setInput={() => {
-        setInputA('');
-        setInputB('');
-        setResult('');
-      }}
-      compute={compute}
-      toolInfo={{
-        title: t('textCompare.title'),
-        description: t('textCompare.longDescription')
-      }}
-    />
+      </Stack>
+    </Box>
   );
 }

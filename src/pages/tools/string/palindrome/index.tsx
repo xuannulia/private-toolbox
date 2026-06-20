@@ -1,126 +1,108 @@
-import { Box } from '@mui/material';
-import React, { useState, useRef } from 'react';
+import {
+  Box,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup
+} from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import ToolOptions, { GetGroupsType } from '@components/options/ToolOptions';
+import { replaceSpecialCharacters } from '@utils/string';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { palindromeList, SplitOperatorType } from './service';
-import RadioWithTextField from '@components/options/RadioWithTextField';
-import ToolInputAndResult from '@components/ToolInputAndResult';
-import ToolExamples, {
-  CardExampleType
-} from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
-import { FormikProps } from 'formik';
-import ToolContent from '@components/ToolContent';
 
-const initialValues = {
-  splitOperatorType: 'symbol' as SplitOperatorType,
-  symbolValue: ' ',
-  regexValue: '\\s+'
-};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Palindrome check failed';
 
-const splitOperators: {
-  title: string;
-  description: string;
-  type: SplitOperatorType;
-}[] = [
-  {
-    title: 'Use a Symbol for Splitting',
-    description:
-      'Character that will be used to split text into parts for palindrome checking.',
-    type: 'symbol'
-  },
-  {
-    title: 'Use a Regex for Splitting',
-    type: 'regex',
-    description:
-      'Regular expression that will be used to split text into parts for palindrome checking.'
-  }
-];
+export default function Palindrome() {
+  const { t } = useTranslation('string');
+  const [input, setInput] = useState('');
+  const [mode, setMode] = useState<SplitOperatorType>('symbol');
+  const [symbolValue, setSymbolValue] = useState(' ');
+  const [regexValue, setRegexValue] = useState('\\s+');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-const exampleCards: CardExampleType<typeof initialValues>[] = [
-  {
-    title: 'Check for Word Palindromes',
-    description:
-      'Checks if each word in the text is a palindrome. Returns "true" for palindromes and "false" for non-palindromes.',
-    sampleText: 'radar level hello anna',
-    sampleResult: 'true true false true',
-    sampleOptions: {
-      ...initialValues,
-      symbolValue: ' '
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
     }
-  },
-  {
-    title: 'Check CSV Words',
-    description: 'Checks palindrome status for comma-separated words.',
-    sampleText: 'mom,dad,wow,test',
-    sampleResult: 'true true true false',
-    sampleOptions: {
-      ...initialValues,
-      symbolValue: ','
-    }
-  },
-  {
-    title: 'Check with Regular Expression',
-    description:
-      'Use a regular expression to split text and check for palindromes.',
-    sampleText: 'level:madam;noon|test',
-    sampleResult: 'true true true false',
-    sampleOptions: {
-      ...initialValues,
-      splitOperatorType: 'regex',
-      regexValue: '[:|;]|\\|'
-    }
-  }
-];
 
-export default function Palindrome({ title }: ToolComponentProps) {
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
-
-  const computeExternal = (
-    optionsValues: typeof initialValues,
-    input: string
-  ) => {
-    const { splitOperatorType, symbolValue, regexValue } = optionsValues;
-    const separator = splitOperatorType === 'symbol' ? symbolValue : regexValue;
-    setResult(palindromeList(splitOperatorType, input, separator));
-  };
-
-  const getGroups: GetGroupsType<typeof initialValues> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: 'Splitting options',
-      component: splitOperators.map(({ title, description, type }) => (
-        <RadioWithTextField
-          key={type}
-          checked={type === values.splitOperatorType}
-          title={title}
-          fieldName={'splitOperatorType'}
-          description={description}
-          value={values[`${type}Value`]}
-          onRadioClick={() => updateField('splitOperatorType', type)}
-          onTextChange={(val) => updateField(`${type}Value`, val)}
-        />
-      ))
+    try {
+      setResult(
+        palindromeList(
+          mode,
+          input,
+          mode === 'symbol' ? replaceSpecialCharacters(symbolValue) : regexValue
+        )
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
     }
-  ];
+  }, [input, mode, regexValue, symbolValue]);
+
+  const output = error ? t('palindrome.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={getGroups}
-      compute={computeExternal}
-      input={input}
-      setInput={setInput}
-      inputComponent={<ToolTextInput value={input} onChange={setInput} />}
-      resultComponent={
-        <ToolTextResult title={'Palindrome results'} value={result} />
-      }
-      exampleCards={exampleCards}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={mode}
+              onChange={(_, nextMode: SplitOperatorType | null) => {
+                if (nextMode) {
+                  setMode(nextMode);
+                }
+              }}
+            >
+              <ToggleButton value="symbol">
+                {t('palindrome.symbolMode')}
+              </ToggleButton>
+              <ToggleButton value="regex">
+                {t('palindrome.regexMode')}
+              </ToggleButton>
+            </ToggleButtonGroup>
+            <ToolTextInput
+              title={t('palindrome.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            {mode === 'symbol' ? (
+              <TextField
+                label={t('palindrome.separatorLabel')}
+                size="small"
+                value={symbolValue}
+                onChange={(event) => setSymbolValue(event.target.value)}
+              />
+            ) : (
+              <TextField
+                label={t('palindrome.regexLabel')}
+                size="small"
+                value={regexValue}
+                onChange={(event) => setRegexValue(event.target.value)}
+              />
+            )}
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('palindrome.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

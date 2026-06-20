@@ -1,160 +1,122 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
+import {
+  Box,
+  FormControlLabel,
+  MenuItem,
+  Stack,
+  Switch,
+  TextField
+} from '@mui/material';
 import ToolCodeInput from '@components/input/ToolCodeInput';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextResult from '@components/result/ToolTextResult';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { stringifyJson } from './service';
-import { ToolComponentProps } from '@tools/defineTool';
-import RadioWithTextField from '@components/options/RadioWithTextField';
-import SimpleRadio from '@components/options/SimpleRadio';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import { isNumber, updateNumberField } from '@utils/string';
-import { CardExampleType } from '@components/examples/ToolExamples';
 
-type InitialValuesType = {
-  indentationType: 'tab' | 'space';
-  spacesCount: number;
-  escapeHtml: boolean;
-};
+type IndentationType = 'tab' | 'space';
 
-const initialValues: InitialValuesType = {
-  indentationType: 'space',
-  spacesCount: 2,
-  escapeHtml: false
-};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Invalid object or JSON input';
 
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Simple Object to JSON',
-    description: 'Convert a basic JavaScript object into a JSON string.',
-    sampleText: `{ name: "John", age: 30 }`,
-    sampleResult: `{
-  "name": "John",
-  "age": 30
-}`,
-    sampleOptions: {
-      indentationType: 'space',
-      spacesCount: 2,
-      escapeHtml: false
+export default function StringifyJson() {
+  const { t } = useTranslation('json');
+  const [input, setInput] = useState('');
+  const [indentationType, setIndentationType] =
+    useState<IndentationType>('space');
+  const [spacesCount, setSpacesCount] = useState('2');
+  const [escapeHtml, setEscapeHtml] = useState(false);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!input.trim()) {
+      setResult('');
+      setError('');
+      return;
     }
-  },
-  {
-    title: 'Array with Mixed Types',
-    description:
-      'Convert an array containing different types of values into JSON.',
-    sampleText: `[1, "hello", true, null, { x: 10 }]`,
-    sampleResult: `[
-    1,
-    "hello",
-    true,
-    null,
-    {
-        "x": 10
-    }
-]`,
-    sampleOptions: {
-      indentationType: 'space',
-      spacesCount: 4,
-      escapeHtml: false
-    }
-  },
-  {
-    title: 'HTML-Escaped JSON',
-    description: 'Convert an object to JSON with HTML characters escaped.',
-    sampleText: `{
-  html: "<div>Hello & Welcome</div>",
-  message: "Special chars: < > & ' \\""
-}`,
-    sampleResult: `{
-  &quot;html&quot;: &quot;&lt;div&gt;Hello &amp; Welcome&lt;/div&gt;&quot;,
-  &quot;message&quot;: &quot;Special chars: &lt; &gt; &amp; &#039; &quot;&quot;
-}`,
-    sampleOptions: {
-      indentationType: 'space',
-      spacesCount: 2,
-      escapeHtml: true
-    }
-  }
-];
 
-export default function StringifyJson({ title }: ToolComponentProps) {
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
-
-  const compute = (values: InitialValuesType, input: string) => {
-    if (input) {
+    try {
+      const normalizedSpacesCount =
+        spacesCount.trim() === '' ? 2 : Number(spacesCount);
       setResult(
-        stringifyJson(
-          input,
-          values.indentationType,
-          values.spacesCount,
-          values.escapeHtml
-        )
+        stringifyJson(input, indentationType, normalizedSpacesCount, escapeHtml)
       );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
     }
-  };
+  }, [escapeHtml, indentationType, input, spacesCount]);
+
+  const output = error ? t('stringify.invalidInput', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      setInput={setInput}
-      initialValues={initialValues}
-      compute={compute}
-      exampleCards={exampleCards}
-      inputComponent={
-        <ToolCodeInput
-          title="JavaScript Object/Array"
-          value={input}
-          onChange={setInput}
-          language="json"
-        />
-      }
-      resultComponent={
-        <ToolTextResult title="JSON String" value={result} extension={'json'} />
-      }
-      getGroups={({ values, updateField }) => [
-        {
-          title: 'Indentation',
-          component: (
-            <Box>
-              <RadioWithTextField
-                checked={values.indentationType === 'space'}
-                title="Use Spaces"
-                fieldName="indentationType"
-                description="Indent output with spaces"
-                value={values.spacesCount.toString()}
-                onRadioClick={() => updateField('indentationType', 'space')}
-                onTextChange={(val) =>
-                  updateNumberField(val, 'spacesCount', updateField)
-                }
-              />
-              <SimpleRadio
-                onClick={() => updateField('indentationType', 'tab')}
-                checked={values.indentationType === 'tab'}
-                description="Indent output with tabs"
-                title="Use Tabs"
-              />
-            </Box>
-          )
-        },
-        {
-          title: 'Options',
-          component: (
-            <CheckboxWithDesc
-              checked={values.escapeHtml}
-              onChange={(value) => updateField('escapeHtml', value)}
-              title="Escape HTML Characters"
-              description="Convert HTML special characters to their entity references"
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolCodeInput
+              title={t('stringify.inputTitle')}
+              value={input}
+              onChange={setInput}
+              language="javascript"
             />
-          )
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+            >
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label={t('stringify.indentation')}
+                value={indentationType}
+                onChange={(event) =>
+                  setIndentationType(event.target.value as IndentationType)
+                }
+                sx={{ backgroundColor: 'background.paper' }}
+              >
+                <MenuItem value="space">{t('stringify.useSpaces')}</MenuItem>
+                <MenuItem value="tab">{t('stringify.useTabs')}</MenuItem>
+              </TextField>
+              {indentationType === 'space' && (
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label={t('stringify.spacesCount')}
+                  value={spacesCount}
+                  onChange={(event) => setSpacesCount(event.target.value)}
+                  inputProps={{ min: 0, max: 8, step: 1 }}
+                  sx={{ backgroundColor: 'background.paper' }}
+                />
+              )}
+              <FormControlLabel
+                sx={{ m: 0, minWidth: 160 }}
+                control={
+                  <Switch
+                    checked={escapeHtml}
+                    onChange={(event) => setEscapeHtml(event.target.checked)}
+                    size="small"
+                  />
+                }
+                label={t('stringify.escapeHtml')}
+              />
+            </Stack>
+          </Stack>
         }
-      ]}
-      toolInfo={{
-        title: 'What Is JSON Stringify?',
-        description:
-          'JSON Stringify is a tool that converts JavaScript objects and arrays into their JSON string representation. It properly formats the output with customizable indentation and offers the option to escape HTML special characters, making it safe for web usage. This tool is particularly useful when you need to serialize data structures for storage or transmission, or when you need to prepare JSON data for HTML embedding.'
-      }}
-    />
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            extension="json"
+            keepSpecialCharacters
+            monospace
+            title={t('stringify.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

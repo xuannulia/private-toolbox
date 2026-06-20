@@ -1,3 +1,5 @@
+import { truncateListItems } from '@private-toolbox/core';
+
 export type SplitOperatorType = 'symbol' | 'regex';
 
 export function truncateList(
@@ -8,24 +10,18 @@ export function truncateList(
   end: boolean,
   length?: number
 ): string {
-  let array: string[];
-  let truncatedArray: string[];
-  switch (splitOperatorType) {
-    case 'symbol':
-      array = input.split(splitSeparator);
-      break;
-    case 'regex':
-      array = input.split(new RegExp(splitSeparator));
-      break;
-  }
   if (length !== undefined) {
     if (length < 0) {
       throw new Error('Length value must be a positive number.');
     }
-    truncatedArray = end
-      ? array.slice(0, length)
-      : array.slice(array.length - length, array.length);
-    return truncatedArray.join(joinSeparator);
+    return truncateListItems({
+      text: input,
+      splitMode: splitOperatorType === 'regex' ? 'regex' : 'separator',
+      separator: splitSeparator,
+      joinSeparator,
+      length,
+      from: end ? 'start' : 'end'
+    }).result;
   }
   throw new Error("Length value isn't a value number.");
 }

@@ -22,6 +22,10 @@
       "description": "オーディオを操作するためのツール – ビデオからオーディオを抽出したり、オーディオ速度を調整したり、複数のオーディオ ファイルを結合したり、その他さまざまな機能を備えています。",
       "title": "オーディオツール"
     },
+    "converters": {
+      "description": "Convert files and data between common formats.",
+      "title": "Converter Tools"
+    },
     "csv": {
       "description": "CSV ファイルの操作用ツール - CSV をさまざまな形式に変換し、CSV データを操作し、CSV 構造を検証し、CSV ファイルを効率的に処理します。",
       "title": "CSVツール"
@@ -45,6 +49,14 @@
     "number": {
       "description": "数字を操作するためのツール – 数列を生成したり、数字を単語に変換したり、単語を数字に変換したり、数字を並べ替えたり、四捨五入したり、因数分解したり、その他さまざまな機能があります。",
       "title": "数値ツール"
+    },
+    "network": {
+      "description": "RDAP, DNS, SSL, IP, CIDR, and local API request tools.",
+      "title": "Network Tools"
+    },
+    "ops": {
+      "description": "Docker and Nginx formatters, validators, and match testers.",
+      "title": "Ops Tools"
     },
     "pdf": {
       "description": "PDF ファイルの操作ツール - PDF からテキストを抽出したり、PDF を他の形式に変換したり、PDF を操作したり、その他さまざまな機能を備えています。",
@@ -81,8 +93,8 @@
     }
   },
   "hero": {
-    "brand": "オムニツール",
-    "description": "作業を素早く完了するための究極のツールキット、OmniTools で生産性を飛躍的に向上させましょう。画像、テキスト、リスト、データを編集するための数千もの使いやすいユーティリティに、ブラウザから直接アクセスできます。",
+    "brand": "Private Toolbox",
+    "description": "Local-first tools for text, files, media, data, and developer workflows.",
     "examples": {
       "calculateNumberSum": "数値の合計を計算する",
       "changeGifSpeed": "GIFの速度を変更する",
@@ -220,6 +232,9 @@
     "seeExamples": "例を見る"
   },
   "toolLayout": {
+    "addBookmark": "ブックマークに追加",
+    "allTools": "すべてのツール",
+    "removeBookmark": "ブックマークを削除",
     "allToolsTitle": "全て {{type}}"
   },
   "toolMultiFileResult": {

@@ -1,16 +1,13 @@
+import { formatJson } from '@private-toolbox/core';
+
 export const beautifyJson = (
   text: string,
   indentationType: 'tab' | 'space',
   spacesCount: number
 ) => {
-  let parsedJson;
   try {
-    parsedJson = JSON.parse(text);
+    return formatJson({ text, indentationType, spacesCount });
   } catch (e) {
     throw new Error('Invalid JSON string');
   }
-
-  const indent = indentationType === 'tab' ? '\t' : spacesCount;
-
-  return JSON.stringify(parsedJson, null, indent);
 };

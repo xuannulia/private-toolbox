@@ -1,26 +1,25 @@
-import { diffWordsWithSpace, diffChars } from 'diff';
+import { diffText } from '@private-toolbox/core';
 import { level } from './types';
 import { escapeHtml } from 'utils/string';
-
-const DIFF_FN = {
-  word: diffWordsWithSpace,
-  char: diffChars
-} as const;
 
 export function compareTextsHtml(
   textA: string,
   textB: string,
   level: level
 ): string {
-  const diffs = DIFF_FN[level](textA, textB);
+  const diff = diffText({
+    left: textA,
+    right: textB,
+    level
+  });
 
-  const html = diffs
+  const html = diff.parts
     .map((part) => {
       const val = escapeHtml(part.value).replace(/\n/g, '<br>');
-      if (part.added) {
+      if (part.type === 'added') {
         return `<span class="diff-added">${val}</span>`;
       }
-      if (part.removed) {
+      if (part.type === 'removed') {
         return `<span class="diff-removed">${val}</span>`;
       }
       return val;

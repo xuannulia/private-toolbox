@@ -1,20 +1,19 @@
-import { Alert, Box } from '@mui/material';
-import { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { Alert, Box, Stack } from '@mui/material';
+import InputHeader from '@components/InputHeader';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import {
-  formatPorts,
-  generateRandomPorts,
-  getPortRangeInfo,
-  validateInput
-} from './service';
-import { InitialValuesType, RandomPortResult } from './types';
+import type { ToolComponentProps } from '@tools/defineTool';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import SimpleRadio from '@components/options/SimpleRadio';
+import {
+  CompactNumberCheckbox,
+  CompactNumberField,
+  CompactNumberToggle,
+  NumberOptionStack,
+  normalizeNumberToken
+} from '../NumberToolControls';
+import { formatPorts, generateRandomPorts, validateInput } from './service';
+import type { InitialValuesType } from './types';
 
 const initialValues: InitialValuesType = {
   portRange: 'registered',
@@ -26,208 +25,126 @@ const initialValues: InitialValuesType = {
   separator: ', '
 };
 
-export default function RandomPortGenerator({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function RandomPortGenerator({ title }: ToolComponentProps) {
   const { t } = useTranslation('number');
-  const [result, setResult] = useState<RandomPortResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [formattedResult, setFormattedResult] = useState<string>('');
+  const [options, setOptions] = useState<InitialValuesType>(initialValues);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const compute = (values: InitialValuesType) => {
+  const updateOption = <K extends keyof InitialValuesType>(
+    key: K,
+    value: InitialValuesType[K]
+  ) => {
+    setOptions((current) => ({ ...current, [key]: value }));
+  };
+
+  useEffect(() => {
     try {
-      setError(null);
-      setResult(null);
-      setFormattedResult('');
-
-      // Validate input
-      const validationError = validateInput(values);
+      const validationError = validateInput(options);
       if (validationError) {
         setError(validationError);
+        setResult('');
         return;
       }
 
-      // Generate random ports
-      const randomResult = generateRandomPorts(values);
-      setResult(randomResult);
-
-      // Format for display
-      const formatted = formatPorts(randomResult.ports, values.separator);
-      setFormattedResult(formatted);
-    } catch (err) {
-      console.error('Random port generation failed:', err);
+      const generated = generateRandomPorts({
+        ...options,
+        separator: normalizeNumberToken(options.separator)
+      });
+      setResult(
+        formatPorts(generated.ports, normalizeNumberToken(options.separator))
+      );
+      setError('');
+    } catch (error) {
+      console.error('Random port generation failed:', error);
+      setResult('');
       setError(t('randomPortGenerator.error.generationFailed'));
     }
-  };
-  const portOptions = [
-    {
-      value: 'well-known',
-      label: t('randomPortGenerator.options.range.wellKnown')
-    },
-    {
-      value: 'registered',
-      label: t('randomPortGenerator.options.range.registered')
-    },
-    {
-      value: 'dynamic',
-      label: t('randomPortGenerator.options.range.dynamic')
-    },
-    {
-      value: 'custom',
-      label: t('randomPortGenerator.options.range.custom')
-    }
-  ] as const;
-  const getGroups: GetGroupsType<InitialValuesType> | null = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('randomPortGenerator.options.range.title'),
-      component: (
-        <Box>
-          {portOptions.map((option) => (
-            <SimpleRadio
-              key={option.value}
-              title={option.label}
-              checked={values.portRange === option.value}
-              onClick={() => updateField('portRange', option.value)}
-            />
-          ))}
-
-          {values.portRange === 'custom' && (
-            <Box sx={{ mt: 2 }}>
-              <TextFieldWithDesc
-                value={values.minPort.toString()}
-                onOwnChange={(value) =>
-                  updateField('minPort', parseInt(value) || 1024)
-                }
-                description={t(
-                  'randomPortGenerator.options.range.minPortDescription'
-                )}
-                inputProps={{
-                  type: 'number',
-                  min: 1,
-                  max: 65535,
-                  'data-testid': 'min-port-input'
-                }}
-              />
-              <TextFieldWithDesc
-                value={values.maxPort.toString()}
-                onOwnChange={(value) =>
-                  updateField('maxPort', parseInt(value) || 49151)
-                }
-                description={t(
-                  'randomPortGenerator.options.range.maxPortDescription'
-                )}
-                inputProps={{
-                  type: 'number',
-                  min: 1,
-                  max: 65535,
-                  'data-testid': 'max-port-input'
-                }}
-              />
-            </Box>
-          )}
-
-          <Box
-            sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}
-          >
-            <strong>{getPortRangeInfo(values.portRange).name}</strong>
-            <br />
-            {getPortRangeInfo(values.portRange).description}
-          </Box>
-        </Box>
-      )
-    },
-    {
-      title: t('randomPortGenerator.options.generation.title'),
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            value={values.count.toString()}
-            onOwnChange={(value) => updateField('count', parseInt(value) || 5)}
-            description={t(
-              'randomPortGenerator.options.generation.countDescription'
-            )}
-            inputProps={{
-              type: 'number',
-              min: 1,
-              max: 1000,
-              'data-testid': 'count-input'
-            }}
-          />
-
-          <CheckboxWithDesc
-            title={t(
-              'randomPortGenerator.options.generation.allowDuplicates.title'
-            )}
-            checked={values.allowDuplicates}
-            onChange={(value) => updateField('allowDuplicates', value)}
-            description={t(
-              'randomPortGenerator.options.generation.allowDuplicates.description'
-            )}
-          />
-
-          <CheckboxWithDesc
-            title={t(
-              'randomPortGenerator.options.generation.sortResults.title'
-            )}
-            checked={values.sortResults}
-            onChange={(value) => updateField('sortResults', value)}
-            description={t(
-              'randomPortGenerator.options.generation.sortResults.description'
-            )}
-          />
-        </Box>
-      )
-    },
-    {
-      title: t('randomPortGenerator.options.output.title'),
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            value={values.separator}
-            onOwnChange={(value) => updateField('separator', value)}
-            description={t(
-              'randomPortGenerator.options.output.separatorDescription'
-            )}
-            inputProps={{
-              'data-testid': 'separator-input'
-            }}
-          />
-        </Box>
-      )
-    }
-  ];
+  }, [options, t]);
 
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      compute={compute}
-      getGroups={getGroups}
-      resultComponent={
-        <Box>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {result && (
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Box>
+            <InputHeader title={title} />
+            <NumberOptionStack>
+              <CompactNumberToggle<InitialValuesType['portRange']>
+                value={options.portRange}
+                options={[
+                  {
+                    label: t('randomPortGenerator.options.range.wellKnown'),
+                    value: 'well-known'
+                  },
+                  {
+                    label: t('randomPortGenerator.options.range.registered'),
+                    value: 'registered'
+                  },
+                  {
+                    label: t('randomPortGenerator.options.range.dynamic'),
+                    value: 'dynamic'
+                  },
+                  {
+                    label: t('randomPortGenerator.options.range.custom'),
+                    value: 'custom'
+                  }
+                ]}
+                onChange={(value) => updateOption('portRange', value)}
+              />
+              {options.portRange === 'custom' && (
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                  <CompactNumberField
+                    label={t('randomPortGenerator.minPort')}
+                    value={options.minPort}
+                    onChange={(value) => updateOption('minPort', Number(value))}
+                  />
+                  <CompactNumberField
+                    label={t('randomPortGenerator.maxPort')}
+                    value={options.maxPort}
+                    onChange={(value) => updateOption('maxPort', Number(value))}
+                  />
+                </Stack>
+              )}
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactNumberField
+                  label={t('common.count')}
+                  value={options.count}
+                  onChange={(value) => updateOption('count', Number(value))}
+                />
+                <CompactNumberField
+                  label={t('common.separator')}
+                  value={options.separator}
+                  type="text"
+                  onChange={(value) => updateOption('separator', value)}
+                />
+              </Stack>
+              <CompactNumberCheckbox
+                checked={options.allowDuplicates}
+                label={t(
+                  'randomPortGenerator.options.generation.allowDuplicates.title'
+                )}
+                onChange={(value) => updateOption('allowDuplicates', value)}
+              />
+              <CompactNumberCheckbox
+                checked={options.sortResults}
+                label={t(
+                  'randomPortGenerator.options.generation.sortResults.title'
+                )}
+                onChange={(value) => updateOption('sortResults', value)}
+              />
+            </NumberOptionStack>
+          </Box>
+        }
+        result={
+          <Stack spacing={2}>
+            {error && <Alert severity="error">{error}</Alert>}
             <ToolTextResult
               title={t('randomPortGenerator.result.title')}
-              value={formattedResult}
+              value={result}
             />
-          )}
-        </Box>
-      }
-      toolInfo={{
-        title: t('randomPortGenerator.info.title'),
-        description:
-          longDescription || t('randomPortGenerator.info.description')
-      }}
-    />
+          </Stack>
+        }
+      />
+    </Box>
   );
 }

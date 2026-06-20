@@ -1,138 +1,111 @@
-import React, { useState } from 'react';
-import { Box } from '@mui/material';
-import ToolContent from '@components/ToolContent';
+import {
+  Box,
+  Checkbox,
+  FormControlLabel,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup
+} from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { rotateString } from './service';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import SimpleRadio from '@components/options/SimpleRadio';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { rotateString } from './service';
 
-interface InitialValuesType {
-  step: string;
-  direction: 'left' | 'right';
-  multiLine: boolean;
-}
+type RotateDirection = 'left' | 'right';
 
-const initialValues: InitialValuesType = {
-  step: '1',
-  direction: 'right',
-  multiLine: true
-};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Rotate text failed';
 
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Rotate text to the right',
-    description:
-      'This example shows how to rotate text to the right by 2 positions.',
-    sampleText: 'abcdef',
-    sampleResult: 'efabcd',
-    sampleOptions: {
-      step: '2',
-      direction: 'right',
-      multiLine: false
-    }
-  },
-  {
-    title: 'Rotate text to the left',
-    description:
-      'This example shows how to rotate text to the left by 2 positions.',
-    sampleText: 'abcdef',
-    sampleResult: 'cdefab',
-    sampleOptions: {
-      step: '2',
-      direction: 'left',
-      multiLine: false
-    }
-  },
-  {
-    title: 'Rotate multi-line text',
-    description:
-      'This example shows how to rotate each line of a multi-line text.',
-    sampleText: 'abcdef\nghijkl',
-    sampleResult: 'fabcde\nlghijk',
-    sampleOptions: {
-      step: '1',
-      direction: 'right',
-      multiLine: true
-    }
-  }
-];
-
-export default function Rotate({ title }: ToolComponentProps) {
+export default function Rotate() {
   const { t } = useTranslation('string');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [step, setStep] = useState('1');
+  const [direction, setDirection] = useState<RotateDirection>('right');
+  const [multiLine, setMultiLine] = useState(true);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const compute = (optionsValues: InitialValuesType, input: string) => {
-    if (input) {
-      const step = parseInt(optionsValues.step, 10) || 1;
-      const isRight = optionsValues.direction === 'right';
-      setResult(rotateString(input, step, isRight, optionsValues.multiLine));
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
     }
-  };
 
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('rotate.rotationOptions'),
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            value={values.step}
-            onOwnChange={(val) => updateField('step', val)}
-            description={t('rotate.stepDescription')}
-            type="number"
-          />
-          <SimpleRadio
-            onClick={() => updateField('direction', 'right')}
-            checked={values.direction === 'right'}
-            title={t('rotate.rotateRight')}
-          />
-          <SimpleRadio
-            onClick={() => updateField('direction', 'left')}
-            checked={values.direction === 'left'}
-            title={t('rotate.rotateLeft')}
-          />
-          <CheckboxWithDesc
-            checked={values.multiLine}
-            onChange={(checked) => updateField('multiLine', checked)}
-            title={t('rotate.processAsMultiLine')}
-          />
-        </Box>
-      )
+    try {
+      const numericStep = Number.parseInt(step, 10) || 0;
+      setResult(
+        rotateString(input, numericStep, direction === 'right', multiLine)
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
     }
-  ];
+  }, [direction, input, multiLine, step]);
+
+  const output = error ? t('rotate.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      inputComponent={
-        <ToolTextInput
-          title={t('rotate.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult title={t('rotate.resultTitle')} value={result} />
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      toolInfo={{
-        title: t('rotate.toolInfo.title'),
-        description: t('rotate.toolInfo.description')
-      }}
-      exampleCards={exampleCards}
-      input={input}
-      setInput={setInput}
-      compute={compute}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={direction}
+              onChange={(_, nextDirection: RotateDirection | null) => {
+                if (nextDirection) {
+                  setDirection(nextDirection);
+                }
+              }}
+            >
+              <ToggleButton value="right">
+                {t('rotate.rotateRight')}
+              </ToggleButton>
+              <ToggleButton value="left">{t('rotate.rotateLeft')}</ToggleButton>
+            </ToggleButtonGroup>
+            <ToolTextInput
+              title={t('rotate.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <Stack spacing={1.5}>
+              <TextField
+                label={t('rotate.stepLabel')}
+                size="small"
+                type="number"
+                value={step}
+                onChange={(event) => setStep(event.target.value)}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={multiLine}
+                    onChange={(event) => setMultiLine(event.target.checked)}
+                    size="small"
+                  />
+                }
+                label={t('rotate.processAsMultiLine')}
+              />
+            </Stack>
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('rotate.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

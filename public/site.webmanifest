@@ -1,6 +1,6 @@
 {
-  "name": "OmniTools",
-  "short_name": "OmniTools",
+  "name": "Private Toolbox",
+  "short_name": "Toolbox",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",

@@ -1,144 +1,136 @@
-import { Box, Slider, Typography } from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import ToolMultipleImageInput, {
-  MultiImageInput
-} from '@components/input/ToolMultipleImageInput';
-import ColorSelector from 'components/options/ColorSelector';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
+import ToolMultipleImageInput from '@components/input/ToolMultipleImageInput';
 import ToolFileResult from '@components/result/ToolFileResult';
 import ToolMultiFileResult from '@components/result/ToolMultiFileResult';
-import React, { useState, useContext, useCallback } from 'react';
-import * as Yup from 'yup';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import InitialValuesType from './types';
-import { convertToJPG } from './service';
 import { CustomSnackBarContext } from 'contexts/CustomSnackBarContext';
-import debounce from 'lodash/debounce';
+import { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  ColorField,
+  ConverterOptionStack,
+  QualitySlider
+} from '../ConvertersToolControls';
+import { convertToJPG } from './service';
+import type { MultiImageInput } from '@components/input/ToolMultipleImageInput';
+import type InitialValuesType from './types';
 
 const initialValues: InitialValuesType = {
   quality: 85,
   backgroundColor: '#ffffff'
 };
 
-const validationSchema = Yup.object({
-  quality: Yup.number().min(1).max(100).required('Quality is required'),
-  backgroundColor: Yup.string().required('Background color is required')
-});
-
-export default function ConvertToJpg({ title }: ToolComponentProps) {
+export default function ConvertToJpg() {
   const { t } = useTranslation('converters');
+  const { showSnackBar } = useContext(CustomSnackBarContext);
   const [input, setInput] = useState<MultiImageInput[]>([]);
+  const [options, setOptions] = useState<InitialValuesType>(initialValues);
   const [results, setResults] = useState<File[]>([]);
   const [zipFile, setZipFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const { showSnackBar } = useContext(CustomSnackBarContext);
+  const [loading, setLoading] = useState(false);
 
-  const compute = async (
-    optionsValues: InitialValuesType,
-    input: MultiImageInput[]
-  ) => {
-    if (!input.length) return;
-
-    try {
-      setIsProcessing(true);
-
-      const output = await convertToJPG(
-        input.map((img) => img.file),
-        optionsValues
-      );
-
-      if (!output) {
-        showSnackBar(t('convertToJPG.failedToConvert'), 'error');
-        return;
-      }
-
-      if (output.results.length < input.length) {
-        showSnackBar(t('convertToJPG.failedToConvert'), 'error');
-      }
-
-      setResults(output.results);
-      setZipFile(output.zipFile);
-    } catch (err) {
-      console.error('Error in conversion:', err);
-    } finally {
-      setIsProcessing(false);
+  useEffect(() => {
+    if (!input.length) {
+      setResults([]);
+      setZipFile(null);
+      setLoading(false);
+      return;
     }
-  };
 
-  const debouncedCompute = useCallback(debounce(compute, 1000), []);
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runConversion() {
+        try {
+          setLoading(true);
+          const output = await convertToJPG(
+            input.map((image) => image.file),
+            options
+          );
+
+          if (canceled) return;
+
+          if (!output) {
+            showSnackBar(t('convertToJPG.failedToConvert'), 'error');
+            setResults([]);
+            setZipFile(null);
+            return;
+          }
+
+          if (output.results.length < input.length) {
+            showSnackBar(t('convertToJPG.failedToConvert'), 'error');
+          }
+
+          setResults(output.results);
+          setZipFile(output.zipFile);
+        } catch (error) {
+          console.error('JPG conversion failed:', error);
+          if (!canceled) {
+            showSnackBar(t('convertToJPG.failedToConvert'), 'error');
+            setResults([]);
+            setZipFile(null);
+          }
+        } finally {
+          if (!canceled) setLoading(false);
+        }
+      }
+
+      void runConversion();
+    }, 300);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options, showSnackBar, t]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolMultipleImageInput
-          value={input}
-          type={'image'}
-          onChange={setInput}
-          accept={['image/*']}
-          title={t('convertToJPG.inputTitle')}
-        />
-      }
-      resultComponent={
-        zipFile ? (
-          <ToolMultiFileResult
-            title={t('convertToJPG.resultTitle')}
-            value={results}
-            zipFile={zipFile}
-            loading={isProcessing}
-          />
-        ) : (
-          <ToolFileResult
-            title={t('convertToJPG.resultTitle')}
-            value={results[0] ?? null}
-            extension={results[0]?.name.split('.').pop() || 'jpg'}
-          />
-        )
-      }
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('convertToJPG.options.title'),
-          component: (
-            <Box>
-              <Box mb={3}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {t('convertToJPG.options.quality')} {values.quality}%
-                </Typography>
-                <Slider
-                  value={values.quality}
-                  onChange={(_, value) =>
-                    updateField(
-                      'quality',
-                      Array.isArray(value) ? value[0] : value
-                    )
-                  }
-                  min={1}
-                  max={100}
-                  step={1}
-                  valueLabelDisplay="auto"
-                  valueLabelFormat={(value) => `${value}%`}
-                  sx={{ mt: 1 }}
-                />
-                <Typography variant="caption" color="text.secondary">
-                  {t('convertToJPG.options.qualityDescription')}
-                </Typography>
-              </Box>
-
-              <ColorSelector
-                value={values.backgroundColor}
-                onColorChange={(val) => updateField('backgroundColor', val)}
-                description={t('convertToJPG.options.colorDescription')}
-                inputProps={{ 'data-testid': 'background-color-input' }}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolMultipleImageInput
+              value={input}
+              type="image"
+              onChange={setInput}
+              accept={['image/*']}
+              title={t('convertToJPG.inputTitle')}
+            />
+            <ConverterOptionStack>
+              <QualitySlider
+                label={t('convertToJPG.options.quality')}
+                value={options.quality}
+                onChange={(quality) =>
+                  setOptions((current) => ({ ...current, quality }))
+                }
               />
-            </Box>
+              <ColorField
+                label={t('convertToJPG.options.backgroundColor')}
+                value={options.backgroundColor}
+                onChange={(backgroundColor) =>
+                  setOptions((current) => ({ ...current, backgroundColor }))
+                }
+              />
+            </ConverterOptionStack>
+          </Stack>
+        }
+        result={
+          zipFile ? (
+            <ToolMultiFileResult
+              title={t('convertToJPG.resultTitle')}
+              value={results}
+              zipFile={zipFile}
+              loading={loading}
+            />
+          ) : (
+            <ToolFileResult
+              title={t('convertToJPG.resultTitle')}
+              value={results[0] ?? null}
+              extension="jpg"
+              loading={loading}
+            />
           )
         }
-      ]}
-      compute={debouncedCompute}
-      setInput={setInput}
-    />
+      />
+    </Box>
   );
 }

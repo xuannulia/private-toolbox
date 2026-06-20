@@ -1,67 +1,76 @@
-import { useState } from 'react';
-import ToolFileResult from '@components/result/ToolFileResult';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { mergePdf } from './service';
+import { Box } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolMultiPdfInput, {
-  MultiPdfInput
+  type MultiPdfInput
 } from '@components/input/ToolMultiplePdfInput';
+import ToolFileResult from '@components/result/ToolFileResult';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { mergePdf } from './service';
 
-export default function MergePdf({ title }: ToolComponentProps) {
+export default function MergePdf() {
   const { t } = useTranslation('pdf');
   const [input, setInput] = useState<MultiPdfInput[]>([]);
   const [result, setResult] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
-  const compute = async (values: File[], input: MultiPdfInput[]) => {
-    if (input.length === 0) {
+  useEffect(() => {
+    if (!input.length) {
+      setResult(null);
+      setLoading(false);
       return;
     }
 
-    try {
-      setIsProcessing(true);
-      const mergeResult = await mergePdf(input.map((i) => i.file));
-      setResult(mergeResult);
-    } catch (error) {
-      throw new Error('Error merging PDF:' + error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runMerge() {
+        try {
+          setLoading(true);
+          const files = [...input]
+            .sort((a, b) => a.order - b.order)
+            .map((item) => item.file);
+          const mergeResult = await mergePdf(files);
+
+          if (!canceled) setResult(mergeResult);
+        } catch (error) {
+          console.error('Error merging PDF:', error);
+          if (!canceled) setResult(null);
+        } finally {
+          if (!canceled) setLoading(false);
+        }
+      }
+
+      void runMerge();
+    }, 300);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      setInput={setInput}
-      initialValues={input.map((i) => i.file)}
-      compute={compute}
-      inputComponent={
-        <ToolMultiPdfInput
-          value={input}
-          onChange={(pdfInputs) => {
-            setInput(pdfInputs);
-          }}
-          accept={['application/pdf']}
-          title={t('merge.inputTitle')}
-          type="pdf"
-        />
-      }
-      getGroups={null}
-      resultComponent={
-        <ToolFileResult
-          title={t('merge.resultTitle')}
-          value={result}
-          extension={'pdf'}
-          loading={isProcessing}
-          loadingText={t('merge.loadingText')}
-        />
-      }
-      toolInfo={{
-        title: t('merge.toolInfo.title'),
-        description: t('merge.toolInfo.description')
-      }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <ToolMultiPdfInput
+            value={input}
+            onChange={setInput}
+            accept={['application/pdf']}
+            title={t('mergePdf.inputTitle')}
+            type="pdf"
+          />
+        }
+        result={
+          <ToolFileResult
+            title={t('mergePdf.resultTitle')}
+            value={result}
+            extension="pdf"
+            loading={loading}
+            loadingText={t('mergePdf.mergingPdfs')}
+          />
+        }
+      />
+    </Box>
   );
 }

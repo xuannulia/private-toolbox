@@ -22,6 +22,10 @@
       "description": "Outils pour travailler avec l'audio : extraire l'audio d'une vidéo, ajuster la vitesse de l'audio, fusionner plusieurs fichiers audio et bien plus encore.",
       "title": "Outils audio"
     },
+    "converters": {
+      "description": "Convert files and data between common formats.",
+      "title": "Converter Tools"
+    },
     "csv": {
       "description": "Outils pour travailler avec des fichiers CSV : convertissez des fichiers CSV en différents formats, manipulez les données CSV, validez la structure CSV et traitez efficacement les fichiers CSV.",
       "title": "Outils CSV"
@@ -45,6 +49,14 @@
     "number": {
       "description": "Outils pour travailler avec des nombres : générer des séquences de nombres, convertir des nombres en mots et des mots en nombres, trier, arrondir, factoriser des nombres et bien plus encore.",
       "title": "Outils numériques"
+    },
+    "network": {
+      "description": "RDAP, DNS, SSL, IP, CIDR, and local API request tools.",
+      "title": "Network Tools"
+    },
+    "ops": {
+      "description": "Docker and Nginx formatters, validators, and match testers.",
+      "title": "Ops Tools"
     },
     "pdf": {
       "description": "Outils pour travailler avec des fichiers PDF : extraire du texte à partir de PDF, convertir des PDF en d'autres formats, manipuler des PDF et bien plus encore.",
@@ -81,8 +93,8 @@
     }
   },
   "hero": {
-    "brand": "OmniTools",
-    "description": "Boostez votre productivité avec OmniTools, la boîte à outils ultime pour accélérer vos tâches ! Accédez à des milliers d'utilitaires conviviaux pour modifier des images, du texte, des listes et des données, directement depuis votre navigateur.",
+    "brand": "Private Toolbox",
+    "description": "Local-first tools for text, files, media, data, and developer workflows.",
     "examples": {
       "calculateNumberSum": "Calculer la somme des nombres",
       "changeGifSpeed": "Modifier la vitesse du GIF",
@@ -220,6 +232,9 @@
     "seeExamples": "Voir des exemples"
   },
   "toolLayout": {
+    "addBookmark": "Ajouter aux favoris",
+    "allTools": "Tous les outils",
+    "removeBookmark": "Retirer des favoris",
     "allToolsTitle": "Tous les {{type}}"
   },
   "toolMultiFileResult": {

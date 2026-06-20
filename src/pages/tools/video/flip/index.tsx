@@ -1,115 +1,96 @@
-import { Box } from '@mui/material';
-import { useCallback, useState } from 'react';
-import * as Yup from 'yup';
-import ToolFileResult from '@components/result/ToolFileResult';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import { debounce } from 'lodash';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolVideoInput from '@components/input/ToolVideoInput';
-import { flipVideo } from './service';
-import { FlipOrientation, InitialValuesType } from './types';
-import SimpleRadio from '@components/options/SimpleRadio';
+import ToolFileResult from '@components/result/ToolFileResult';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CompactVideoToggle, VideoOptionStack } from '../VideoToolControls';
+import { flipVideo } from './service';
+import type { FlipOrientation, InitialValuesType } from './types';
 
-export const initialValues: InitialValuesType = {
+const initialOptions: InitialValuesType = {
   orientation: 'horizontal'
 };
 
-export const validationSchema = Yup.object({
-  orientation: Yup.string()
-    .oneOf(
-      ['horizontal', 'vertical'],
-      'Orientation must be horizontal or vertical'
-    )
-    .required('Orientation is required')
-});
-
-const orientationOptions: { value: FlipOrientation; label: string }[] = [
-  { value: 'horizontal', label: 'Horizontal (Mirror)' },
-  { value: 'vertical', label: 'Vertical (Upside Down)' }
-];
-
-export default function FlipVideo({ title }: ToolComponentProps) {
+export default function FlipVideo() {
   const { t } = useTranslation('video');
   const [input, setInput] = useState<File | null>(null);
+  const [options, setOptions] = useState<InitialValuesType>(initialOptions);
   const [result, setResult] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const compute = async (
-    optionsValues: InitialValuesType,
-    input: File | null
-  ) => {
-    if (!input) return;
-    setLoading(true);
-
-    try {
-      const flippedFile = await flipVideo(input, optionsValues.orientation);
-      setResult(flippedFile);
-    } catch (error) {
-      console.error('Error flipping video:', error);
-    } finally {
+  useEffect(() => {
+    if (!input) {
+      setResult(null);
       setLoading(false);
+      return;
     }
-  };
 
-  const debouncedCompute = useCallback(debounce(compute, 1000), []);
+    const inputFile = input;
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runFlip() {
+        try {
+          setLoading(true);
+          const flippedFile = await flipVideo(inputFile, options.orientation);
 
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('flip.orientation'),
-      component: (
-        <Box>
-          {orientationOptions.map((orientationOption) => (
-            <SimpleRadio
-              key={orientationOption.value}
-              title={t(`flip.${orientationOption.value}Label`)}
-              checked={values.orientation === orientationOption.value}
-              onClick={() => {
-                updateField('orientation', orientationOption.value);
-              }}
-            />
-          ))}
-        </Box>
-      )
-    }
-  ];
+          if (!canceled) setResult(flippedFile);
+        } catch (error) {
+          console.error('Error flipping video:', error);
+          if (!canceled) setResult(null);
+        } finally {
+          if (!canceled) setLoading(false);
+        }
+      }
+
+      void runFlip();
+    }, 300);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolVideoInput
-          value={input}
-          onChange={setInput}
-          title={t('flip.inputTitle')}
-        />
-      }
-      resultComponent={
-        loading ? (
-          <ToolFileResult
-            title={t('flip.flippingVideo')}
-            value={null}
-            loading={true}
-            extension={''}
-          />
-        ) : (
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolVideoInput
+              value={input}
+              onChange={setInput}
+              title={t('flip.inputTitle')}
+            />
+            <VideoOptionStack>
+              <CompactVideoToggle<FlipOrientation>
+                label={t('flip.orientation')}
+                value={options.orientation}
+                options={[
+                  {
+                    value: 'horizontal',
+                    label: t('flip.horizontalLabel')
+                  },
+                  {
+                    value: 'vertical',
+                    label: t('flip.verticalLabel')
+                  }
+                ]}
+                onChange={(orientation) => setOptions({ orientation })}
+              />
+            </VideoOptionStack>
+          </Stack>
+        }
+        result={
           <ToolFileResult
             title={t('flip.resultTitle')}
             value={result}
-            extension={'mp4'}
+            extension="mp4"
+            loading={loading}
+            loadingText={t('flip.flippingVideo')}
           />
-        )
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      compute={debouncedCompute}
-      setInput={setInput}
-      validationSchema={validationSchema}
-    />
+        }
+      />
+    </Box>
   );
 }

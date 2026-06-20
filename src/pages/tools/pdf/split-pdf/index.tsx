@@ -1,178 +1,148 @@
-import { Box, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
-import ToolFileResult from '@components/result/ToolFileResult';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { parsePageRanges, splitPdf } from './service';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { PDFDocument } from 'pdf-lib';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolPdfInput from '@components/input/ToolPdfInput';
+import ToolFileResult from '@components/result/ToolFileResult';
+import { PDFDocument } from 'pdf-lib';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  CompactPdfField,
+  PdfOptionStack,
+  PdfStatList
+} from '../PdfToolControls';
+import { parsePageRanges, splitPdf } from './service';
 
 type InitialValuesType = {
   pageRanges: string;
 };
 
-const initialValues: InitialValuesType = {
+const initialOptions: InitialValuesType = {
   pageRanges: ''
 };
 
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Extract Specific Pages',
-    description: 'Extract pages 1, 5, 6, 7, and 8 from a PDF document.',
-    sampleText: '',
-    sampleResult: '',
-    sampleOptions: {
-      pageRanges: '1,5-8'
-    }
-  },
-  {
-    title: 'Extract First and Last Pages',
-    description: 'Extract only the first and last pages from a PDF document.',
-    sampleText: '',
-    sampleResult: '',
-    sampleOptions: {
-      pageRanges: '1,10'
-    }
-  },
-  {
-    title: 'Extract a Range of Pages',
-    description: 'Extract a continuous range of pages from a PDF document.',
-    sampleText: '',
-    sampleResult: '',
-    sampleOptions: {
-      pageRanges: '3-7'
-    }
-  }
-];
-
-export default function SplitPdf({ title }: ToolComponentProps) {
+export default function SplitPdf() {
   const { t } = useTranslation('pdf');
   const [input, setInput] = useState<File | null>(null);
+  const [options, setOptions] = useState<InitialValuesType>(initialOptions);
   const [result, setResult] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [totalPages, setTotalPages] = useState<number>(0);
-  const [pageRangePreview, setPageRangePreview] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
 
-  // Get the total number of pages when a PDF is uploaded
   useEffect(() => {
-    const getPdfInfo = async () => {
-      if (!input) {
-        setTotalPages(0);
-        return;
-      }
-
-      try {
-        const arrayBuffer = await input.arrayBuffer();
-        const pdf = await PDFDocument.load(arrayBuffer);
-        setTotalPages(pdf.getPageCount());
-      } catch (error) {
-        console.error('Error getting PDF info:', error);
-        setTotalPages(0);
-      }
-    };
-
-    getPdfInfo();
-  }, [input]);
-
-  const onValuesChange = (values: InitialValuesType) => {
-    const { pageRanges } = values;
-    if (!totalPages || !pageRanges?.trim()) {
-      setPageRangePreview('');
+    if (!input) {
+      setTotalPages(0);
       return;
     }
-    try {
-      const count = parsePageRanges(pageRanges, totalPages).length;
-      setPageRangePreview(
-        t('splitPdf.pageExtractionPreview', {
-          count,
-          plural: count === 1 ? '' : 's'
-        })
-      );
-    } catch (error) {
-      setPageRangePreview('');
-    }
-  };
 
-  const compute = async (values: InitialValuesType, input: File | null) => {
-    if (!input) return;
+    let canceled = false;
 
-    try {
-      setIsProcessing(true);
-      const splitResult = await splitPdf(input, values.pageRanges);
-      setResult(splitResult);
-    } catch (error) {
-      throw new Error('Error splitting PDF:' + error);
-    } finally {
-      setIsProcessing(false);
+    async function readPdfInfo() {
+      try {
+        const arrayBuffer = await input!.arrayBuffer();
+        const pdf = await PDFDocument.load(arrayBuffer);
+
+        if (!canceled) setTotalPages(pdf.getPageCount());
+      } catch (error) {
+        console.error('Error getting PDF info:', error);
+        if (!canceled) setTotalPages(0);
+      }
     }
-  };
+
+    void readPdfInfo();
+
+    return () => {
+      canceled = true;
+    };
+  }, [input]);
+
+  useEffect(() => {
+    if (!input) {
+      setResult(null);
+      setLoading(false);
+      return;
+    }
+
+    const inputFile = input;
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runSplit() {
+        try {
+          setLoading(true);
+          const splitResult = await splitPdf(inputFile, options.pageRanges);
+
+          if (!canceled) setResult(splitResult);
+        } catch (error) {
+          console.error('Error splitting PDF:', error);
+          if (!canceled) setResult(null);
+        } finally {
+          if (!canceled) setLoading(false);
+        }
+      }
+
+      void runSplit();
+    }, 300);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options.pageRanges]);
+
+  const pageRangePreview = useMemo(() => {
+    if (!totalPages || !options.pageRanges.trim()) return '';
+
+    const count = parsePageRanges(options.pageRanges, totalPages).length;
+    if (!count) return '';
+
+    return t('splitPdf.pageExtractionPreview', {
+      count,
+      plural: count === 1 ? '' : 's'
+    });
+  }, [options.pageRanges, totalPages, t]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      setInput={setInput}
-      initialValues={initialValues}
-      compute={compute}
-      exampleCards={exampleCards}
-      inputComponent={
-        <ToolPdfInput
-          value={input}
-          onChange={setInput}
-          accept={['application/pdf']}
-          title={t('splitPdf.inputTitle')}
-        />
-      }
-      resultComponent={
-        <ToolFileResult
-          title={t('splitPdf.resultTitle')}
-          value={result}
-          extension={'pdf'}
-          loading={isProcessing}
-          loadingText={t('splitPdf.extractingPages')}
-        />
-      }
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('splitPdf.pageSelection'),
-          component: (
-            <Box>
-              {totalPages > 0 && (
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  {t('splitPdf.pdfPageCount', {
-                    count: totalPages,
-                    plural: totalPages === 1 ? '' : 's'
-                  })}
-                </Typography>
-              )}
-              <TextFieldWithDesc
-                value={values.pageRanges}
-                onOwnChange={(val) => {
-                  updateField('pageRanges', val);
-                }}
-                description={t('splitPdf.pageRangesDescription')}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolPdfInput
+              value={input}
+              onChange={setInput}
+              accept={['application/pdf']}
+              title={t('splitPdf.inputTitle')}
+            />
+            <PdfOptionStack>
+              <CompactPdfField
+                label={t('splitPdf.pageRanges')}
+                value={options.pageRanges}
                 placeholder={t('splitPdf.pageRangesPlaceholder')}
+                onChange={(pageRanges) => setOptions({ pageRanges })}
               />
-              {pageRangePreview && (
-                <Typography
-                  variant="body2"
-                  sx={{ mt: 1, color: 'primary.main' }}
-                >
-                  {pageRangePreview}
-                </Typography>
-              )}
-            </Box>
-          )
+              <PdfStatList
+                items={[
+                  {
+                    label: t('splitPdf.pdfPageCountLabel'),
+                    value: totalPages || undefined
+                  },
+                  {
+                    label: t('splitPdf.previewLabel'),
+                    value: pageRangePreview
+                  }
+                ]}
+              />
+            </PdfOptionStack>
+          </Stack>
         }
-      ]}
-      onValuesChange={onValuesChange}
-      toolInfo={{
-        title: t('splitPdf.toolInfo.title'),
-        description: t('splitPdf.toolInfo.description')
-      }}
-    />
+        result={
+          <ToolFileResult
+            title={t('splitPdf.resultTitle')}
+            value={result}
+            extension="pdf"
+            loading={loading}
+            loadingText={t('splitPdf.extractingPages')}
+          />
+        }
+      />
+    </Box>
   );
 }

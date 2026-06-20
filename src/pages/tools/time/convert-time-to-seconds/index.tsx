@@ -1,104 +1,52 @@
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { Box } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { convertTimetoSeconds } from './service';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { convertTimetoSeconds } from './service';
 
-const initialValues = {};
-type InitialValuesType = typeof initialValues;
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Multiple Clock Times',
-    description:
-      'In this example, we convert multiple clock times to seconds. Each clock time is listed on a new line and the spacing between input times is preserved in the output.',
-    sampleText: `00:00:00
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Convert time to seconds failed';
 
-00:00:01
-00:01:00
-01:00:00
-01:59:59
-12:00:00
-18:30:30
-23:59:59
-
-24:00:00`,
-    sampleResult: `0
-
-1
-60
-3600
-7199
-43200
-66630
-86399
-
-86400`,
-    sampleOptions: {}
-  },
-  {
-    title: 'Partial Clock Times',
-    description:
-      'This example finds how many seconds there are in clock times that are partially written. Some of the clock times contain just the hours and some others contain just hours and minutes.',
-    sampleText: `1
-1:10
-14:44
-23`,
-    sampleResult: `3600
-4200
-53040
-82800`,
-    sampleOptions: {}
-  },
-  {
-    title: 'Time Beyond 24 Hours',
-    description:
-      'In this example, we go beyond the regular 24-hour clock. In fact, we even go beyond 60 minutes and 60 seconds.',
-    sampleText: `24:00:01
-48:00:00
-72
-
-00:100:00
-100:100:100`,
-    sampleResult: `86401
-172800
-259200
-
-6000
-366100`,
-    sampleOptions: {}
-  }
-];
-
-export default function TimeToSeconds({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function TimeToSeconds() {
   const { t } = useTranslation('time');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const compute = (optionsValues: typeof initialValues, input: string) => {
-    setResult(convertTimetoSeconds(input));
-  };
+  useEffect(() => {
+    try {
+      setResult(convertTimetoSeconds(input));
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [input]);
+
+  const output = error ? t('common.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={<ToolTextInput value={input} onChange={setInput} />}
-      resultComponent={<ToolTextResult value={result} />}
-      initialValues={initialValues}
-      getGroups={null}
-      setInput={setInput}
-      compute={compute}
-      toolInfo={{
-        title: t('convertTimeToSeconds.toolInfo.title', { title }),
-        description: longDescription
-      }}
-      exampleCards={exampleCards}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <ToolTextInput
+            title={t('convertTimeToSeconds.inputTitle')}
+            value={input}
+            onChange={setInput}
+          />
+        }
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('convertTimeToSeconds.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

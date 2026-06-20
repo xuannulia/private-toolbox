@@ -1,108 +1,106 @@
-import { Box } from '@mui/material';
-import React, { useContext, useState } from 'react';
-import * as Yup from 'yup';
+import { Box, Stack } from '@mui/material';
+import { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ToolImageInput from '@components/input/ToolImageInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import SelectWithDesc from '@components/options/SelectWithDesc';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import CircularProgress from '@mui/material/CircularProgress';
-import { extractTextFromImage, getAvailableLanguages } from './service';
-import { InitialValuesType } from './types';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import { CustomSnackBarContext } from '../../../../../contexts/CustomSnackBarContext';
+import {
+  CompactImageCheckbox,
+  CompactImageSelect,
+  ImageOptionStack
+} from '../../ImageToolControls';
+import { extractTextFromImage, getAvailableLanguages } from './service';
+import { type InitialValuesType } from './types';
 
-const initialValues: InitialValuesType = {
+const initialOptions: InitialValuesType = {
   language: 'eng',
   detectParagraphs: true
 };
 
-const validationSchema = Yup.object({
-  language: Yup.string().required('Language is required')
-});
-
-export default function ImageToText({ title }: ToolComponentProps) {
+export default function ImageToText() {
+  const { t } = useTranslation('image');
   const [input, setInput] = useState<File | null>(null);
-  const [result, setResult] = useState<string>('');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [options, setOptions] = useState<InitialValuesType>(initialOptions);
+  const [result, setResult] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const { showSnackBar } = useContext(CustomSnackBarContext);
-  const compute = async (optionsValues: InitialValuesType, input: any) => {
-    if (!input) return;
 
-    setIsProcessing(true);
-
-    try {
-      const extractedText = await extractTextFromImage(input, optionsValues);
-      setResult(extractedText);
-    } catch (err: any) {
-      showSnackBar(
-        err.message || 'An error occurred while processing the image',
-        'error'
-      );
+  useEffect(() => {
+    if (!input) {
       setResult('');
-    } finally {
       setIsProcessing(false);
+      return;
     }
-  };
 
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: 'OCR Options',
-      component: (
-        <Box>
-          <SelectWithDesc
-            selected={values.language}
-            onChange={(val) => updateField('language', val)}
-            description={
-              'Select the primary language in the image for better accuracy'
-            }
-            options={getAvailableLanguages()}
-          />
-          <CheckboxWithDesc
-            checked={values.detectParagraphs}
-            onChange={(value) => updateField('detectParagraphs', value)}
-            description={
-              'Attempt to preserve paragraph structure in the extracted text'
-            }
-            title={'Detect Paragraphs'}
-          />
-        </Box>
-      )
-    }
-  ];
+    const image = input;
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runOcr() {
+        try {
+          setIsProcessing(true);
+          const extractedText = await extractTextFromImage(image, options);
+          if (!canceled) setResult(extractedText);
+        } catch (error) {
+          if (!canceled) {
+            showSnackBar(
+              error instanceof Error ? error.message : t('imageToText.failed'),
+              'error'
+            );
+            setResult('');
+          }
+        } finally {
+          if (!canceled) setIsProcessing(false);
+        }
+      }
+
+      void runOcr();
+    }, 500);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options, showSnackBar, t]);
 
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={getGroups}
-      compute={compute}
-      input={input}
-      validationSchema={validationSchema}
-      inputComponent={
-        <ToolImageInput
-          value={input}
-          onChange={setInput}
-          accept={['image/jpeg', 'image/png']}
-          title={'Input Image'}
-        />
-      }
-      resultComponent={
-        <ToolTextResult
-          title={'Extracted Text'}
-          value={result}
-          loading={isProcessing}
-        />
-      }
-      toolInfo={{
-        title: 'Image to Text (OCR)',
-        description:
-          'This tool extracts text from images using Optical Character Recognition (OCR). Upload an image containing text, select the primary language, and get the extracted text. For best results, use clear images with good contrast.'
-      }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolImageInput
+              value={input}
+              onChange={setInput}
+              accept={['image/jpeg', 'image/png']}
+              title={t('imageToText.inputTitle')}
+            />
+            <ImageOptionStack>
+              <CompactImageSelect
+                label={t('imageToText.language')}
+                value={options.language}
+                onChange={(language) =>
+                  setOptions((current) => ({ ...current, language }))
+                }
+                options={getAvailableLanguages()}
+              />
+              <CompactImageCheckbox
+                checked={options.detectParagraphs}
+                onChange={(detectParagraphs) =>
+                  setOptions((current) => ({ ...current, detectParagraphs }))
+                }
+                label={t('imageToText.detectParagraphs')}
+              />
+            </ImageOptionStack>
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            title={t('imageToText.resultTitle')}
+            value={result}
+            loading={isProcessing}
+          />
+        }
+      />
+    </Box>
   );
 }

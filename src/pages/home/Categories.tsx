@@ -1,113 +1,111 @@
 import { getToolsByCategory } from '@tools/index';
 import Grid from '@mui/material/Grid';
-import { Box, Card, CardContent, Stack, useTheme } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Card,
+  CardActionArea,
+  CardContent,
+  Collapse,
+  Stack
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import { useState } from 'react';
-import { categoriesColors } from 'config/uiConfig';
 import { Icon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
 import { getI18nNamespaceFromToolCategory } from '@utils/string';
 import { useUserTypeFilter } from '../../providers/UserTypeFilterProvider';
+import { useState } from 'react';
+import { ToolCategory } from '@tools/defineTool';
+import { validNamespaces } from '../../i18n';
 
 type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 
+const secondaryHomeCategoryTypes = new Set<ToolCategory>([
+  'pdf',
+  'video',
+  'audio',
+  'png',
+  'gif',
+  'converters'
+]);
+
+const splitHomeCategories = (
+  categories: ReturnType<typeof getToolsByCategory>
+) => ({
+  primary: categories.filter(
+    (category) => !secondaryHomeCategoryTypes.has(category.type)
+  ),
+  secondary: categories.filter((category) =>
+    secondaryHomeCategoryTypes.has(category.type)
+  )
+});
+
 const SingleCategory = function ({
-  category,
-  index
+  category
 }: {
   category: ArrayElement<ReturnType<typeof getToolsByCategory>>;
-  index: number;
 }) {
   const { t } = useTranslation(getI18nNamespaceFromToolCategory(category.type));
   const navigate = useNavigate();
-  const theme = useTheme();
-  const [hovered, setHovered] = useState<boolean>(false);
-  const toggleHover = () => setHovered((prevState) => !prevState);
 
-  // Get translated category title and description
   const categoryTitle = t(`categories.${category.type}.title`, category.title);
   const categoryDescription = t(
     `categories.${category.type}.description`,
     category.description
   );
-  const seeAllText = t('translation:categories.seeAll', 'See all {{title}}', {
-    title: categoryTitle
-  });
-  const tryText = t('translation:categories.try', 'Try {{title}}', {
-    //@ts-ignore
-    title: t(category.example.title)
-  });
 
   return (
-    <Grid
-      item
-      xs={12}
-      md={6}
-      onMouseEnter={toggleHover}
-      onMouseLeave={toggleHover}
-    >
+    <Grid item xs={12} sm={6} lg={3}>
       <Card
+        variant={'outlined'}
         sx={{
           height: '100%',
-          backgroundColor: hovered ? 'background.hover' : 'background.paper'
+          borderRadius: 1,
+          backgroundColor: 'background.paper'
         }}
       >
-        <CardContent sx={{ height: '100%' }}>
-          <Stack
-            direction={'column'}
-            height={'100%'}
-            justifyContent={'space-between'}
-          >
-            <Box>
-              <Stack direction={'row'} spacing={2} alignItems={'center'}>
-                <Icon
-                  icon={category.icon}
-                  fontSize={'60px'}
-                  style={{
-                    transform: `scale(${hovered ? 1.1 : 1}`
+        <CardActionArea
+          onClick={() => navigate('/categories/' + category.type)}
+          sx={{ height: '100%', alignItems: 'stretch' }}
+        >
+          <CardContent sx={{ height: '100%', p: 2 }}>
+            <Stack spacing={1.25}>
+              <Stack direction={'row'} spacing={1.25} alignItems={'center'}>
+                <Box
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 1,
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: 'primary.main',
+                    backgroundColor: 'background.default',
+                    flexShrink: 0
                   }}
-                  color={categoriesColors[index % categoriesColors.length]}
-                />
-                <Link
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 700,
-                    color: theme.palette.mode === 'dark' ? 'white' : 'black'
-                  }}
-                  to={'/categories/' + category.type}
                 >
+                  <Icon icon={category.icon} fontSize={21} />
+                </Box>
+                <Typography fontWeight={700} noWrap>
                   {categoryTitle}
-                </Link>
+                </Typography>
               </Stack>
-              <Typography sx={{ mt: 2 }}>{categoryDescription}</Typography>
-            </Box>
-            <Grid container spacing={2} mt={2}>
-              <Grid item xs={12} md={6}>
-                <Button
-                  fullWidth
-                  sx={{ height: '100%' }}
-                  onClick={() => navigate('/categories/' + category.type)}
-                  variant={'contained'}
-                >
-                  {seeAllText}
-                </Button>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Button
-                  sx={{ backgroundColor: 'background.default', height: '100%' }}
-                  fullWidth
-                  onClick={() => navigate(category.example.path)}
-                  variant={'outlined'}
-                >
-                  {tryText}
-                </Button>
-              </Grid>
-            </Grid>
-          </Stack>
-        </CardContent>
+              <Typography
+                color={'text.secondary'}
+                fontSize={13}
+                sx={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                }}
+              >
+                {categoryDescription}
+              </Typography>
+            </Stack>
+          </CardContent>
+        </CardActionArea>
       </Card>
     </Grid>
   );
@@ -115,14 +113,51 @@ const SingleCategory = function ({
 
 export default function Categories() {
   const { selectedUserTypes } = useUserTypeFilter();
-  const { t } = useTranslation();
+  const { t } = useTranslation(validNamespaces);
   const categories = getToolsByCategory(selectedUserTypes, t);
+  const { primary, secondary } = splitHomeCategories(categories);
+  const [secondaryVisible, setSecondaryVisible] = useState(false);
 
   return (
-    <Grid width={'80%'} container spacing={2}>
-      {categories.map((category, index) => (
-        <SingleCategory key={category.type} category={category} index={index} />
-      ))}
-    </Grid>
+    <Stack sx={{ width: '100%', maxWidth: 1120 }} spacing={1.5}>
+      <Grid container spacing={1.5}>
+        {primary.map((category) => (
+          <SingleCategory key={category.type} category={category} />
+        ))}
+      </Grid>
+
+      {secondary.length > 0 && (
+        <Stack spacing={1}>
+          <Box>
+            <Button
+              size={'small'}
+              variant={'text'}
+              onClick={() => setSecondaryVisible((visible) => !visible)}
+              endIcon={
+                <Icon
+                  icon={
+                    secondaryVisible ? 'mdi:chevron-up' : 'mdi:chevron-down'
+                  }
+                  fontSize={18}
+                />
+              }
+              sx={{ borderRadius: 1 }}
+            >
+              {secondaryVisible
+                ? t('translation:categories.showLess')
+                : t('translation:categories.moreTools')}
+            </Button>
+          </Box>
+
+          <Collapse in={secondaryVisible} timeout={'auto'} unmountOnExit>
+            <Grid container spacing={1.5}>
+              {secondary.map((category) => (
+                <SingleCategory key={category.type} category={category} />
+              ))}
+            </Grid>
+          </Collapse>
+        </Stack>
+      )}
+    </Stack>
   );
 }

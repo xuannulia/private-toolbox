@@ -1,19 +1,21 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
-import * as Yup from 'yup';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import { updateNumberField } from '@utils/string';
-import { InitialValuesType } from './types';
+import { Box, Stack } from '@mui/material';
 import ToolVideoInput from '@components/input/ToolVideoInput';
 import ToolFileResult from '@components/result/ToolFileResult';
-import SimpleRadio from '@components/options/SimpleRadio';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  CompactVideoField,
+  CompactVideoToggle,
+  VideoOptionStack
+} from '../VideoToolControls';
+import type { InitialValuesType } from './types';
 
-const initialValues: InitialValuesType = {
+const ffmpeg = new FFmpeg();
+
+const initialOptions: InitialValuesType = {
   quality: 'mid',
   fps: '10',
   scale: '320:-1:flags=bicubic',
@@ -21,214 +23,209 @@ const initialValues: InitialValuesType = {
   end: 100
 };
 
-const validationSchema = Yup.object({
-  start: Yup.number().min(0, 'Start time must be positive'),
-  end: Yup.number().min(
-    Yup.ref('start'),
-    'End time must be greater than start time'
-  )
-});
+const qualityOptions: {
+  value: InitialValuesType['quality'];
+  fps: string;
+  scale: string;
+}[] = [
+  {
+    value: 'low',
+    fps: '5',
+    scale: '240:-1:flags=bilinear'
+  },
+  {
+    value: 'mid',
+    fps: '10',
+    scale: '320:-1:flags=bicubic'
+  },
+  {
+    value: 'high',
+    fps: '15',
+    scale: '480:-1:flags=lanczos'
+  },
+  {
+    value: 'ultra',
+    fps: '15',
+    scale: '640:-1:flags=lanczos'
+  }
+];
 
-export default function VideoToGif({
-  title,
-  longDescription
-}: ToolComponentProps) {
+async function ensureFfmpegLoaded() {
+  if (!ffmpeg.loaded) {
+    await ffmpeg.load({
+      wasmURL:
+        'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.9/dist/esm/ffmpeg-core.wasm'
+    });
+  }
+}
+
+async function convertVideoToGif(
+  file: File,
+  options: InitialValuesType
+): Promise<File> {
+  await ensureFfmpegLoaded();
+
+  const fileName = file.name;
+  const outputName = 'output.gif';
+
+  await ffmpeg.writeFile(fileName, await fetchFile(file));
+  await ffmpeg.exec([
+    '-i',
+    fileName,
+    '-ss',
+    options.start.toString(),
+    '-to',
+    options.end.toString(),
+    '-vf',
+    `fps=${options.fps},scale=${options.scale},palettegen`,
+    'palette.png'
+  ]);
+
+  await ffmpeg.exec([
+    '-i',
+    fileName,
+    '-i',
+    'palette.png',
+    '-ss',
+    options.start.toString(),
+    '-to',
+    options.end.toString(),
+    '-filter_complex',
+    `fps=${options.fps},scale=${options.scale}[x];[x][1:v]paletteuse`,
+    outputName
+  ]);
+
+  const data = await ffmpeg.readFile(outputName);
+
+  try {
+    await ffmpeg.deleteFile(fileName);
+    await ffmpeg.deleteFile('palette.png');
+    await ffmpeg.deleteFile(outputName);
+  } catch (error) {
+    console.warn('Unable to clean FFmpeg files:', error);
+  }
+
+  return new File(
+    [new Blob([data as any], { type: 'image/gif' })],
+    outputName,
+    {
+      type: 'image/gif'
+    }
+  );
+}
+
+export default function VideoToGif() {
+  const { t } = useTranslation('video');
   const [input, setInput] = useState<File | null>(null);
+  const [options, setOptions] = useState<InitialValuesType>(initialOptions);
   const [result, setResult] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const compute = (values: InitialValuesType, input: File | null) => {
-    if (!input) return;
-    const { fps, scale, start, end } = values;
-    let ffmpeg: FFmpeg | null = null;
-    let ffmpegLoaded = false;
+  useEffect(() => {
+    if (!input || options.end <= options.start) {
+      setResult(null);
+      setLoading(false);
+      return;
+    }
 
-    const convertVideoToGif = async (
-      file: File,
-      fps: string,
-      scale: string,
-      start: number,
-      end: number
-    ): Promise<void> => {
-      setLoading(true);
+    const inputFile = input;
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runConversion() {
+        try {
+          setLoading(true);
+          const convertedFile = await convertVideoToGif(inputFile, options);
 
-      if (!ffmpeg) {
-        ffmpeg = new FFmpeg();
+          if (!canceled) setResult(convertedFile);
+        } catch (error) {
+          console.error('Failed to convert video:', error);
+          if (!canceled) setResult(null);
+        } finally {
+          if (!canceled) setLoading(false);
+        }
       }
 
-      if (!ffmpegLoaded) {
-        await ffmpeg.load({
-          wasmURL:
-            'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.9/dist/esm/ffmpeg-core.wasm'
-        });
-        ffmpegLoaded = true;
-      }
+      void runConversion();
+    }, 700);
 
-      const fileName = file.name;
-      const outputName = 'output.gif';
-
-      try {
-        ffmpeg.writeFile(fileName, await fetchFile(file));
-
-        await ffmpeg.exec([
-          '-i',
-          fileName,
-          '-ss',
-          start.toString(),
-          '-to',
-          end.toString(),
-          '-vf',
-          `fps=${fps},scale=${scale},palettegen`,
-          'palette.png'
-        ]);
-
-        await ffmpeg.exec([
-          '-i',
-          fileName,
-          '-i',
-          'palette.png',
-          '-ss',
-          start.toString(),
-          '-to',
-          end.toString(),
-          '-filter_complex',
-          `fps=${fps},scale=${scale}[x];[x][1:v]paletteuse`,
-          outputName
-        ]);
-
-        const data = await ffmpeg.readFile(outputName);
-
-        const blob = new Blob([data as any], { type: 'image/gif' });
-        const convertedFile = new File([blob], outputName, {
-          type: 'image/gif'
-        });
-
-        await ffmpeg.deleteFile(fileName);
-        await ffmpeg.deleteFile(outputName);
-
-        setResult(convertedFile);
-      } catch (err) {
-        console.error(`Failed to convert video: ${err}`);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
     };
+  }, [input, options]);
 
-    convertVideoToGif(input, fps, scale, start, end);
+  const setQuality = (quality: InitialValuesType['quality']) => {
+    const nextQuality = qualityOptions.find((item) => item.value === quality);
+    if (!nextQuality) return;
+
+    setOptions((current) => ({
+      ...current,
+      quality,
+      fps: nextQuality.fps,
+      scale: nextQuality.scale
+    }));
   };
 
-  const getGroups: GetGroupsType<InitialValuesType> | null = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: 'Set Quality',
-      component: (
-        <Box>
-          <SimpleRadio
-            title="Low"
-            onClick={() => {
-              updateField('quality', 'low');
-              updateField('fps', '5');
-              updateField('scale', '240:-1:flags=bilinear');
-            }}
-            checked={values.quality === 'low'}
-          />
-          <SimpleRadio
-            title="Mid"
-            onClick={() => {
-              updateField('quality', 'mid');
-              updateField('fps', '10');
-              updateField('scale', '320:-1:flags=bicubic');
-            }}
-            checked={values.quality === 'mid'}
-          />
-          <SimpleRadio
-            title="High"
-            onClick={() => {
-              updateField('quality', 'high');
-              updateField('fps', '15');
-              updateField('scale', '480:-1:flags=lanczos');
-            }}
-            checked={values.quality === 'high'}
-          />
-          <SimpleRadio
-            title="Ultra"
-            onClick={() => {
-              updateField('quality', 'ultra');
-              updateField('fps', '15');
-              updateField('scale', '640:-1:flags=lanczos');
-            }}
-            checked={values.quality === 'ultra'}
-          />
-        </Box>
-      )
-    },
-    {
-      title: 'Timestamps',
-      component: (
-        <Box>
-          <TextFieldWithDesc
-            onOwnChange={(value) =>
-              updateNumberField(value, 'start', updateField)
-            }
-            value={values.start}
-            label="Start Time"
-            sx={{ mb: 2, backgroundColor: 'background.paper' }}
-          />
-          <TextFieldWithDesc
-            onOwnChange={(value) =>
-              updateNumberField(value, 'end', updateField)
-            }
-            value={values.end}
-            label="End Time"
-          />
-        </Box>
-      )
-    }
-  ];
+  const updateTimeOption = (key: 'start' | 'end', value: string) => {
+    setOptions((current) => ({
+      ...current,
+      [key]: Math.max(0, Number(value) || 0)
+    }));
+  };
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      renderCustomInput={({ start, end }, setFieldValue) => {
-        return (
-          <ToolVideoInput
-            value={input}
-            onChange={setInput}
-            title={'Input Video'}
-            showTrimControls={true}
-            onTrimChange={(start, end) => {
-              setFieldValue('start', start);
-              setFieldValue('end', end);
-            }}
-            trimStart={start}
-            trimEnd={end}
-          />
-        );
-      }}
-      resultComponent={
-        loading ? (
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolVideoInput
+              value={input}
+              onChange={setInput}
+              title={t('videoToGif.inputTitle')}
+              showTrimControls={true}
+              onTrimChange={(start, end) =>
+                setOptions((current) => ({ ...current, start, end }))
+              }
+              trimStart={options.start}
+              trimEnd={options.end}
+            />
+            <VideoOptionStack>
+              <CompactVideoToggle<InitialValuesType['quality']>
+                label={t('videoToGif.quality')}
+                value={options.quality}
+                options={[
+                  { value: 'low', label: t('videoToGif.low') },
+                  { value: 'mid', label: t('videoToGif.mid') },
+                  { value: 'high', label: t('videoToGif.high') },
+                  { value: 'ultra', label: t('videoToGif.ultra') }
+                ]}
+                onChange={setQuality}
+              />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CompactVideoField
+                  label={t('videoToGif.startTime')}
+                  value={options.start}
+                  onChange={(value) => updateTimeOption('start', value)}
+                />
+                <CompactVideoField
+                  label={t('videoToGif.endTime')}
+                  value={options.end}
+                  onChange={(value) => updateTimeOption('end', value)}
+                />
+              </Stack>
+            </VideoOptionStack>
+          </Stack>
+        }
+        result={
           <ToolFileResult
-            title="Converting to Gif"
-            value={null}
-            loading={true}
-          />
-        ) : (
-          <ToolFileResult
-            title="Converted to Gif"
+            title={t('videoToGif.resultTitle')}
             value={result}
             extension="gif"
+            loading={loading}
+            loadingText={t('videoToGif.loadingText')}
           />
-        )
-      }
-      initialValues={initialValues}
-      getGroups={getGroups}
-      setInput={setInput}
-      compute={compute}
-      toolInfo={{ title: `What is a ${title}?`, description: longDescription }}
-    />
+        }
+      />
+    </Box>
   );
 }

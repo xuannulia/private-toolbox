@@ -1,7 +1,5 @@
-import { Buffer } from 'buffer';
+import { decodeBase64, encodeBase64 } from '@private-toolbox/core';
 
 export function base64(input: string, encode: boolean): string {
-  return encode
-    ? Buffer.from(input, 'utf-8').toString('base64')
-    : Buffer.from(input, 'base64').toString('utf-8');
+  return encode ? encodeBase64({ text: input }) : decodeBase64({ text: input });
 }

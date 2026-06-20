@@ -1,58 +1,78 @@
-import ToolContent from '@components/ToolContent';
-import React, { useState } from 'react';
+import { Box, Stack, TextField } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { compute } from './service';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { compute } from './service';
 
-const initialValues = {
-  dotSymbol: '.',
-  dashSymbol: '-'
-};
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Morse conversion failed';
 
 export default function ToMorse() {
   const { t } = useTranslation('string');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
-  const computeOptions = (optionsValues: typeof initialValues, input: any) => {
-    const { dotSymbol, dashSymbol } = optionsValues;
-    setResult(compute(input, dotSymbol, dashSymbol));
-  };
+  const [input, setInput] = useState('');
+  const [dotSymbol, setDotSymbol] = useState('.');
+  const [dashSymbol, setDashSymbol] = useState('-');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
+    }
+
+    try {
+      setResult(compute(input, dotSymbol, dashSymbol));
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [dashSymbol, dotSymbol, input]);
+
+  const output = error ? t('toMorse.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={t('toMorse.title')}
-      initialValues={initialValues}
-      compute={computeOptions}
-      input={input}
-      setInput={setInput}
-      inputComponent={<ToolTextInput value={input} onChange={setInput} />}
-      resultComponent={
-        <ToolTextResult title={t('toMorse.resultTitle')} value={result} />
-      }
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('toMorse.shortSignal'),
-          component: (
-            <TextFieldWithDesc
-              description={t('toMorse.dotSymbolDescription')}
-              value={values.dotSymbol}
-              onOwnChange={(val) => updateField('dotSymbol', val)}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('toMorse.inputTitle')}
+              value={input}
+              onChange={setInput}
             />
-          )
-        },
-        {
-          title: t('toMorse.longSignal'),
-          component: (
-            <TextFieldWithDesc
-              description={t('toMorse.dashSymbolDescription')}
-              value={values.dashSymbol}
-              onOwnChange={(val) => updateField('dashSymbol', val)}
-            />
-          )
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                fullWidth
+                label={t('toMorse.dotSymbolLabel')}
+                size="small"
+                value={dotSymbol}
+                onChange={(event) => setDotSymbol(event.target.value)}
+              />
+              <TextField
+                fullWidth
+                label={t('toMorse.dashSymbolLabel')}
+                size="small"
+                value={dashSymbol}
+                onChange={(event) => setDashSymbol(event.target.value)}
+              />
+            </Stack>
+          </Stack>
         }
-      ]}
-    />
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('toMorse.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

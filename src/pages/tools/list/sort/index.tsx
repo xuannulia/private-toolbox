@@ -1,175 +1,151 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { Sort, SortingMethod, SplitOperatorType } from './service';
-import SimpleRadio from '@components/options/SimpleRadio';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import SelectWithDesc from '@components/options/SelectWithDesc';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  CompactCheckbox,
+  CompactSelect,
+  ListSplitMode,
+  SplitOptions,
+  normalizeListSeparator
+} from '../ListToolControls';
+import { Sort, SortingMethod } from './service';
 
-const initialValues = {
-  splitSeparatorType: 'symbol' as SplitOperatorType,
-  sortingMethod: 'alphabetic' as SortingMethod,
-  increasing: true,
-  splitSeparator: ',',
-  joinSeparator: ',',
-  removeDuplicated: false,
-  caseSensitive: false
-};
-const splitOperators: {
-  title: string;
-  description: string;
-  type: SplitOperatorType;
-}[] = [
-  {
-    title: 'Use a Symbol for Splitting',
-    description: 'Delimit input list items with a character.',
-    type: 'symbol'
-  },
-  {
-    title: 'Use a Regex for Splitting',
-    type: 'regex',
-    description: 'Delimit input list items with a regular expression.'
-  }
-];
+type SortOrder = 'increasing' | 'decreasing';
 
-export default function SortList({ title }: ToolComponentProps) {
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Sort list failed';
+
+export default function SortList() {
   const { t } = useTranslation('list');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
-  const compute = (optionsValues: typeof initialValues, input: any) => {
-    const {
-      splitSeparatorType,
-      joinSeparator,
-      splitSeparator,
-      increasing,
-      caseSensitive,
-      removeDuplicated,
-      sortingMethod
-    } = optionsValues;
+  const [input, setInput] = useState('');
+  const [splitMode, setSplitMode] = useState<ListSplitMode>('symbol');
+  const [splitSeparator, setSplitSeparator] = useState(',');
+  const [joinSeparator, setJoinSeparator] = useState(',');
+  const [sortingMethod, setSortingMethod] =
+    useState<SortingMethod>('alphabetic');
+  const [order, setOrder] = useState<SortOrder>('increasing');
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const [removeDuplicated, setRemoveDuplicated] = useState(false);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-    setResult(
-      Sort(
-        sortingMethod,
-        splitSeparatorType,
-        input,
-        increasing,
-        splitSeparator,
-        joinSeparator,
-        removeDuplicated,
-        caseSensitive
-      )
-    );
-  };
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
+    }
+
+    try {
+      setResult(
+        Sort(
+          sortingMethod,
+          splitMode,
+          input,
+          order === 'increasing',
+          normalizeListSeparator(splitSeparator),
+          normalizeListSeparator(joinSeparator),
+          removeDuplicated,
+          caseSensitive
+        )
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [
+    caseSensitive,
+    input,
+    joinSeparator,
+    order,
+    removeDuplicated,
+    sortingMethod,
+    splitMode,
+    splitSeparator
+  ]);
+
+  const output = error ? t('common.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolTextInput
-          title={t('sort.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult title={t('sort.resultTitle')} value={result} />
-      }
-      initialValues={initialValues}
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('sort.inputItemSeparator'),
-          component: (
-            <Box>
-              {splitOperators.map(({ title, description, type }) => (
-                <SimpleRadio
-                  key={type}
-                  onClick={() => updateField('splitSeparatorType', type)}
-                  title={t(`sort.splitOperators.${type}.title`)}
-                  description={t(`sort.splitOperators.${type}.description`)}
-                  checked={values.splitSeparatorType === type}
-                />
-              ))}
-              <TextFieldWithDesc
-                description={t('sort.splitSeparatorDescription')}
-                value={values.splitSeparator}
-                onOwnChange={(val) => updateField('splitSeparator', val)}
-              />
-            </Box>
-          )
-        },
-        {
-          title: t('sort.sortMethod'),
-          component: (
-            <Box>
-              <SelectWithDesc
-                selected={values.sortingMethod}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('sort.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <SplitOptions
+              splitMode={splitMode}
+              splitSeparator={splitSeparator}
+              joinSeparator={joinSeparator}
+              labels={{
+                symbol: t('common.symbolMode'),
+                regex: t('common.regexMode'),
+                splitSeparator: t('common.splitSeparator'),
+                joinSeparator: t('common.joinSeparator')
+              }}
+              onSplitModeChange={setSplitMode}
+              onSplitSeparatorChange={setSplitSeparator}
+              onJoinSeparatorChange={setJoinSeparator}
+            />
+            <Stack spacing={1.5}>
+              <CompactSelect
+                label={t('sort.sortMethod')}
+                value={sortingMethod}
                 options={[
                   {
                     label: t('sort.sortOptions.alphabetic'),
                     value: 'alphabetic'
                   },
-                  {
-                    label: t('sort.sortOptions.numeric'),
-                    value: 'numeric'
-                  },
+                  { label: t('sort.sortOptions.numeric'), value: 'numeric' },
                   { label: t('sort.sortOptions.length'), value: 'length' }
                 ]}
-                onChange={(value) => updateField('sortingMethod', value)}
-                description={t('sort.sortMethodDescription')}
+                onChange={setSortingMethod}
               />
-              <SelectWithDesc
-                selected={values.increasing}
+              <CompactSelect
+                label={t('common.order')}
+                value={order}
                 options={[
                   {
                     label: t('sort.orderOptions.increasing'),
-                    value: true
+                    value: 'increasing'
                   },
                   {
                     label: t('sort.orderOptions.decreasing'),
-                    value: false
+                    value: 'decreasing'
                   }
                 ]}
-                onChange={(value) => {
-                  updateField('increasing', value);
-                }}
-                description={t('sort.orderDescription')}
+                onChange={setOrder}
               />
-              <CheckboxWithDesc
-                title={t('sort.caseSensitive')}
-                description={t('sort.caseSensitiveDescription')}
-                checked={values.caseSensitive}
-                onChange={(val) => updateField('caseSensitive', val)}
+              <CompactCheckbox
+                checked={caseSensitive}
+                label={t('sort.caseSensitive')}
+                onChange={setCaseSensitive}
               />
-            </Box>
-          )
-        },
-        {
-          title: t('sort.sortedItemProperties'),
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                description={t('sort.joinSeparatorDescription')}
-                value={values.joinSeparator}
-                onOwnChange={(val) => updateField('joinSeparator', val)}
+              <CompactCheckbox
+                checked={removeDuplicated}
+                label={t('sort.removeDuplicates')}
+                onChange={setRemoveDuplicated}
               />
-              <CheckboxWithDesc
-                title={t('sort.removeDuplicates')}
-                description={t('sort.removeDuplicatesDescription')}
-                checked={values.removeDuplicated}
-                onChange={(val) => updateField('removeDuplicated', val)}
-              />
-            </Box>
-          )
+            </Stack>
+          </Stack>
         }
-      ]}
-      compute={compute}
-      setInput={setInput}
-    />
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('sort.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

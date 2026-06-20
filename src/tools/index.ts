@@ -14,37 +14,43 @@ import { IconifyIcon } from '@iconify/react';
 import { pdfTools } from '../pages/tools/pdf';
 import { xmlTools } from '../pages/tools/xml';
 import { convertersTools } from '../pages/tools/converters';
+import { networkTools } from '../pages/tools/network';
+import { opsTools } from '../pages/tools/ops';
 import { TFunction } from 'i18next';
 import { FullI18nKey, I18nNamespaces } from '../i18n';
 
 const toolCategoriesOrder: ToolCategory[] = [
+  'json',
+  'string',
+  'time',
+  'network',
+  'ops',
+  'csv',
+  'xml',
+  'number',
+  'list',
   'image-generic',
   'pdf',
-  'string',
   'video',
-  'time',
   'audio',
-  'json',
-  'list',
-  'csv',
-  'number',
   'png',
-  'xml',
   'gif',
   'converters'
 ];
 export const tools: DefinedTool[] = [
-  ...imageTools,
-  ...stringTools,
   ...jsonTools,
-  ...pdfTools,
-  ...listTools,
-  ...csvTools,
-  ...videoTools,
-  ...numberTools,
+  ...networkTools,
+  ...opsTools,
+  ...stringTools,
   ...timeTools,
-  ...audioTools,
+  ...csvTools,
   ...xmlTools,
+  ...numberTools,
+  ...listTools,
+  ...imageTools,
+  ...pdfTools,
+  ...videoTools,
+  ...audioTools,
   ...convertersTools
 ];
 const categoriesConfig: {
@@ -120,6 +126,18 @@ const categoriesConfig: {
     title: 'translation:categories.image-generic.title'
   },
   {
+    type: 'network',
+    icon: 'mdi:network-outline',
+    value: 'translation:categories.network.description',
+    title: 'translation:categories.network.title'
+  },
+  {
+    type: 'ops',
+    icon: 'mdi:wrench-cog-outline',
+    value: 'translation:categories.ops.description',
+    title: 'translation:categories.ops.title'
+  },
+  {
     type: 'audio',
     icon: 'ic:twotone-audiotrack',
     value: 'translation:categories.audio.description',
@@ -141,6 +159,8 @@ const categoriesConfig: {
 const CATEGORIES_USER_TYPES_MAPPINGS: Partial<Record<ToolCategory, UserType>> =
   {
     xml: 'developers',
+    network: 'developers',
+    ops: 'developers',
     csv: 'developers',
     json: 'developers',
     gif: 'generalUsers',

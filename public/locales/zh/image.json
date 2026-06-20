@@ -1,75 +1,263 @@
 {
   "changeColors": {
     "description": "快速准确地将图像中的选定颜色替换为新颜色。",
+    "fromColor": {
+      "colorOption": "替换指定颜色",
+      "selectorDescription": "要替换的颜色",
+      "title": "来源颜色",
+      "transparentOption": "替换透明像素"
+    },
+    "inputTitle": "输入图片",
+    "loadingText": "正在替换颜色...",
+    "resultTitle": "结果图片",
     "shortDescription": "快速交换图像中的颜色",
+    "similarity": "相似度",
+    "toColor": {
+      "colorOption": "替换为指定颜色",
+      "selectorDescription": "替换后的颜色",
+      "title": "目标颜色",
+      "transparentOption": "替换为透明"
+    },
     "title": "改变图像的颜色"
   },
   "changeOpacity": {
+    "areaHeight": "区域高度",
+    "areaLeft": "区域左侧",
+    "areaTop": "区域顶部",
+    "areaWidth": "区域宽度",
     "description": "轻松调整图片透明度。只需上传图片，使用滑块在 0（完全透明）和 1（完全不透明）之间设置所需的不透明度，然后下载修改后的图片即可。",
+    "gradient": "渐变",
+    "gradientType": "渐变类型",
+    "inputTitle": "输入图片",
+    "linear": "线性",
+    "loadingText": "正在调整透明度...",
+    "mode": "模式",
+    "opacity": "透明度",
+    "radial": "径向",
+    "resultTitle": "调整后图片",
     "shortDescription": "调整图像的透明度",
+    "solid": "纯色",
     "title": "更改图像不透明度"
   },
   "compress": {
     "compressedSize": "压缩尺寸",
+    "compressing": "正在压缩图片...",
     "compressionOptions": "压缩选项",
     "description": "在保持质量的同时减小图像文件大小。",
     "failedToCompress": "压缩图片失败，请重试。",
     "fileSizes": "文件大小",
     "inputTitle": "输入图像",
+    "maxFileSize": "最大文件大小（MB）",
     "maxFileSizeDescription": "最大文件大小（以兆字节为单位）",
     "originalSize": "原始尺寸",
+    "quality": "质量",
     "qualityDescription": "图像质量百分比（越低表示文件大小越小）",
     "resultTitle": "压缩图像",
     "shortDescription": "压缩图像以减小文件大小，同时保持合理的质量。",
+    "someFailedToCompress": "部分图片压缩失败，已跳过。",
     "title": "压缩图像"
   },
   "compressPng": {
+    "compressedSize": "压缩后大小",
     "description": "这是一个压缩 PNG 图片的程序。只要您将 PNG 图片粘贴到输入区域，程序就会对其进行压缩，并在输出区域显示结果。在选项中，您可以调整压缩级别，以及查看新旧图片文件的大小。",
+    "inputTitle": "输入 PNG",
+    "loadingText": "正在压缩 PNG...",
+    "originalSize": "原始大小",
+    "rate": "压缩率",
+    "resultTitle": "压缩后 PNG",
     "shortDescription": "快速压缩 PNG",
     "title": "压缩 png"
   },
   "convertJgpToPng": {
+    "color": "透明颜色",
     "description": "快速将您的 JPG 图像转换为 PNG。只需在左侧的编辑器中导入您的 PNG 图像即可",
+    "enableTransparency": "启用透明色",
+    "inputTitle": "输入 JPG",
+    "loadingText": "正在转换图片...",
+    "resultTitle": "输出 PNG",
     "shortDescription": "快速将您的 JPG 图像转换为 PNG",
+    "similarity": "相似度",
     "title": "JPG 转换为 PNG"
   },
   "createTransparent": {
+    "backgroundColor": "替换颜色",
     "description": "通过移除所选颜色，使图像背景变为透明。",
+    "fromColor": "要替换的颜色",
+    "inputTitle": "输入图片",
+    "loadingText": "正在处理图片...",
+    "resultTitle": "透明 PNG",
     "shortDescription": "快速使图像透明",
+    "similarity": "相似度",
     "title": "创建透明 PNG"
   },
   "crop": {
+    "circular": "圆形",
+    "cropHeight": "裁剪高度",
+    "cropShape": "裁剪形状",
+    "cropWidth": "裁剪宽度",
     "description": "裁剪图像以删除不需要的区域。",
     "inputTitle": "输入图像",
+    "loadingText": "正在裁剪图片...",
+    "rectangular": "矩形",
     "resultTitle": "裁剪图像",
     "shortDescription": "快速裁剪图像。",
-    "title": "裁剪图片"
+    "title": "裁剪图片",
+    "xPosition": "X 坐标",
+    "yPosition": "Y 坐标"
   },
   "editor": {
     "description": "高级图像编辑器，包含裁剪、旋转、注释、调整颜色和添加水印等工具。直接在浏览器中使用专业级工具编辑图像。",
+    "inputTitle": "上传图片进行编辑",
     "shortDescription": "使用高级工具和功能编辑图像",
     "title": "图像编辑器"
   },
   "imageToText": {
+    "detectParagraphs": "识别段落",
     "description": "使用光学字符识别 (OCR) 从图像 (JPG、PNG) 中提取文本。",
+    "failed": "文本提取失败",
+    "inputTitle": "输入图片",
+    "language": "语言",
+    "resultTitle": "提取结果",
     "shortDescription": "使用 OCR 从图像中提取文本。",
     "title": "图像转文本 (OCR)"
   },
+  "imageToBase64": {
+    "base64": "纯 Base64",
+    "dataUrl": "Data URL",
+    "description": "在浏览器中将图片转换为 Base64 文本或 Data URL。",
+    "failed": "图片转换失败",
+    "formatTitle": "输出格式",
+    "inputTitle": "输入图片",
+    "resultTitle": "Base64 输出",
+    "shortDescription": "图片转 Base64 或 Data URL。",
+    "title": "图片转 Base64"
+  },
+  "imageInfo": {
+    "alpha": {
+      "no": "否",
+      "unknown": "未知",
+      "yes": "是"
+    },
+    "copied": "图片信息已复制",
+    "copyFailed": "复制失败",
+    "description": "查看图片尺寸、格式、体积和透明通道等基础信息。",
+    "failed": "读取图片信息失败",
+    "fields": {
+      "aspectRatio": "比例",
+      "dimensions": "尺寸",
+      "extension": "扩展名",
+      "hasAlpha": "透明通道",
+      "megapixels": "百万像素",
+      "mimeType": "MIME 类型",
+      "modifiedAt": "修改时间",
+      "name": "文件名",
+      "orientation": "方向",
+      "pixelCount": "像素数",
+      "size": "文件大小"
+    },
+    "inputTitle": "输入图片",
+    "orientation": {
+      "landscape": "横向",
+      "portrait": "纵向",
+      "square": "正方形"
+    },
+    "resultTitle": "图片信息",
+    "shortDescription": "查看图片尺寸、格式和大小。",
+    "title": "图片信息查看"
+  },
+  "imageToIcon": {
+    "description": "在浏览器中将图片转换为多尺寸 .ico 图标文件。",
+    "failed": "生成 icon 失败",
+    "inputTitle": "输入图片",
+    "resultTitle": "ICO 图标",
+    "shortDescription": "图片转 .ico / favicon。",
+    "sizeTitle": "图标尺寸",
+    "title": "图片转 Icon"
+  },
+  "barcode": {
+    "backgroundColor": "背景色",
+    "description": "在浏览器中生成 Code 128 SVG 条形码。",
+    "displayText": "显示文本",
+    "foregroundColor": "条码颜色",
+    "height": "高度",
+    "inputTitle": "条形码内容",
+    "margin": "边距",
+    "moduleWidth": "缩放",
+    "optionsTitle": "选项",
+    "resultTitle": "条形码",
+    "shortDescription": "生成 Code 128 SVG 条形码。",
+    "title": "条形码生成器"
+  },
   "qrCode": {
     "description": "为不同数据类型生成二维码：URL、文本、电子邮件、电话、短信、WiFi、vCard 等。",
+    "failed": "二维码生成失败",
+    "groups": {
+      "details": "{{type}} 内容",
+      "logo": "Logo",
+      "settings": "设置",
+      "type": "类型"
+    },
+    "logoInvalid": "请选择图片文件",
+    "options": {
+      "address": "地址",
+      "backgroundColor": "背景色",
+      "company": "公司（可选）",
+      "dots": "圆点",
+      "email": "邮箱",
+      "emailBody": "邮件正文（可选）",
+      "emailSubject": "邮件主题（可选）",
+      "encryptionType": "加密类型",
+      "errorCorrectionLevel": "容错级别",
+      "foregroundColor": "前景色",
+      "fullName": "姓名",
+      "job": "职位（可选）",
+      "logoPadding": "Logo 留白",
+      "logoRemove": "移除",
+      "logoSize": "Logo 尺寸 (%)",
+      "logoUpload": "上传 Logo",
+      "margin": "外边距",
+      "message": "消息（可选）",
+      "moduleStyle": "码点样式",
+      "name": "名称",
+      "outputFormat": "输出格式",
+      "password": "密码",
+      "phone": "电话号码",
+      "qrType": "二维码类型",
+      "size": "尺寸像素 (100-1000)",
+      "square": "方块",
+      "ssid": "网络名称 (SSID)",
+      "text": "输入文本",
+      "transparentBackground": "透明背景",
+      "url": "输入 URL",
+      "website": "网站（可选）"
+    },
+    "resultOutput": "生成的二维码",
     "shortDescription": "为各种数据格式创建定制的二维码。",
     "title": "二维码生成器"
   },
+  "qrCodeDecode": {
+    "description": "在浏览器中识别图片里的二维码内容。",
+    "failed": "二维码识别失败",
+    "inputTitle": "二维码图片",
+    "resultTitle": "识别结果",
+    "shortDescription": "从图片中识别二维码。",
+    "title": "二维码解码"
+  },
   "removeBackground": {
     "description": "自动移除图像背景，并保留主体为透明背景。",
+    "inputTitle": "输入图片",
+    "loadingText": "正在移除背景...",
+    "resultTitle": "透明 PNG",
     "shortDescription": "自动删除图像的背景",
     "title": "从图像中删除背景"
   },
   "resize": {
     "description": "将图像调整为不同的尺寸。",
     "dimensionType": "尺寸类型",
+    "height": "高度",
     "heightDescription": "高度（像素）",
     "inputTitle": "输入图像",
+    "loadingText": "正在调整图片大小...",
     "maintainAspectRatio": "保持纵横比",
     "maintainAspectRatioDescription": "保持图像的原始纵横比。",
     "percentage": "百分比",
@@ -90,11 +278,58 @@
       "description": "此工具允许您调整 JPG、PNG、SVG 或 GIF 图像的大小。您可以指定像素或百分比来调整大小，并可选择保持原始宽高比。",
       "title": "调整图像大小"
     },
+    "width": "宽度",
     "widthDescription": "宽度（像素）"
   },
   "rotate": {
+    "customAngle": "自定义角度",
     "description": "按指定角度旋转图像。",
+    "inputTitle": "输入图片",
+    "loadingText": "正在旋转图片...",
+    "presetAngle": "预设角度",
+    "resultTitle": "旋转后图片",
+    "rotateMethod": "旋转方式",
     "shortDescription": "轻松旋转图像。",
     "title": "旋转图像"
+  },
+  "split": {
+    "description": "将地图或大图按所选纸张格式和留白拆分为多页 PDF。",
+    "inputTitle": "输入图片",
+    "loadingText": "正在生成 PDF，可能需要一点时间...",
+    "pageParameters": {
+      "padding": {
+        "description": "每页四周留白（使用当前单位）",
+        "label": "留白"
+      },
+      "selectPageFormat": "纸张格式",
+      "title": "页面参数"
+    },
+    "resultTitle": "拆分后 PDF",
+    "scaleParameters": {
+      "pxPerSquareQuantity": {
+        "description": "原图中指定格子数量对应的像素数",
+        "label": "像素/格子数量"
+      },
+      "squareQuantity": {
+        "description": "用于缩放的横向或纵向格子数量",
+        "label": "格子数量"
+      },
+      "title": "缩放参数",
+      "unitsPerOneSquare": {
+        "description": "一个格子在所选单位下的实际尺寸",
+        "label": "每格单位"
+      }
+    },
+    "shortDescription": "将大图拆分为多页 PDF。",
+    "title": "图片拆分为页面",
+    "units": {
+      "options": {
+        "in": "英寸 (in)",
+        "mm": "毫米 (mm)",
+        "pt": "点 (pt)"
+      },
+      "select": "选择测量单位",
+      "title": "单位"
+    }
   }
 }

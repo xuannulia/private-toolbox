@@ -1,113 +1,68 @@
-import React, { useState } from 'react';
+import { Box, Checkbox, FormControlLabel, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import { GetGroupsType } from '@components/options/ToolOptions';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPalindromeList } from './service';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { ToolComponentProps } from '@tools/defineTool';
-import ToolContent from '@components/ToolContent';
 
-const initialValues = {
-  lastChar: true,
-  multiLine: false
-};
+export default function CreatePalindrome() {
+  const { t } = useTranslation('string');
+  const [input, setInput] = useState('');
+  const [lastChar, setLastChar] = useState(true);
+  const [multiLine, setMultiLine] = useState(false);
+  const [result, setResult] = useState('');
 
-const exampleCards: CardExampleType<typeof initialValues>[] = [
-  {
-    title: 'Create Simple Palindrome',
-    description:
-      'Creates a palindrome by repeating the text in reverse order, including the last character.',
-    sampleText: 'level',
-    sampleResult: 'levellevel',
-    sampleOptions: {
-      ...initialValues,
-      lastChar: true
-    }
-  },
-  {
-    title: 'Create Palindrome Without Last Character Duplication',
-    description:
-      'Creates a palindrome without repeating the last character in the reverse part.',
-    sampleText: 'radar',
-    sampleResult: 'radarada',
-    sampleOptions: {
-      ...initialValues,
-      lastChar: false
-    }
-  },
-  {
-    title: 'Multi-line Palindrome Creation',
-    description: 'Creates palindromes for each line independently.',
-    sampleText: 'mom\ndad\nwow',
-    sampleResult: 'mommom\ndaddad\nwowwow',
-    sampleOptions: {
-      ...initialValues,
-      lastChar: true,
-      multiLine: true
-    }
-  }
-];
-
-export default function CreatePalindrome({
-  title,
-  longDescription
-}: ToolComponentProps) {
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
-
-  const computeExternal = (
-    optionsValues: typeof initialValues,
-    input: string
-  ) => {
-    const { lastChar, multiLine } = optionsValues;
-    setResult(createPalindromeList(input, lastChar, multiLine));
-  };
-
-  const getGroups: GetGroupsType<typeof initialValues> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: 'Palindrome options',
-      component: [
-        <CheckboxWithDesc
-          key="lastChar"
-          checked={values.lastChar}
-          title="Include last character"
-          description="Repeat the last character in the reversed part"
-          onChange={(val) => updateField('lastChar', val)}
-        />,
-        <CheckboxWithDesc
-          key="multiLine"
-          checked={values.multiLine}
-          title="Process multi-line text"
-          description="Create palindromes for each line independently"
-          onChange={(val) => updateField('multiLine', val)}
-        />
-      ]
-    }
-  ];
+  useEffect(() => {
+    setResult(input ? createPalindromeList(input, lastChar, multiLine) : '');
+  }, [input, lastChar, multiLine]);
 
   return (
-    <ToolContent
-      title={title}
-      initialValues={initialValues}
-      getGroups={getGroups}
-      compute={computeExternal}
-      input={input}
-      setInput={setInput}
-      inputComponent={
-        <ToolTextInput title={'Input text'} value={input} onChange={setInput} />
-      }
-      resultComponent={
-        <ToolTextResult title={'Palindrome text'} value={result} />
-      }
-      toolInfo={{
-        title: 'What Is a String Palindrome Creator?',
-        description: longDescription
-      }}
-      exampleCards={exampleCards}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('createPalindrome.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <Stack spacing={0.5}>
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={lastChar}
+                    onChange={(event) => setLastChar(event.target.checked)}
+                    size="small"
+                  />
+                }
+                label={t('createPalindrome.includeLastChar')}
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Checkbox
+                    checked={multiLine}
+                    onChange={(event) => setMultiLine(event.target.checked)}
+                    size="small"
+                  />
+                }
+                label={t('createPalindrome.multiLine')}
+              />
+            </Stack>
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            disabled={!result}
+            keepSpecialCharacters
+            monospace
+            title={t('createPalindrome.resultTitle')}
+            value={result}
+          />
+        }
+      />
+    </Box>
   );
 }

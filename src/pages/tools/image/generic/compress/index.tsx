@@ -1,152 +1,170 @@
-import React, { useContext, useState } from 'react';
+import { Box, Stack } from '@mui/material';
+import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { InitialValuesType } from './types';
-import { compressImages } from './service';
-import ToolContent from '@components/ToolContent';
 import ToolMultipleImageInput, {
   MultiImageInput
 } from '@components/input/ToolMultipleImageInput';
-import { ToolComponentProps } from '@tools/defineTool';
 import ToolFileResult from '@components/result/ToolFileResult';
 import ToolMultiFileResult from '@components/result/ToolMultiFileResult';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import { Box } from '@mui/material';
-import Typography from '@mui/material/Typography';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import { CustomSnackBarContext } from '../../../../../contexts/CustomSnackBarContext';
-import { updateNumberField } from '@utils/string';
+import {
+  CompactImageField,
+  ImageOptionStack,
+  ImageStatList
+} from '../../ImageToolControls';
+import { compressImages } from './service';
+import { type InitialValuesType } from './types';
 
-const initialValues: InitialValuesType = {
+const initialOptions: InitialValuesType = {
   maxFileSizeInMB: 1.0,
   quality: 80
 };
 
-export default function CompressImage({ title }: ToolComponentProps) {
+export default function CompressImage() {
   const { t } = useTranslation('image');
+  const { showSnackBar } = useContext(CustomSnackBarContext);
   const [input, setInput] = useState<MultiImageInput[]>([]);
+  const [options, setOptions] = useState<InitialValuesType>(initialOptions);
   const [results, setResults] = useState<File[]>([]);
   const [zipFile, setZipFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [originalSize, setOriginalSize] = useState<number | null>(null); // Store original file size
-  const [compressedSize, setCompressedSize] = useState<number | null>(null); // Store compressed file size
-  const { showSnackBar } = useContext(CustomSnackBarContext);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [originalSize, setOriginalSize] = useState<number | null>(null);
+  const [compressedSize, setCompressedSize] = useState<number | null>(null);
 
-  const compute = async (
-    values: InitialValuesType,
-    input: MultiImageInput[]
-  ) => {
-    if (!input.length) return;
-
-    setOriginalSize(input.reduce((acc, img) => acc + img.file.size, 0));
-
-    try {
-      setIsProcessing(true);
-
-      const output = await compressImages(
-        input.map((img) => img.file),
-        values
-      );
-
-      if (!output) {
-        showSnackBar(t('compress.failedToCompress'), 'error');
-        return;
-      }
-
-      if (output.results.length < input.length) {
-        showSnackBar(t('compress.failedToCompress'), 'error');
-      }
-
-      setResults(output.results);
-      setZipFile(output.zipFile);
-      setCompressedSize(output.results.reduce((acc, f) => acc + f.size, 0));
-    } catch (err) {
-      console.error('Error in compression:', err);
-    } finally {
+  useEffect(() => {
+    if (!input.length) {
+      setResults([]);
+      setZipFile(null);
+      setOriginalSize(null);
+      setCompressedSize(null);
       setIsProcessing(false);
+      return;
     }
-  };
+
+    const files = input.map((image) => image.file);
+    let canceled = false;
+    const timeout = window.setTimeout(() => {
+      async function runCompression() {
+        setOriginalSize(files.reduce((acc, image) => acc + image.size, 0));
+        setResults([]);
+        setZipFile(null);
+
+        try {
+          setIsProcessing(true);
+          const output = await compressImages(files, options);
+
+          if (!output) {
+            if (!canceled) {
+              showSnackBar(t('compress.failedToCompress'), 'error');
+            }
+            return;
+          }
+
+          if (!canceled) {
+            if (output.results.length < input.length) {
+              showSnackBar(t('compress.someFailedToCompress'), 'error');
+            }
+
+            setResults(output.results);
+            setZipFile(output.zipFile);
+            setCompressedSize(
+              output.results.reduce((acc, image) => acc + image.size, 0)
+            );
+          }
+        } catch (error) {
+          console.error('Error in compression:', error);
+          if (!canceled) showSnackBar(t('compress.failedToCompress'), 'error');
+        } finally {
+          if (!canceled) setIsProcessing(false);
+        }
+      }
+
+      void runCompression();
+    }, 500);
+
+    return () => {
+      canceled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [input, options, showSnackBar, t]);
 
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolMultipleImageInput
-          value={input}
-          type={'image'}
-          onChange={setInput}
-          accept={['image/*']}
-          title={t('compress.inputTitle')}
-        />
-      }
-      resultComponent={
-        zipFile ? (
-          <ToolMultiFileResult
-            title={t('compress.resultTitle')}
-            value={results}
-            zipFile={zipFile}
-            loading={isProcessing}
-          />
-        ) : (
-          <ToolFileResult
-            title={t('compress.resultTitle')}
-            value={results[0] ?? null}
-            extension={results[0]?.name.split('.').pop() || 'png'}
-          />
-        )
-      }
-      initialValues={initialValues}
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('compress.compressionOptions'),
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                name="maxFileSizeInMB"
-                type="number"
-                inputProps={{ min: 0.1, step: 0.1 }}
-                description={t('compress.maxFileSizeDescription')}
-                onOwnChange={(value) =>
-                  updateNumberField(value, 'maxFileSizeInMB', updateField)
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolMultipleImageInput
+              value={input}
+              type="image"
+              onChange={setInput}
+              accept={['image/*']}
+              title={t('compress.inputTitle')}
+            />
+            <ImageOptionStack>
+              <CompactImageField
+                label={t('compress.maxFileSize')}
+                value={options.maxFileSizeInMB}
+                onChange={(maxFileSizeInMB) =>
+                  setOptions((current) => ({
+                    ...current,
+                    maxFileSizeInMB: Math.max(
+                      0.1,
+                      Number(maxFileSizeInMB) || 0.1
+                    )
+                  }))
                 }
-                value={values.maxFileSizeInMB}
               />
-              <TextFieldWithDesc
-                name="quality"
-                type="number"
-                inputProps={{ min: 10, max: 100, step: 1 }}
-                description={t('compress.qualityDescription')}
-                onOwnChange={(value) =>
-                  updateNumberField(value, 'quality', updateField)
+              <CompactImageField
+                label={t('compress.quality')}
+                value={options.quality}
+                onChange={(quality) =>
+                  setOptions((current) => ({
+                    ...current,
+                    quality: Math.min(100, Math.max(10, Number(quality) || 10))
+                  }))
                 }
-                value={values.quality}
               />
-            </Box>
-          )
-        },
-        {
-          title: t('compress.fileSizes'),
-          component: (
-            <Box>
-              <Box>
-                {originalSize !== null && (
-                  <Typography>
-                    {t('compress.originalSize')}:{' '}
-                    {(originalSize / 1024).toFixed(2)} KB
-                  </Typography>
-                )}
-                {compressedSize !== null && (
-                  <Typography>
-                    {t('compress.compressedSize')}:{' '}
-                    {(compressedSize / 1024).toFixed(2)} KB
-                  </Typography>
-                )}
-              </Box>
-            </Box>
+              <ImageStatList
+                rows={[
+                  {
+                    label: t('compress.originalSize'),
+                    value:
+                      originalSize === null
+                        ? null
+                        : `${(originalSize / 1024).toFixed(2)} KB`
+                  },
+                  {
+                    label: t('compress.compressedSize'),
+                    value:
+                      compressedSize === null
+                        ? null
+                        : `${(compressedSize / 1024).toFixed(2)} KB`
+                  }
+                ]}
+              />
+            </ImageOptionStack>
+          </Stack>
+        }
+        result={
+          zipFile ? (
+            <ToolMultiFileResult
+              title={t('compress.resultTitle')}
+              value={results}
+              zipFile={zipFile}
+              loading={isProcessing}
+            />
+          ) : (
+            <ToolFileResult
+              title={t('compress.resultTitle')}
+              value={results[0] ?? null}
+              extension={results[0]?.name.split('.').pop() || 'png'}
+              loading={isProcessing}
+              loadingText={t('compress.compressing')}
+            />
           )
         }
-      ]}
-      compute={compute}
-      setInput={setInput}
-    />
+      />
+    </Box>
   );
 }

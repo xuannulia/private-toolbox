@@ -22,6 +22,10 @@
       "description": "Herramientas para trabajar con audio: extraer audio de vídeo, ajustar la velocidad del audio, fusionar varios archivos de audio y mucho más.",
       "title": "Herramientas de audio"
     },
+    "converters": {
+      "description": "Convert files and data between common formats.",
+      "title": "Converter Tools"
+    },
     "csv": {
       "description": "Herramientas para trabajar con archivos CSV: convierta CSV a diferentes formatos, manipule datos CSV, valide la estructura CSV y procese archivos CSV de manera eficiente.",
       "title": "Herramientas CSV"
@@ -45,6 +49,14 @@
     "number": {
       "description": "Herramientas para trabajar con números: generar secuencias numéricas, convertir números en palabras y palabras en números, ordenar, redondear, factorizar números y mucho más.",
       "title": "Herramientas numéricas"
+    },
+    "network": {
+      "description": "RDAP, DNS, SSL, IP, CIDR, and local API request tools.",
+      "title": "Network Tools"
+    },
+    "ops": {
+      "description": "Docker and Nginx formatters, validators, and match testers.",
+      "title": "Ops Tools"
     },
     "pdf": {
       "description": "Herramientas para trabajar con archivos PDF: extraer texto de archivos PDF, convertir archivos PDF a otros formatos, manipular archivos PDF y mucho más.",
@@ -81,8 +93,8 @@
     }
   },
   "hero": {
-    "brand": "OmniTools",
-    "description": "Aumente su productividad con OmniTools, ¡el kit de herramientas definitivo para agilizar su trabajo! Acceda a miles de utilidades intuitivas para editar imágenes, texto, listas y datos, todo directamente desde su navegador.",
+    "brand": "Private Toolbox",
+    "description": "Local-first tools for text, files, media, data, and developer workflows.",
     "examples": {
       "calculateNumberSum": "Calcular la suma de números",
       "changeGifSpeed": "Cambiar la velocidad del GIF",
@@ -220,6 +232,9 @@
     "seeExamples": "Ver ejemplos"
   },
   "toolLayout": {
+    "addBookmark": "Añadir marcador",
+    "allTools": "Todas las herramientas",
+    "removeBookmark": "Quitar marcador",
     "allToolsTitle": "Todo {{type}}"
   },
   "toolMultiFileResult": {

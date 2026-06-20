@@ -8,14 +8,26 @@ export type QRCodeType =
   | 'vCard';
 
 export type WifiEncryptionType = 'WPA' | 'WEP' | 'None';
+export type QrCodeOutputFormat = 'png' | 'svg';
+export type QrCodeModuleStyle = 'square' | 'dots';
+export type QrCodeErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
 export interface InitialValuesType {
   qrCodeType: QRCodeType;
 
   // Common settings
   size: string;
+  margin: string;
+  outputFormat: QrCodeOutputFormat;
   bgColor: string;
   fgColor: string;
+  transparentBackground: boolean;
+  errorCorrectionLevel: QrCodeErrorCorrectionLevel;
+  moduleStyle: QrCodeModuleStyle;
+  logoDataUrl: string;
+  logoName: string;
+  logoSizePercent: string;
+  logoPadding: string;
 
   // URL
   url: string;

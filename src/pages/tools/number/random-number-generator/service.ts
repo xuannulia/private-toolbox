@@ -1,3 +1,7 @@
+import {
+  formatRandomNumbers as formatSharedRandomNumbers,
+  generateRandomNumbers as generateSharedRandomNumbers
+} from '@private-toolbox/core';
 import { InitialValuesType, RandomNumberResult } from './types';
 
 /**
@@ -6,116 +10,43 @@ import { InitialValuesType, RandomNumberResult } from './types';
 export function generateRandomNumbers(
   options: InitialValuesType
 ): RandomNumberResult {
-  const {
-    minValue,
-    maxValue,
-    count,
-    allowDecimals,
-    allowDuplicates,
-    sortResults
-  } = options;
-
-  if (minValue >= maxValue) {
+  if (options.minValue >= options.maxValue) {
     throw new Error('Minimum value must be less than maximum value');
   }
 
-  if (count <= 0) {
+  if (options.count <= 0) {
     throw new Error('Count must be greater than 0');
   }
 
-  if (!allowDuplicates && count > maxValue - minValue + 1) {
+  if (
+    !options.allowDuplicates &&
+    !options.allowDecimals &&
+    options.count > options.maxValue - options.minValue + 1
+  ) {
     throw new Error(
       'Cannot generate unique numbers: count exceeds available range'
     );
   }
 
-  const numbers: number[] = [];
-
-  if (allowDuplicates) {
-    // Generate random numbers with possible duplicates
-    for (let i = 0; i < count; i++) {
-      const randomNumber = generateRandomNumber(
-        minValue,
-        maxValue,
-        allowDecimals
-      );
-      numbers.push(randomNumber);
-    }
-  } else {
-    // Generate unique random numbers
-    const availableNumbers = new Set<number>();
-
-    // Create a pool of available numbers
-    for (let i = minValue; i <= maxValue; i++) {
-      if (allowDecimals) {
-        // For decimals, we need to generate more granular values
-        for (let j = 0; j < 100; j++) {
-          availableNumbers.add(i + j / 100);
-        }
-      } else {
-        availableNumbers.add(i);
-      }
-    }
-
-    const availableArray = Array.from(availableNumbers);
-
-    // Shuffle the available numbers
-    for (let i = availableArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [availableArray[i], availableArray[j]] = [
-        availableArray[j],
-        availableArray[i]
-      ];
-    }
-
-    // Take the first 'count' numbers
-    for (let i = 0; i < Math.min(count, availableArray.length); i++) {
-      numbers.push(availableArray[i]);
-    }
-  }
-
-  // Sort if requested
-  if (sortResults) {
-    numbers.sort((a, b) => a - b);
-  }
+  const result = generateSharedRandomNumbers({
+    minValue: options.minValue,
+    maxValue: options.maxValue,
+    count: options.count,
+    allowDecimals: options.allowDecimals,
+    allowDuplicates: options.allowDuplicates,
+    sortResults: options.sortResults,
+    separator: options.separator,
+    precision: options.allowDecimals ? 2 : 0
+  });
 
   return {
-    numbers,
-    min: minValue,
-    max: maxValue,
-    count,
-    hasDuplicates: !allowDuplicates && hasDuplicatesInArray(numbers),
-    isSorted: sortResults
+    numbers: result.numbers,
+    min: result.min,
+    max: result.max,
+    count: result.count,
+    hasDuplicates: result.hasDuplicates,
+    isSorted: result.isSorted
   };
-}
-
-/**
- * Generate a single random number within the specified range
- */
-function generateRandomNumber(
-  min: number,
-  max: number,
-  allowDecimals: boolean
-): number {
-  if (allowDecimals) {
-    return Math.random() * (max - min) + min;
-  } else {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-}
-
-/**
- * Check if an array has duplicate values
- */
-function hasDuplicatesInArray(arr: number[]): boolean {
-  const seen = new Set<number>();
-  for (const num of arr) {
-    if (seen.has(num)) {
-      return true;
-    }
-    seen.add(num);
-  }
-  return false;
 }
 
 /**
@@ -126,9 +57,7 @@ export function formatNumbers(
   separator: string,
   allowDecimals: boolean
 ): string {
-  return numbers
-    .map((num) => (allowDecimals ? num.toFixed(2) : Math.round(num).toString()))
-    .join(separator);
+  return formatSharedRandomNumbers(numbers, separator, allowDecimals, 2);
 }
 
 /**

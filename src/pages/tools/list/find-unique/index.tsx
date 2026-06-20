@@ -1,153 +1,129 @@
-import { Box } from '@mui/material';
-import React, { useState } from 'react';
+import { Box, Stack } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import ToolContent from '@components/ToolContent';
-import { findUniqueCompute, SplitOperatorType } from './service';
-import SimpleRadio from '@components/options/SimpleRadio';
-import TextFieldWithDesc from '@components/options/TextFieldWithDesc';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  CompactCheckbox,
+  ListSplitMode,
+  SplitOptions,
+  normalizeListSeparator
+} from '../ListToolControls';
+import { findUniqueCompute } from './service';
 
-const initialValues = {
-  splitOperatorType: 'symbol' as SplitOperatorType,
-  splitSeparator: ',',
-  joinSeparator: '\\n',
-  deleteEmptyItems: true,
-  caseSensitive: false,
-  trimItems: true,
-  absolutelyUnique: false
-};
-const splitOperators: {
-  title: string;
-  description: string;
-  type: SplitOperatorType;
-}[] = [
-  {
-    title: 'Use a Symbol for Splitting',
-    description: 'Delimit input list items with a character.',
-    type: 'symbol'
-  },
-  {
-    title: 'Use a Regex for Splitting',
-    type: 'regex',
-    description: 'Delimit input list items with a regular expression.'
-  }
-];
+const formatError = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Find unique items failed';
 
 export default function FindUnique() {
   const { t } = useTranslation('list');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
-  const compute = (optionsValues: typeof initialValues, input: any) => {
-    const {
-      splitOperatorType,
-      splitSeparator,
-      joinSeparator,
-      deleteEmptyItems,
-      trimItems,
-      caseSensitive,
-      absolutelyUnique
-    } = optionsValues;
+  const [input, setInput] = useState('');
+  const [splitMode, setSplitMode] = useState<ListSplitMode>('symbol');
+  const [splitSeparator, setSplitSeparator] = useState(',');
+  const [joinSeparator, setJoinSeparator] = useState('\\n');
+  const [deleteEmptyItems, setDeleteEmptyItems] = useState(true);
+  const [trimItems, setTrimItems] = useState(true);
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const [absolutelyUnique, setAbsolutelyUnique] = useState(false);
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-    setResult(
-      findUniqueCompute(
-        splitOperatorType,
-        splitSeparator,
-        joinSeparator,
-        input,
-        deleteEmptyItems,
-        trimItems,
-        caseSensitive,
-        absolutelyUnique
-      )
-    );
-  };
+  useEffect(() => {
+    if (!input) {
+      setResult('');
+      setError('');
+      return;
+    }
+
+    try {
+      setResult(
+        findUniqueCompute(
+          splitMode,
+          normalizeListSeparator(splitSeparator),
+          normalizeListSeparator(joinSeparator),
+          input,
+          deleteEmptyItems,
+          trimItems,
+          caseSensitive,
+          absolutelyUnique
+        )
+      );
+      setError('');
+    } catch (error) {
+      setResult('');
+      setError(formatError(error));
+    }
+  }, [
+    absolutelyUnique,
+    caseSensitive,
+    deleteEmptyItems,
+    input,
+    joinSeparator,
+    splitMode,
+    splitSeparator,
+    trimItems
+  ]);
+
+  const output = error ? t('common.errorFallback', { error }) : result;
 
   return (
-    <ToolContent
-      title={t('findUnique.title')}
-      initialValues={initialValues}
-      compute={compute}
-      input={input}
-      setInput={setInput}
-      inputComponent={
-        <ToolTextInput
-          title={t('findUnique.inputTitle')}
-          value={input}
-          onChange={setInput}
-        />
-      }
-      resultComponent={
-        <ToolTextResult title={t('findUnique.resultTitle')} value={result} />
-      }
-      getGroups={({ values, updateField }) => [
-        {
-          title: t('findUnique.inputListDelimiter'),
-          component: (
-            <Box>
-              {splitOperators.map(({ title, description, type }) => (
-                <SimpleRadio
-                  key={type}
-                  onClick={() => updateField('splitOperatorType', type)}
-                  title={title}
-                  description={description}
-                  checked={values.splitOperatorType === type}
-                />
-              ))}
-              <TextFieldWithDesc
-                description={t('findUnique.delimiterDescription')}
-                value={values.splitSeparator}
-                onOwnChange={(val) => updateField('splitSeparator', val)}
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('findUnique.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <SplitOptions
+              splitMode={splitMode}
+              splitSeparator={splitSeparator}
+              joinSeparator={joinSeparator}
+              labels={{
+                symbol: t('common.symbolMode'),
+                regex: t('common.regexMode'),
+                splitSeparator: t('common.splitSeparator'),
+                joinSeparator: t('common.joinSeparator')
+              }}
+              onSplitModeChange={setSplitMode}
+              onSplitSeparatorChange={setSplitSeparator}
+              onJoinSeparatorChange={setJoinSeparator}
+            />
+            <Stack spacing={0.5}>
+              <CompactCheckbox
+                checked={trimItems}
+                label={t('findUnique.trimItems')}
+                onChange={setTrimItems}
               />
-            </Box>
-          )
-        },
-        {
-          title: t('findUnique.outputListDelimiter'),
-          component: (
-            <Box>
-              <TextFieldWithDesc
-                value={values.joinSeparator}
-                onOwnChange={(value) => updateField('joinSeparator', value)}
+              <CompactCheckbox
+                checked={deleteEmptyItems}
+                label={t('findUnique.skipEmptyItems')}
+                onChange={setDeleteEmptyItems}
               />
-              <CheckboxWithDesc
-                title={t('findUnique.trimItems')}
-                description={t('findUnique.trimItemsDescription')}
-                checked={values.trimItems}
-                onChange={(value) => updateField('trimItems', value)}
+              <CompactCheckbox
+                checked={caseSensitive}
+                label={t('findUnique.caseSensitiveItems')}
+                onChange={setCaseSensitive}
               />
-              <CheckboxWithDesc
-                title={t('findUnique.skipEmptyItems')}
-                description={t('findUnique.skipEmptyItemsDescription')}
-                checked={values.deleteEmptyItems}
-                onChange={(value) => updateField('deleteEmptyItems', value)}
+              <CompactCheckbox
+                checked={absolutelyUnique}
+                label={t('findUnique.findAbsolutelyUniqueItems')}
+                onChange={setAbsolutelyUnique}
               />
-            </Box>
-          )
-        },
-        {
-          title: t('findUnique.uniqueItemOptions'),
-          component: (
-            <Box>
-              <CheckboxWithDesc
-                title={t('findUnique.findAbsolutelyUniqueItems')}
-                description={t(
-                  'findUnique.findAbsolutelyUniqueItemsDescription'
-                )}
-                checked={values.absolutelyUnique}
-                onChange={(value) => updateField('absolutelyUnique', value)}
-              />
-              <CheckboxWithDesc
-                title={t('findUnique.caseSensitiveItems')}
-                description={t('findUnique.caseSensitiveItemsDescription')}
-                checked={values.caseSensitive}
-                onChange={(value) => updateField('caseSensitive', value)}
-              />
-            </Box>
-          )
+            </Stack>
+          </Stack>
         }
-      ]}
-    />
+        result={
+          <ToolTextResult
+            disabled={!result || Boolean(error)}
+            keepSpecialCharacters
+            monospace
+            title={t('findUnique.resultTitle')}
+            value={output}
+          />
+        }
+      />
+    </Box>
   );
 }

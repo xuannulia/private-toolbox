@@ -1,98 +1,53 @@
-import React, { useState } from 'react';
-import ToolContent from '@components/ToolContent';
-import { ToolComponentProps } from '@tools/defineTool';
+import { Box, FormControlLabel, Stack, Switch } from '@mui/material';
+import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextInput from '@components/input/ToolTextInput';
 import ToolTextResult from '@components/result/ToolTextResult';
-import CheckboxWithDesc from '@components/options/CheckboxWithDesc';
-import { GetGroupsType } from '@components/options/ToolOptions';
-import { CardExampleType } from '@components/examples/ToolExamples';
-import { slugGenerator } from './service';
-import { InitialValuesType } from './types';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { slugGenerator } from './service';
 
-const initialValues: InitialValuesType = {
-  caseSensitive: false
-};
-
-const exampleCards: CardExampleType<InitialValuesType>[] = [
-  {
-    title: 'Slug (lowercase)',
-    description: 'Convert a title into a URL-friendly slug',
-    sampleText: 'Hello World! This is a test.',
-    sampleResult: 'hello-world-this-is-a-test',
-    sampleOptions: {
-      caseSensitive: false
-    }
-  },
-  {
-    title: 'Slug (case preserved)',
-    description:
-      'Convert a title into a URL-friendly slug without any case change',
-    sampleText: 'Hello World! This is a test.',
-    sampleResult: 'Hello-World-This-is-a-test',
-    sampleOptions: {
-      caseSensitive: true
-    }
-  },
-  {
-    title: 'Slugs (multi lines processing)',
-    description: 'Convert titles on each lines into a URL-friendly slugs',
-    sampleText: 'Hello World! This is a test.\nMultiples lines are processed',
-    sampleResult: 'Hello-World-This-is-a-test\nMultiples-lines-are-processed',
-    sampleOptions: {
-      caseSensitive: true
-    }
-  }
-];
-export default function SlugGenerator({
-  title,
-  longDescription
-}: ToolComponentProps) {
+export default function SlugGenerator() {
   const { t } = useTranslation('string');
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+  const [input, setInput] = useState('');
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const [result, setResult] = useState('');
 
-  const compute = (values: InitialValuesType, input: string) => {
-    setResult(slugGenerator(input, values));
-  };
+  useEffect(() => {
+    setResult(slugGenerator(input, { caseSensitive }));
+  }, [caseSensitive, input]);
 
-  const getGroups: GetGroupsType<InitialValuesType> = ({
-    values,
-    updateField
-  }) => [
-    {
-      title: t('slugGenerator.options.title'),
-      component: [
-        <CheckboxWithDesc
-          key="case"
-          checked={values.caseSensitive}
-          title={t('slugGenerator.options.caseLabel')}
-          description={t('slugGenerator.options.caseDescription')}
-          onChange={(val) => updateField('caseSensitive', val)}
-        />
-      ]
-    }
-  ];
   return (
-    <ToolContent
-      title={title}
-      input={input}
-      inputComponent={
-        <ToolTextInput
-          value={input}
-          onChange={setInput}
-          title={t('slugGenerator.inputTitle')}
-        />
-      }
-      resultComponent={
-        <ToolTextResult value={result} title={t('slugGenerator.resultTitle')} />
-      }
-      initialValues={initialValues}
-      exampleCards={exampleCards}
-      getGroups={getGroups}
-      setInput={setInput}
-      compute={compute}
-      toolInfo={{ title: `What is a ${title}?`, description: longDescription }}
-    />
+    <Box>
+      <ToolInputAndResult
+        input={
+          <Stack spacing={2}>
+            <ToolTextInput
+              title={t('slugGenerator.inputTitle')}
+              value={input}
+              onChange={setInput}
+            />
+            <FormControlLabel
+              sx={{ m: 0 }}
+              control={
+                <Switch
+                  checked={caseSensitive}
+                  onChange={(event) => setCaseSensitive(event.target.checked)}
+                  size="small"
+                />
+              }
+              label={t('slugGenerator.options.caseLabel')}
+            />
+          </Stack>
+        }
+        result={
+          <ToolTextResult
+            disabled={!result}
+            monospace
+            title={t('slugGenerator.resultTitle')}
+            value={result}
+          />
+        }
+      />
+    </Box>
   );
 }
