@@ -1,7 +1,7 @@
 import ToolLayout from '../components/ToolLayout';
 import React, { JSXElementConstructor, LazyExoticComponent } from 'react';
 import { IconifyIcon } from '@iconify/react';
-import { FullI18nKey, validNamespaces } from '../i18n';
+import type { FullI18nKey, I18nNamespaces } from '../i18n';
 import { useTranslation } from 'react-i18next';
 import { getDefaultToolProcessing, type ToolProcessing } from './processing';
 
@@ -58,6 +58,38 @@ export interface ToolComponentProps {
   longDescription?: string;
 }
 
+const getToolNamespaces = (category: ToolCategory): I18nNamespaces[] => {
+  if (['png', 'image-generic'].includes(category)) {
+    return ['translation', 'image'];
+  }
+
+  if (category === 'gif') {
+    return ['translation', 'video'];
+  }
+
+  if (
+    [
+      'string',
+      'number',
+      'video',
+      'list',
+      'json',
+      'time',
+      'csv',
+      'pdf',
+      'audio',
+      'xml',
+      'converters',
+      'network',
+      'ops'
+    ].includes(category)
+  ) {
+    return ['translation', category as I18nNamespaces];
+  }
+
+  return ['translation'];
+};
+
 export const defineTool = (
   basePath: ToolCategory,
   options: ToolMeta
@@ -65,6 +97,7 @@ export const defineTool = (
   const { icon, path, keywords, component, i18n, processing } = options;
   const Component = component;
   const fullPath = `${basePath}/${path}`;
+  const namespaces = getToolNamespaces(basePath);
   return {
     type: basePath,
     path: fullPath,
@@ -81,7 +114,7 @@ export const defineTool = (
       }),
     userTypes: i18n.userTypes,
     component: function ToolComponent() {
-      const { t } = useTranslation(validNamespaces);
+      const { t } = useTranslation(namespaces);
       return (
         <ToolLayout type={basePath} i18n={i18n} fullPath={fullPath}>
           <Component

@@ -7,6 +7,7 @@ import { CssBaseline, Theme, ThemeProvider } from '@mui/material';
 import { CustomSnackBarProvider } from '../contexts/CustomSnackBarContext';
 import { SnackbarProvider } from 'notistack';
 import { tools } from '../tools';
+import type { DefinedTool } from '../tools/defineTool';
 import './index.css';
 import { darkTheme, lightTheme } from '../config/muiConfig';
 import ScrollToTopButton from './ScrollToTopButton';
@@ -15,10 +16,18 @@ import i18n from '../i18n';
 
 export type Mode = 'dark' | 'light' | 'system';
 
+const ToolRoute = ({ tool }: { tool: DefinedTool }) => {
+  const Component = tool.component;
+  return <Component />;
+};
+
 const AppRoutes = () => {
   const updatedRoutesConfig = [...routesConfig];
   tools.forEach((tool) => {
-    updatedRoutesConfig.push({ path: tool.path, element: tool.component() });
+    updatedRoutesConfig.push({
+      path: tool.path,
+      element: <ToolRoute tool={tool} />
+    });
   });
   return useRoutes(updatedRoutesConfig);
 };
