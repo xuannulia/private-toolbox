@@ -1,7 +1,7 @@
 {
   "name": "private-toolbox",
   "installCommand": "npm ci --no-audit --no-fund",
-  "buildCommand": "npm run build:server && VITE_PRIVATE_TOOLBOX_API_URL=${VITE_PRIVATE_TOOLBOX_API_URL:-https://tools.metool.tech} npm run build",
+  "buildCommand": "npm run build:server && VITE_PRIVATE_TOOLBOX_API_URL=${VITE_PRIVATE_TOOLBOX_API_URL:-https://api.metool.tech} npm run build",
   "assets": {
     "directory": "./dist",
     "notFoundStrategy": "singlePageApplication"
