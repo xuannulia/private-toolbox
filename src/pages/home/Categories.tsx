@@ -1,18 +1,10 @@
 import { getToolsByCategory } from '@tools/index';
 import Grid from '@mui/material/Grid';
-import {
-  Box,
-  Card,
-  CardActionArea,
-  CardContent,
-  Stack
-} from '@mui/material';
+import { Box, Card, CardActionArea, CardContent, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
-import { Icon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
-import { getI18nNamespaceFromToolCategory } from '@utils/string';
-import { validNamespaces } from '../../i18n';
+import ToolCategoryIcon from '@components/ToolCategoryIcon';
 
 type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
@@ -22,7 +14,7 @@ const SingleCategory = function ({
 }: {
   category: ArrayElement<ReturnType<typeof getToolsByCategory>>;
 }) {
-  const { t } = useTranslation(getI18nNamespaceFromToolCategory(category.type));
+  const { t } = useTranslation('translation');
   const navigate = useNavigate();
 
   const categoryTitle = t(`categories.${category.type}.title`, category.title);
@@ -60,7 +52,10 @@ const SingleCategory = function ({
                     flexShrink: 0
                   }}
                 >
-                  <Icon icon={category.icon} fontSize={21} />
+                  <ToolCategoryIcon
+                    category={category.type}
+                    sx={{ fontSize: 21 }}
+                  />
                 </Box>
                 <Typography fontWeight={700} noWrap>
                   {categoryTitle}
@@ -87,7 +82,7 @@ const SingleCategory = function ({
 };
 
 export default function Categories() {
-  const { t } = useTranslation(validNamespaces);
+  const { t } = useTranslation('translation');
   const categories = getToolsByCategory([], t);
 
   return (

@@ -1,6 +1,6 @@
 import ToolLayout from '../components/ToolLayout';
 import React, { JSXElementConstructor, LazyExoticComponent } from 'react';
-import { IconifyIcon } from '@iconify/react';
+import type { IconifyIcon } from '@iconify/react';
 import type { FullI18nKey, I18nNamespaces } from '../i18n';
 import { useTranslation } from 'react-i18next';
 import { getDefaultToolProcessing, type ToolProcessing } from './processing';

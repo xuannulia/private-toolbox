@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Button from '@mui/material/Button';
-import { Icon } from '@iconify/react';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 export default function ScrollToTopButton() {
   const [visible, setVisible] = useState(false);
@@ -41,7 +41,7 @@ export default function ScrollToTopButton() {
       }}
       aria-label="Scroll to top"
     >
-      <Icon icon="mdi:arrow-up" fontSize={24} style={{ color: 'white' }} />
+      <KeyboardArrowUpIcon sx={{ color: 'white', fontSize: 24 }} />
     </Button>
   );
 }

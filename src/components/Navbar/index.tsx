@@ -4,6 +4,10 @@ import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import HomeRepairServiceOutlinedIcon from '@mui/icons-material/HomeRepairServiceOutlined';
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
+import ContrastOutlinedIcon from '@mui/icons-material/ContrastOutlined';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Drawer,
@@ -19,7 +23,6 @@ import {
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
-import { Icon } from '@iconify/react';
 import { Mode } from 'components/App';
 import { useTranslation } from 'react-i18next';
 
@@ -105,19 +108,21 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const buttons: ReactNode[] = [
     languageSelector,
-    <Icon
+    <IconButton
       key={mode}
       onClick={onChangeMode}
-      style={{ cursor: 'pointer' }}
-      fontSize={30}
-      icon={
-        mode === 'dark'
-          ? 'ic:round-dark-mode'
-          : mode === 'light'
-            ? 'ic:round-light-mode'
-            : 'ic:round-contrast'
-      }
-    />
+      color="inherit"
+      aria-label="Change theme"
+      size="small"
+    >
+      {mode === 'dark' ? (
+        <DarkModeOutlinedIcon sx={{ fontSize: 30 }} />
+      ) : mode === 'light' ? (
+        <LightModeOutlinedIcon sx={{ fontSize: 30 }} />
+      ) : (
+        <ContrastOutlinedIcon sx={{ fontSize: 30 }} />
+      )}
+    </IconButton>
   ];
   const drawerList = (
     <List>
@@ -158,10 +163,11 @@ const Navbar: React.FC<NavbarProps> = ({
           style={{ color: 'inherit', textDecoration: 'none' }}
         >
           <Stack direction={'row'} alignItems={'center'} spacing={1}>
-            <Icon
-              icon={'mdi:toolbox-outline'}
-              fontSize={isMobile ? 28 : 32}
-              color={theme.palette.primary.main}
+            <HomeRepairServiceOutlinedIcon
+              sx={{
+                color: 'primary.main',
+                fontSize: isMobile ? 28 : 32
+              }}
             />
             <Typography
               component={'span'}

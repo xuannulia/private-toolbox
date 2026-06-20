@@ -11,11 +11,12 @@ import {
 } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import SearchIcon from '@mui/icons-material/Search';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import { type SyntheticEvent, useMemo, useState } from 'react';
 import { type DefinedTool } from '@tools/defineTool';
 import { filterTools, tools } from '@tools/index';
 import { useNavigate } from 'react-router-dom';
-import { Icon } from '@iconify/react';
 import { getToolCategoryTitle } from '@utils/string';
 import { useTranslation } from 'react-i18next';
 import { validNamespaces } from '../i18n';
@@ -26,6 +27,7 @@ import {
 } from '@utils/bookmark';
 import { getRecentToolPaths, recordRecentTool } from '@utils/recentTools';
 import IconButton from '@mui/material/IconButton';
+import ToolCategoryIcon from './ToolCategoryIcon';
 
 const GroupHeader = styled('div')(({ theme }) => ({
   position: 'sticky',
@@ -231,7 +233,10 @@ export default function Hero() {
                   width={'100%'}
                 >
                   <Stack direction={'row'} spacing={1.5} alignItems={'center'}>
-                    <Icon fontSize={20} icon={option.icon} />
+                    <ToolCategoryIcon
+                      category={option.type}
+                      sx={{ fontSize: 20 }}
+                    />
                     <Box>
                       <Typography fontWeight={700}>{t(option.name)}</Typography>
                       <Typography fontSize={12} color={'text.secondary'}>
@@ -246,19 +251,15 @@ export default function Hero() {
                       setBookmarkedToolPaths(getBookmarkedToolPaths());
                     }}
                   >
-                    <Icon
-                      fontSize={20}
-                      color={
-                        isBookmarked(option.path)
-                          ? theme.palette.primary.main
-                          : theme.palette.grey[500]
-                      }
-                      icon={
-                        isBookmarked(option.path)
-                          ? 'mdi:bookmark'
-                          : 'mdi:bookmark-plus-outline'
-                      }
-                    />
+                    {isBookmarked(option.path) ? (
+                      <BookmarkIcon
+                        sx={{ fontSize: 20, color: theme.palette.primary.main }}
+                      />
+                    ) : (
+                      <BookmarkBorderIcon
+                        sx={{ fontSize: 20, color: theme.palette.grey[500] }}
+                      />
+                    )}
                   </IconButton>
                 </Stack>
               </Box>

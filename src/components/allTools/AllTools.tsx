@@ -1,6 +1,6 @@
 import { Box, Grid, Stack, Typography } from '@mui/material';
 import ToolCard from './ToolCard';
-import { IconifyIcon } from '@iconify/react';
+import type { IconifyIcon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
 import { FullI18nKey } from '../../i18n';
 

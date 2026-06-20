@@ -10,7 +10,7 @@ import { Entries } from 'type-fest';
 import { jsonTools } from '../pages/tools/json';
 import { csvTools } from '../pages/tools/csv';
 import { timeTools } from '../pages/tools/time';
-import { IconifyIcon } from '@iconify/react';
+import type { IconifyIcon } from '@iconify/react';
 import { pdfTools } from '../pages/tools/pdf';
 import { xmlTools } from '../pages/tools/xml';
 import { convertersTools } from '../pages/tools/converters';

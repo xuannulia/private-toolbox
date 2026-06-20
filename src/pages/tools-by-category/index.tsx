@@ -3,7 +3,6 @@ import Typography from '@mui/material/Typography';
 import { useNavigate, useParams } from 'react-router-dom';
 import { filterTools, getToolsByCategory } from '../../tools';
 import { getToolCategoryTitle } from '@utils/string';
-import { Icon } from '@iconify/react';
 import React from 'react';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -11,6 +10,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { Helmet } from 'react-helmet';
 import { useTranslation } from 'react-i18next';
 import { validNamespaces } from '../../i18n';
+import ToolCategoryIcon from '@components/ToolCategoryIcon';
 
 export default function ToolsByCategory() {
   const navigate = useNavigate();
@@ -124,18 +124,14 @@ export default function ToolsByCategory() {
                       flexShrink: 0
                     }}
                   >
-                    <Icon
-                      icon={tool.icon ?? 'ph:compass-tool-thin'}
-                      fontSize={22}
+                    <ToolCategoryIcon
+                      category={tool.type}
+                      sx={{ fontSize: 22 }}
                     />
                   </Box>
                   <Box minWidth={0}>
                     <Typography fontWeight={700}>{t(tool.name)}</Typography>
-                    <Typography
-                      color={'text.secondary'}
-                      fontSize={13}
-                      mt={0.5}
-                    >
+                    <Typography color={'text.secondary'} fontSize={13} mt={0.5}>
                       {t(tool.shortDescription)}
                     </Typography>
                   </Box>

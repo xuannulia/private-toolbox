@@ -1,7 +1,8 @@
 import { Box, Stack, useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import ToolBreadcrumb from './ToolBreadcrumb';
-import { Icon } from '@iconify/react';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import { getToolsByCategory } from '@tools/index';
 import { useState } from 'react';
 import { isBookmarked, toggleBookmarked } from '@utils/bookmark';
@@ -68,13 +69,15 @@ export default function ToolHeader({ title, type, path }: ToolHeaderProps) {
             setBookmarked(!bookmarked);
           }}
         >
-          <Icon
-            fontSize={28}
-            color={
-              bookmarked ? theme.palette.primary.main : theme.palette.grey[500]
-            }
-            icon={bookmarked ? 'mdi:bookmark' : 'mdi:bookmark-plus-outline'}
-          />
+          {bookmarked ? (
+            <BookmarkIcon
+              sx={{ fontSize: 28, color: theme.palette.primary.main }}
+            />
+          ) : (
+            <BookmarkBorderIcon
+              sx={{ fontSize: 28, color: theme.palette.grey[500] }}
+            />
+          )}
         </IconButton>
       </Stack>
     </Box>
