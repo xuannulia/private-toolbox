@@ -1,191 +1,186 @@
-<div align="center">
-        <img src="src/assets/logo.png" width="220" />
-        <br /><br />
-<a href="https://trendshift.io/repositories/13055" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13055" alt="iib0011%2Fomni-tools | Trendshift" style="width: 200px;" width="200"/></a>
-   <br /><br />
-<a href="https://github.com/iib0011/omni-tools/releases">
-          <img src="https://img.shields.io/badge/version-0.6.0-blue?style=for-the-badge" />
-        </a>
-        <a href="https://hub.docker.com/r/iib0011/omni-tools">
-          <img src="https://img.shields.io/docker/pulls/iib0011/omni-tools?style=for-the-badge&logo=docker" />
-        </a>
-        <a href="https://github.com/iib0011">
-          <img src="https://img.shields.io/github/stars/iib0011/omni-tools?style=for-the-badge&logo=github" />
-        </a>
-        <a href="https://github.com/iib0011/omni-tools/blob/main/LICENSE">
-          <img src="https://img.shields.io/github/license/iib0011/omni-tools?style=for-the-badge" />
-        </a>
-        <a href="https://discord.gg/SDbbn3hT4b">
-          <img src="https://img.shields.io/discord/1342971141823664179?label=Discord&style=for-the-badge" />
-        </a>
-        <br /><br />
-</div>
+# Private Toolbox
 
-Welcome to OmniTools, a self-hosted web app offering a variety of online tools to simplify everyday tasks.
-Whether you are coding, manipulating images/videos, PDFs or crunching numbers, OmniTools has you covered. Please don't
-forget to
-star the repo to support us.
-Here is the [demo](https://omnitools.app) website.
+Private Toolbox is a self-hosted private tools site based on OmniTools. It keeps the existing browser-side tools, adds backend-assisted tools, and exposes a curated MCP server for personal agents.
 
-All files are processed entirely on the client side: nothing ever leaves your device.
-Plus, the Docker image is super lightweight at just 28MB, making it fast to deploy and easy to self-host.
+The project is optimized for private use:
 
-![img.png](docs-images/img.png)
+- Web tools stay fast and direct.
+- HTTP online request is available to Web UI / API only.
+- MCP intentionally does not expose `http.request`; agents can use `curl`.
+- Network, file, and secret-related MCP tools are configurable.
+- Web tools carry internal processing metadata for local/backend/network flow and API/MCP availability.
+- Original OmniTools attribution is kept in [NOTICE.md](NOTICE.md).
 
-## Table of Contents
+## Workspaces
 
-- [Features](#features)
-- [Self-host](#self-hostrun)
-- [Contribute](#contribute)
-- [Contact](#contact)
-- [License](#license)
+- `src/`: React web app.
+- `packages/core`: shared deterministic tools for Web / API / MCP.
+- `packages/server`: guarded server-side tools such as RDAP, DNS, SSL, IP lookup, file hash, image icon conversion, QR decode, batch rename, and temporary file writing.
+- `apps/api`: local HTTP API for Web/server-assisted tools.
+- `apps/mcp`: stdio MCP server for personal agent clients.
 
-## Features
-
-We strive to offer a variety of tools, including:
-
-### **Image/Video/Audio Tools**
-
-- Image Resizer
-- Image Converter
-- Image Editor
-- Video Trimmer
-- Video Reverser
-- And more...
-
-### **PDF Tools**
-
-- PDF Splitter
-- PDF Merger
-- PDF Editor
-- And more...
-
-### **Text/List Tools**
-
-- Case Converters
-- List Shuffler
-- Text Formatters
-- And more...
-
-### **Date and Time Tools**
-
-- Date Calculators
-- Time Zone Converters
-- And more...
-
-### **Math Tools**
-
-- Generate Prime Numbers
-- Calculate voltage, current, or resistance
-- And more...
-
-### **Data Tools**
-
-- JSON Tools
-- CSV Tools
-- XML Tools
-- And more...
-
-Stay tuned as we continue to expand and improve our collection!
-
-## Self-host/Run
-
-### Docker
+## Quick Start
 
 ```bash
-docker run -d --name omni-tools --restart unless-stopped -p 8080:80 iib0011/omni-tools:latest
+npm install
+cp .env.example .env.local
+npm run dev:private
 ```
 
-### Docker Compose
+`dev:private` loads `.env.example` and `.env.local`, builds the local API, starts API and Vite together, and points the Web app at the configured API URL.
 
-```yaml
-services:
-  omni-tools:
-    image: iib0011/omni-tools:latest
-    container_name: omni-tools
-    restart: unless-stopped
-    ports:
-      - "8080:80"
-
-```
-
-## Contribute
-
-This is a React Project with Typescript Material UI. We use icons from [Iconify](https://icon-sets.iconify.design)
-
-### Project setup
+Use fixed ports when needed:
 
 ```bash
-git clone https://github.com/iib0011/omni-tools.git
-cd omni-tools
-npm i
+npm run dev:private -- --api-port 4327 --web-port 5177
+```
+
+For frontend-only OmniTools-style development:
+
+```bash
 npm run dev
 ```
 
-### Create a new tool
+## Private Deployment
+
+Common environment variables are listed in [.env.example](.env.example). The defaults bind local services to `127.0.0.1`, write private file outputs under `./output/private-toolbox-files`, keep network rate-limit state in that output folder, and send MCP audit logs to `stderr`.
+
+Build the deployable pieces:
 
 ```bash
-npm run script:create:tool my-tool-name folder1 # npm run script:create:tool split pdf
+npm run build
+npm run build:api
+npm run build:mcp
+npm run smoke:private
 ```
 
-For tools located under multiple nested directories, use:
+Run local private services in separate shells:
 
 ```bash
-npm run script:create:tool my-tool-name folder1/folder2 # npm run script:create:tool compress image/png
+npm run serve
+npm run start --workspace @private-toolbox/api
+node apps/mcp/dist/server.js
 ```
 
-Use `folder1\folder2` on Windows.
+API defaults:
 
-### Run tests
+- Host: `127.0.0.1`
+- Port: `4317`
+- Health: `GET /health`
+- Tool list: `GET /api/tools`
+- Tool call: `POST /api/tools/call`
+
+See [apps/api/README.md](apps/api/README.md) for endpoint details.
+
+## Feature Map
+
+The current feature grouping, excluded items, layout rules, API boundaries, and MCP exposure policy are tracked in [docs/feature-map.md](docs/feature-map.md).
+
+## MCP Integration
+
+Build first:
 
 ```bash
-npm run test
+npm run build:mcp
 ```
 
-- For e2e tests
+Generate a ready-to-paste client config:
 
 ```bash
-npm run test:e2e
+npm run --silent mcp:client-config
 ```
 
-### i18n (Translations)
-The translation files are [here](public/locales). Only edit these if you are a developer. For non developers, use [Locize](https://www.locize.app/register?invitation=YOIH0Dyz3KHh3uQFCGYe9v1QOUoq8W5ySgmlwjX9cSypeJmt8F40brDtVbXb71fK).
+MCP uses stdio JSON-RPC. Most clients need the same command/args pair:
 
-<img src="https://api.star-history.com/svg?repos=iib0011/omni-tools&type=Date"/>
+```json
+{
+  "mcpServers": {
+    "private-toolbox": {
+      "command": "node",
+      "args": ["/absolute/path/to/private-toolbox/apps/mcp/dist/server.js"],
+      "env": {
+        "PRIVATE_TOOLBOX_MCP_CONFIG": "/absolute/path/to/private-toolbox/config/mcp/agent-curated.json",
+        "PRIVATE_TOOLBOX_FILE_ROOT": "/absolute/path/to/private-toolbox/output/private-toolbox-files",
+        "PRIVATE_TOOLBOX_FILE_OUTPUT_DIR": "/absolute/path/to/private-toolbox/output/private-toolbox-files/output",
+        "PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_STATE_FILE": "/absolute/path/to/private-toolbox/output/private-toolbox-files/rate-limit-state.json",
+        "PRIVATE_TOOLBOX_MCP_AUDIT_LOG": "stderr"
+      }
+    }
+  }
+}
+```
 
-## 🤝 Looking to contribute?
+For Codex, Claude, OpenClaw, or similar clients, place that server entry in the client's MCP configuration file and use absolute paths. If the client uses a different schema, keep the same executable intent: `node` plus `apps/mcp/dist/server.js`.
 
-We welcome contributions! You can help by:
+Reusable MCP config profiles:
 
-- Reporting bugs
-- Suggesting new features in GitHub issues or [here](https://tally.so/r/nrkkx2)
-- Translating in [Locize project](https://www.locize.app/register?invitation=YOIH0Dyz3KHh3uQFCGYe9v1QOUoq8W5ySgmlwjX9cSypeJmt8F40brDtVbXb71fK).
-- Improving documentation
-- Submitting pull requests
+- [config/mcp/default-private.json](config/mcp/default-private.json): default private-use profile.
+- [config/mcp/agent-curated.json](config/mcp/agent-curated.json): smaller allow list for Codex, Claude, OpenClaw, and similar agents.
 
+Generate a config with a different profile or file root:
 
-You can also join our [Discord server](https://discord.gg/SDbbn3hT4b)
-## 🧡 Sponsors
-<div align="center">
-  <a href="https://www.locize.com/" target="_blank">
-    <img src="docs-images/locizeSponsor.svg" alt="Locize" width="200"/>
-  </a>
-</div>
+```bash
+npm run --silent mcp:client-config -- --profile default-private --file-root /Users/you/private-toolbox-files
+```
 
-Thanks to [Locize](https://www.locize.com) for sponsoring OmniTools and supporting localization efforts.
-They make translation management simple and developer-friendly.
+Important MCP behavior:
 
-## Contributors
+- `enableHttpTools` is always normalized to `false`.
+- `PRIVATE_TOOLBOX_MCP_ENABLE_HTTP_TOOLS=true` is ignored.
+- Audit logs record tool name, source, risks, duration, and status, not full inputs or outputs.
 
-<a href="https://github.com/iib0011/omni-tools/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=iib0011/omni-tools" />
-</a>
+See [apps/mcp/README.md](apps/mcp/README.md) for the current exposed tool list and environment overrides.
 
-## Contact
+## Common Commands
 
-For any questions or suggestions, feel free to open an issue or contact me at:
-[ibracool99@gmail.com](mailto:ibracool99@gmail.com)
+| Command                              | Purpose                                             |
+| ------------------------------------ | --------------------------------------------------- |
+| `npm run dev:private`                | Start API and Web together with local env loading.  |
+| `npm run dev`                        | Start frontend-only Vite development.               |
+| `npm run build`                      | Typecheck and build the Web app.                    |
+| `npm run build:api`                  | Build core, server, and API workspaces.             |
+| `npm run build:mcp`                  | Build core, server, and MCP workspaces.             |
+| `npm run audit:ui`                   | Audit focused tool pages for noisy UI regressions.  |
+| `npm run audit:tools`                | Audit Web/API/MCP tool inventory and boundaries.    |
+| `npm run smoke:web-ui`               | Run desktop/mobile browser smoke for key pages.     |
+| `npm run smoke:private`              | Build API/MCP and run local API + MCP smoke checks. |
+| `npm run verify:private`             | Run typecheck, audits, Web/API/MCP smoke checks.    |
+| `npm run typecheck`                  | Typecheck the Web app.                              |
+| `npm run typecheck:core`             | Typecheck shared deterministic tools.               |
+| `npm run typecheck:api`              | Build server dependencies and typecheck API.        |
+| `npm run typecheck:mcp`              | Build server dependencies and typecheck MCP.        |
+| `npm run test -- --run`              | Run Vitest once.                                    |
+| `npm run --silent mcp:client-config` | Print a ready-to-paste MCP client config.           |
+
+Expected warnings during verification:
+
+- Vite CJS API deprecation.
+- Stale `baseline-browser-mapping` / Browserslist data.
+- Large Vite chunks from existing media/PDF/image tooling.
+- Node `punycode` deprecation in some tests.
+
+## Direct API / MCP Runs
+
+API:
+
+```bash
+npm run build:api
+npm run start --workspace @private-toolbox/api
+```
+
+MCP:
+
+```bash
+PRIVATE_TOOLBOX_MCP_CONFIG=/absolute/path/to/private-toolbox/config/mcp/agent-curated.json node apps/mcp/dist/server.js
+```
+
+## Notes
+
+- This fork is private-use first; UI copy should stay short and functional.
+- New deterministic logic should live in `packages/core`.
+- Tools that need network, filesystem, or binary handling should live in `packages/server`.
+- Web UI can expose HTTP online request through API, but MCP should not expose it.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT. See [LICENSE](LICENSE).
