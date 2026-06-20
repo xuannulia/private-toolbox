@@ -13,13 +13,20 @@ import Typography from '@mui/material/Typography';
 import SearchIcon from '@mui/icons-material/Search';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import { type SyntheticEvent, useMemo, useState } from 'react';
+import {
+  type SyntheticEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState
+} from 'react';
 import { type DefinedTool } from '@tools/defineTool';
 import { filterTools, tools } from '@tools/index';
 import { useNavigate } from 'react-router-dom';
 import { getToolCategoryTitle } from '@utils/string';
 import { useTranslation } from 'react-i18next';
-import { validNamespaces } from '../i18n';
+import { type I18nNamespaces, validNamespaces } from '../i18n';
+import type { TFunction } from 'i18next';
 import {
   getBookmarkedToolPaths,
   isBookmarked,
@@ -28,6 +35,18 @@ import {
 import { getRecentToolPaths, recordRecentTool } from '@utils/recentTools';
 import IconButton from '@mui/material/IconButton';
 import ToolCategoryIcon from './ToolCategoryIcon';
+
+const toolSearchNamespaces = validNamespaces.filter(
+  (namespace) => namespace !== 'translation'
+);
+
+const getFallbackToolLabel = (tool: DefinedTool) => {
+  const segment = tool.path.split('/').at(-1) ?? tool.path;
+
+  return segment
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+};
 
 const GroupHeader = styled('div')(({ theme }) => ({
   position: 'sticky',
@@ -95,7 +114,7 @@ const ToolChipRow = ({ title, tools, onDelete, onOpen }: ToolChipRowProps) => {
 };
 
 export default function Hero() {
-  const { t } = useTranslation(validNamespaces);
+  const { t, i18n } = useTranslation('translation');
   const [inputValue, setInputValue] = useState<string>('');
   const theme = useTheme();
   const [bookmarkedToolPaths, setBookmarkedToolPaths] = useState<string[]>(
@@ -103,67 +122,113 @@ export default function Hero() {
   );
   const [recentToolPaths] = useState<string[]>(getRecentToolPaths());
   const navigate = useNavigate();
+  const [toolNamespacesLoaded, setToolNamespacesLoaded] = useState(() =>
+    toolSearchNamespaces.every((namespace) =>
+      i18n.hasLoadedNamespace(namespace)
+    )
+  );
+  const [toolNamespacesLoading, setToolNamespacesLoading] = useState(false);
+  const typedT = t as unknown as TFunction<I18nNamespaces[]>;
+
+  useEffect(() => {
+    setToolNamespacesLoaded(
+      toolSearchNamespaces.every((namespace) =>
+        i18n.hasLoadedNamespace(namespace)
+      )
+    );
+  }, [i18n, i18n.language]);
+
+  const ensureToolNamespaces = useCallback(() => {
+    if (
+      toolSearchNamespaces.every((namespace) =>
+        i18n.hasLoadedNamespace(namespace)
+      )
+    ) {
+      setToolNamespacesLoaded(true);
+      return;
+    }
+
+    setToolNamespacesLoading(true);
+    void i18n.loadNamespaces(toolSearchNamespaces).then(() => {
+      setToolNamespacesLoaded(true);
+      setToolNamespacesLoading(false);
+    });
+  }, [i18n, i18n.language]);
+
   const filteredTools = useMemo(
-    () => filterTools(tools, inputValue, [], t),
-    [inputValue, t]
+    () =>
+      filterTools(tools, toolNamespacesLoaded ? inputValue : '', [], typedT),
+    [inputValue, toolNamespacesLoaded, typedT]
   );
 
   const exampleTools: ToolInfo[] = [
     {
-      label: t('json:prettify.title'),
+      label: t('hero.examples.prettifyJson'),
       url: '/json/prettify'
     },
     {
-      label: t('string:regexToolkit.title'),
+      label: t('hero.examples.regexToolkit'),
       url: '/string/regex-toolkit'
     },
     {
-      label: t('time:crontabGuru.title'),
+      label: t('hero.examples.crontabGuru'),
       url: '/time/crontab-guru'
     },
     {
-      label: t('network:dns.title'),
+      label: t('hero.examples.dnsLookup'),
       url: '/network/dns-lookup'
     },
     {
-      label: t('network:ipLookup.title'),
+      label: t('hero.examples.ipLookup'),
       url: '/network/ip-lookup'
     },
     {
-      label: t('string:rsaKeyPair.title'),
+      label: t('hero.examples.rsaKeyPair'),
       url: '/string/rsa-keypair'
     },
     {
-      label: t('image:qrCode.title'),
+      label: t('hero.examples.qrCodeGenerator'),
       url: '/image-generic/qr-code'
     },
     {
-      label: t('ops:dockerCompose.title'),
+      label: t('hero.examples.dockerCompose'),
       url: '/ops/docker-compose'
     },
     {
-      label: t('ops:nginxFormat.title'),
+      label: t('hero.examples.nginxFormat'),
       url: '/ops/nginx-format'
     }
   ];
 
   const handleInputChange = (_event: SyntheticEvent, newInputValue: string) => {
     setInputValue(newInputValue);
+
+    if (newInputValue.trim()) {
+      ensureToolNamespaces();
+    }
   };
 
-  const toolsMap = new Map<string, ToolInfo>();
-  for (const tool of filteredTools) {
-    toolsMap.set(tool.path, {
-      label: t(tool.name),
-      url: '/' + tool.path
-    });
-  }
+  const toolsByPath = useMemo(
+    () => new Map(tools.map((tool) => [tool.path, tool])),
+    []
+  );
+
+  const getToolLabel = useCallback(
+    (tool: DefinedTool) =>
+      toolNamespacesLoaded ? typedT(tool.name) : getFallbackToolLabel(tool),
+    [toolNamespacesLoaded, typedT]
+  );
 
   const resolveToolPaths = (paths: string[]): ToolInfo[] =>
     paths.flatMap((path) => {
-      const tool = toolsMap.get(path);
+      const tool = toolsByPath.get(path);
       if (tool === undefined) return [];
-      return [tool];
+      return [
+        {
+          label: getToolLabel(tool),
+          url: '/' + tool.path
+        }
+      ];
     });
 
   const bookmarkedTools = resolveToolPaths(bookmarkedToolPaths).slice(0, 8);
@@ -186,27 +251,30 @@ export default function Hero() {
       <Stack spacing={1.5}>
         <Autocomplete
           autoHighlight
+          loading={toolNamespacesLoading}
+          onOpen={ensureToolNamespaces}
           options={filteredTools}
-          noOptionsText={t('translation:hero.search.noResult')}
+          noOptionsText={t('hero.search.noResult')}
           filterOptions={(options) => options}
           groupBy={(option) => option.type}
           renderGroup={(params) => {
             return (
               <li key={params.key}>
                 <GroupHeader>
-                  {getToolCategoryTitle(params.group, t)}
+                  {getToolCategoryTitle(params.group, typedT)}
                 </GroupHeader>
                 <GroupItems>{params.children}</GroupItems>
               </li>
             );
           }}
           inputValue={inputValue}
-          getOptionLabel={(option) => t(option.name)}
+          getOptionLabel={getToolLabel}
           renderInput={(params) => (
             <TextField
               {...params}
               fullWidth
-              placeholder={t('translation:hero.search.placeholder')}
+              onFocus={ensureToolNamespaces}
+              placeholder={t('hero.search.placeholder')}
               InputProps={{
                 ...params.InputProps,
                 endAdornment: <SearchIcon />,
@@ -238,9 +306,13 @@ export default function Hero() {
                       sx={{ fontSize: 20 }}
                     />
                     <Box>
-                      <Typography fontWeight={700}>{t(option.name)}</Typography>
+                      <Typography fontWeight={700}>
+                        {getToolLabel(option)}
+                      </Typography>
                       <Typography fontSize={12} color={'text.secondary'}>
-                        {t(option.shortDescription)}
+                        {toolNamespacesLoaded
+                          ? typedT(option.shortDescription)
+                          : option.path}
                       </Typography>
                     </Box>
                   </Stack>
@@ -276,7 +348,7 @@ export default function Hero() {
 
         <Stack spacing={0.75}>
           <ToolChipRow
-            title={t('translation:hero.shortcuts.bookmarked')}
+            title={t('hero.shortcuts.bookmarked')}
             tools={bookmarkedTools}
             onOpen={openTool}
             onDelete={(tool) => {
@@ -285,12 +357,12 @@ export default function Hero() {
             }}
           />
           <ToolChipRow
-            title={t('translation:hero.shortcuts.recent')}
+            title={t('hero.shortcuts.recent')}
             tools={recentTools}
             onOpen={openTool}
           />
           <ToolChipRow
-            title={t('translation:hero.shortcuts.common')}
+            title={t('hero.shortcuts.common')}
             tools={quickTools}
             onOpen={openTool}
           />
