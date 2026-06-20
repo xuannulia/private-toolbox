@@ -210,22 +210,28 @@
   "symmetricCrypto": {
     "algorithm": "算法",
     "ciphertext": "密文",
-    "description": "本地进行 AES、DES、TripleDES、RC4 和 Rabbit 文本加解密。",
+    "description": "本地进行 AES、DES、TripleDES、RC4 和 Rabbit 文本加解密，支持密钥编码、IV、模式和填充方式。",
     "encodings": {
       "base64": "Base64",
-      "hex": "Hex"
+      "hex": "Hex",
+      "utf8": "UTF-8"
     },
     "inputEncoding": "输入编码",
+    "iv": "IV / 偏移量",
+    "ivEncoding": "IV 编码",
     "key": "密钥",
+    "keyEncoding": "密钥编码",
+    "mode": "模式",
     "operation": "操作",
     "operations": {
       "decrypt": "解密",
       "encrypt": "加密"
     },
     "outputEncoding": "输出编码",
+    "padding": "填充",
     "plaintext": "明文",
     "resultTitle": "加解密结果",
-    "shortDescription": "AES、DES、TripleDES、RC4、Rabbit 加解密。",
+    "shortDescription": "带 IV、模式、填充参数的对称加解密。",
     "title": "对称加密 / 解密"
   },
   "textHash": {

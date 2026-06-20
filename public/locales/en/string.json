@@ -210,22 +210,28 @@
   "symmetricCrypto": {
     "algorithm": "Algorithm",
     "ciphertext": "Ciphertext",
-    "description": "Encrypt or decrypt text locally with AES, DES, TripleDES, RC4, and Rabbit.",
+    "description": "Encrypt or decrypt text locally with AES, DES, TripleDES, RC4, and Rabbit, including key encoding, IV, mode, and padding controls.",
     "encodings": {
       "base64": "Base64",
-      "hex": "Hex"
+      "hex": "Hex",
+      "utf8": "UTF-8"
     },
     "inputEncoding": "Input encoding",
+    "iv": "IV",
+    "ivEncoding": "IV encoding",
     "key": "Key",
+    "keyEncoding": "Key encoding",
+    "mode": "Mode",
     "operation": "Operation",
     "operations": {
       "decrypt": "Decrypt",
       "encrypt": "Encrypt"
     },
     "outputEncoding": "Output encoding",
+    "padding": "Padding",
     "plaintext": "Plaintext",
     "resultTitle": "Crypto Result",
-    "shortDescription": "AES, DES, TripleDES, RC4, and Rabbit encryption.",
+    "shortDescription": "Symmetric crypto with IV, mode, and padding controls.",
     "title": "Symmetric Encrypt / Decrypt"
   },
   "textHash": {
