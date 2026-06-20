@@ -1,0 +1,25 @@
+{
+  "name": "@private-toolbox/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./src/*": "./src/*"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@private-toolbox/core": "file:../core",
+    "exif-parser": "^0.1.12",
+    "jimp": "^0.22.12",
+    "jsqr": "^1.4.0"
+  }
+}

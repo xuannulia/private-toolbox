@@ -1,0 +1,10 @@
+{
+  "enableCoreTools": true,
+  "enableServerTools": true,
+  "enableHttpTools": false,
+  "allowedRisks": ["local", "network", "secret", "file-read", "file-write"],
+  "enabledTools": null,
+  "disabledTools": [],
+  "maxOutputBytes": 1048576,
+  "auditLog": "stderr"
+}

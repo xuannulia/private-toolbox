@@ -1,19 +1,22 @@
 {
-  "name": "omni-tools",
-  "description": "This project offers a variety of online tools to help with everyday tasks, \nall available for free and open for community contributions",
+  "name": "private-toolbox",
+  "description": "Private self-hosted toolbox with local-first web tools and MCP integrations.",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "author": {
-    "name": "Ibrahima Gaye Coulibaly",
-    "email": "ibracool99@gmail.com",
-    "url": "https://github.com/iib0011"
+    "name": "Private Toolbox Maintainers",
+    "url": "https://github.com/xuannulia/private-toolbox"
   },
   "bugs": {
-    "url": "https://github.com/iib0011/omni-tools/issues",
-    "email": "ibracool99@gmail.com"
+    "url": "https://github.com/xuannulia/private-toolbox/issues"
   },
   "scripts": {
     "dev": "vite",
+    "dev:private": "node scripts/start-private-dev.mjs",
     "build": "tsc && vite build",
     "serve": "vite preview",
     "test": "vitest",
@@ -22,6 +25,20 @@
     "script:create:tool": "node scripts/create-tool.mjs",
     "lint": "eslint src --max-warnings=0 --fix",
     "typecheck": "tsc --project tsconfig.json --noEmit",
+    "typecheck:core": "tsc --project packages/core/tsconfig.json --noEmit",
+    "typecheck:server": "npm run build:core && tsc --project packages/server/tsconfig.json --noEmit",
+    "typecheck:api": "npm run build:server && tsc --project apps/api/tsconfig.json --noEmit",
+    "typecheck:mcp": "npm run build:server && tsc --project apps/mcp/tsconfig.json --noEmit",
+    "mcp:client-config": "node scripts/print-mcp-client-config.mjs",
+    "audit:ui": "node scripts/audit-ui-simplicity.mjs",
+    "audit:tools": "npm run build:server && node scripts/audit-tool-inventory.mjs",
+    "smoke:web-ui": "node scripts/smoke-web-ui.mjs",
+    "smoke:private": "npm run build:api && npm run build:mcp && node scripts/smoke-private-toolbox.mjs",
+    "verify:private": "npm run typecheck && npm run audit:ui && npm run audit:tools && npm run smoke:web-ui && npm run smoke:private",
+    "build:core": "npm run build --workspace @private-toolbox/core",
+    "build:server": "npm run build:core && npm run build --workspace @private-toolbox/server",
+    "build:api": "npm run build:server && npm run build --workspace @private-toolbox/api",
+    "build:mcp": "npm run build:server && npm run build --workspace @private-toolbox/mcp",
     "prepare": "husky install",
     "i18n:pull": "locize download --project-id e7156a3e-66fb-4035-a0f0-cebf1c63a3ba --path ./public/locales",
     "i18n:sync": "locize sync --project-id e7156a3e-66fb-4035-a0f0-cebf1c63a3ba --path ./public/locales --update-values true --reference-language-only false -compare-modification-time true"
@@ -63,6 +80,7 @@
     "jimp": "^0.22.12",
     "js-quantities": "^1.8.0",
     "jspdf": "^3.0.3",
+    "jsqr": "^1.4.0",
     "jszip": "^3.10.1",
     "lint-staged": "^15.4.3",
     "locize": "^4.0.14",

@@ -9,6 +9,7 @@ dist-ssr
 
 # testing
 /coverage
+/.playwright-cli
 
 # next.js
 /.next/
@@ -38,6 +39,10 @@ yarn-error.log*
 
 /test-results
 /playwright-report
+/output/playwright
+/output/private-toolbox-files
+/output/private-toolbox-audit*.jsonl
+/apps/api/output
 
 dist.zip
 .aider*
