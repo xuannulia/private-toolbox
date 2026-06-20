@@ -3,6 +3,9 @@
   "description": "Private self-hosted toolbox with local-first web tools and MCP integrations.",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"

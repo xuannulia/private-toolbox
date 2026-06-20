@@ -1,0 +1,9 @@
+{
+  "name": "private-toolbox",
+  "installCommand": "npm ci --no-audit --no-fund",
+  "buildCommand": "npm run build:server && npm run build",
+  "assets": {
+    "directory": "./dist",
+    "notFoundStrategy": "singlePageApplication"
+  }
+}
