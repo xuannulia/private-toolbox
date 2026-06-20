@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
@@ -41,10 +41,22 @@ const Navbar: React.FC<NavbarProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [timestamp, setTimestamp] = useState(() =>
+    Math.floor(Date.now() / 1000)
+  );
   const currentLanguage =
     languages.find(({ code }) => code === i18n.resolvedLanguage)?.code ??
     languages.find(({ code }) => code === i18n.language?.split('-')[0])?.code ??
     'en';
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setTimestamp(Math.floor(Date.now() / 1000));
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
   const toggleDrawer = (open: boolean) => () => {
     setDrawerOpen(open);
   };
@@ -142,7 +154,7 @@ const Navbar: React.FC<NavbarProps> = ({
       >
         <Link
           to="/"
-          aria-label="Private Toolbox home"
+          aria-label="Current timestamp home"
           style={{ color: 'inherit', textDecoration: 'none' }}
         >
           <Stack direction={'row'} alignItems={'center'} spacing={1}>
@@ -156,8 +168,9 @@ const Navbar: React.FC<NavbarProps> = ({
               fontWeight={800}
               fontSize={{ xs: 18, md: 24 }}
               lineHeight={1}
+              fontFamily={'monospace'}
             >
-              Private Toolbox
+              {timestamp}
             </Typography>
           </Stack>
         </Link>
