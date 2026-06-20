@@ -16,7 +16,7 @@ import {
   type CronCalendarOutput,
   type CronConvertOutput,
   type CronConvertTarget
-} from '@private-toolbox/core';
+} from '@private-toolbox/core/tools/cron';
 import { ToolComponentProps } from '@tools/defineTool';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';

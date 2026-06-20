@@ -1,4 +1,7 @@
-import { parseCronExpression, validateCronExpression } from '@private-toolbox/core';
+import {
+  parseCronExpression,
+  validateCronExpression
+} from '@private-toolbox/core/tools/cron';
 
 const LANG: Record<string, string> = {
   fr: 'fr',

@@ -1,4 +1,4 @@
-import { formatJson } from '@private-toolbox/core';
+import { formatJson } from '@private-toolbox/core/tools/json';
 
 export const beautifyJson = (
   text: string,
