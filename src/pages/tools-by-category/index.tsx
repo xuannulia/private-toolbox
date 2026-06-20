@@ -9,31 +9,22 @@ import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
 import { Helmet } from 'react-helmet';
-import UserTypeFilter from '@components/UserTypeFilter';
 import { useTranslation } from 'react-i18next';
 import { validNamespaces } from '../../i18n';
-import { useUserTypeFilter } from '../../providers/UserTypeFilterProvider';
 
 export default function ToolsByCategory() {
   const navigate = useNavigate();
   const theme = useTheme();
   const { categoryName } = useParams();
   const [searchTerm, setSearchTerm] = React.useState<string>('');
-  const { selectedUserTypes, setSelectedUserTypes } = useUserTypeFilter();
   const { t } = useTranslation(validNamespaces);
   const rawTitle = getToolCategoryTitle(categoryName as string, t);
-  // First get tools by category without filtering
-  const toolsByCategory = getToolsByCategory(selectedUserTypes, t).find(
+  const toolsByCategory = getToolsByCategory([], t).find(
     ({ type }) => type === categoryName
   );
   const categoryDefinedTools = toolsByCategory?.tools ?? [];
 
-  const categoryTools = filterTools(
-    categoryDefinedTools,
-    searchTerm,
-    selectedUserTypes,
-    t
-  );
+  const categoryTools = filterTools(categoryDefinedTools, searchTerm, [], t);
 
   return (
     <Box
@@ -86,13 +77,6 @@ export default function ToolsByCategory() {
               onChange={(event) => setSearchTerm(event.target.value)}
             />
           </Stack>
-          <Box display={'flex'} justifyContent={'center'}>
-            <UserTypeFilter
-              userTypes={toolsByCategory?.userTypes ?? undefined}
-              selectedUserTypes={selectedUserTypes}
-              onUserTypesChange={setSelectedUserTypes}
-            />
-          </Box>
           {categoryTools.length > 0 ? (
             <Box
               sx={{

@@ -26,7 +26,6 @@ import {
 } from '@utils/bookmark';
 import { getRecentToolPaths, recordRecentTool } from '@utils/recentTools';
 import IconButton from '@mui/material/IconButton';
-import { useUserTypeFilter } from '../providers/UserTypeFilterProvider';
 
 const GroupHeader = styled('div')(({ theme }) => ({
   position: 'sticky',
@@ -97,15 +96,14 @@ export default function Hero() {
   const { t } = useTranslation(validNamespaces);
   const [inputValue, setInputValue] = useState<string>('');
   const theme = useTheme();
-  const { selectedUserTypes } = useUserTypeFilter();
   const [bookmarkedToolPaths, setBookmarkedToolPaths] = useState<string[]>(
     getBookmarkedToolPaths()
   );
   const [recentToolPaths] = useState<string[]>(getRecentToolPaths());
   const navigate = useNavigate();
   const filteredTools = useMemo(
-    () => filterTools(tools, inputValue, selectedUserTypes, t),
-    [inputValue, selectedUserTypes, t]
+    () => filterTools(tools, inputValue, [], t),
+    [inputValue, t]
   );
 
   const exampleTools: ToolInfo[] = [
