@@ -18,12 +18,12 @@ import { tool as jsonToCsv } from './json-to-csv/meta';
 import { tool as jsonToExcel } from './json-to-excel/meta';
 
 export const jsonTools = [
+  jsonPrettify,
   validateJson,
   jsonSchemaValidator,
   jsonSchemaFromJson,
   jsonSchemaMock,
   jsonToTypes,
-  jsonPrettify,
   jsonMinify,
   jsonStringify,
   jsonToYaml,

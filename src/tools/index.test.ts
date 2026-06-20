@@ -55,6 +55,19 @@ const otherPdfTool = {
   component: (() => null) as unknown,
   userTypes: ['generalUsers']
 } as unknown as DefinedTool;
+
+const jsonFormatterTool = {
+  type: 'json',
+  path: 'json/prettify',
+  name: 'json:prettify.title' as FullI18nKey,
+  description: 'json:prettify.description' as FullI18nKey,
+  shortDescription: 'json:prettify.shortDescription' as FullI18nKey,
+  icon: 'icon',
+  keywords: ['json格式化', 'json 格式化', 'format', '格式化'],
+  component: (() => null) as unknown,
+  userTypes: ['developers']
+} as unknown as DefinedTool;
+
 type NamespacedT = TFunction<I18nNamespaces[]>;
 
 const enTranslations: Record<string, string> = {
@@ -75,6 +88,12 @@ const esTranslations: Record<string, string> = {
   'pdf:mergePdf.shortDescription': 'Unir archivos PDF'
 };
 
+const zhTranslations: Record<string, string> = {
+  'json:prettify.title': 'JSON 格式化',
+  'json:prettify.description': '使用适当的缩进和间距来格式化 JSON。',
+  'json:prettify.shortDescription': '格式化并美化 JSON'
+};
+
 const makeT = (dict: Record<string, string>): NamespacedT =>
   ((key: string) => dict[key] ?? key) as unknown as NamespacedT;
 
@@ -82,6 +101,7 @@ describe('filterTools token-based search', () => {
   const tools = [mergePdfTool, base64Tool, otherPdfTool];
   const tEn = makeT(enTranslations);
   const tEs = makeT(esTranslations);
+  const tZh = makeT(zhTranslations);
 
   it('returns all tools when query is empty or whitespace', () => {
     expect(filterTools(tools, '', [], tEn)).toEqual(tools);
@@ -122,6 +142,11 @@ describe('filterTools token-based search', () => {
   it('works with non-English localized strings', () => {
     const result = filterTools(tools, 'unir pdf', [], tEs);
     expect(result).toContain(mergePdfTool);
+  });
+
+  it('matches Chinese JSON formatter queries without spaces', () => {
+    const result = filterTools([jsonFormatterTool], 'json格式化', [], tZh);
+    expect(result).toEqual([jsonFormatterTool]);
   });
 
   it('tolerates single-character typos in query tokens', () => {

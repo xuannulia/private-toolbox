@@ -155,14 +155,14 @@
     "indentation": "缩进",
     "inputTitle": "输入 JSON",
     "invalidTree": "JSON 无效",
-    "resultTitle": "美化 JSON",
-    "shortDescription": "格式化并美化 JSON 代码",
+    "resultTitle": "格式化结果",
+    "shortDescription": "格式化并美化 JSON",
     "spacesCount": "空格数",
     "textView": "文本",
-    "title": "美化 JSON",
+    "title": "JSON 格式化",
     "toolInfo": {
       "description": "此工具允许您使用适当的缩进和间距格式化 JSON 数据，使其更具可读性且更易于使用。",
-      "title": "美化 JSON"
+      "title": "JSON 格式化"
     },
     "treeView": "树",
     "useSpaces": "空格",
