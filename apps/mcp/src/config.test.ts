@@ -8,7 +8,6 @@ const requiredAgentCuratedTools = [
   'rdap.lookup',
   'dns.lookup',
   'ssl.inspect',
-  'ip.current',
   'ip.lookup',
   'rsa.generate_keypair',
   'rsa.encrypt',

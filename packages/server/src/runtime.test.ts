@@ -31,7 +31,6 @@ const makeConfig = (
     dataSourceOverrides: {},
     toolDataSources: {
       'rdap.lookup': 'rdap',
-      'ip.current': 'ippure',
       'ip.lookup': 'ippure'
     },
     stateFilePath: null,

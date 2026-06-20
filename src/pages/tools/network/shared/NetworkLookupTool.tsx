@@ -13,10 +13,11 @@ import ToolInputAndResult from '@components/ToolInputAndResult';
 import ToolTextResult from '@components/result/ToolTextResult';
 import { type JsonValue } from '@private-toolbox/core';
 import { ToolComponentProps } from '@tools/defineTool';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   callApiTool,
+  type ApiToolResult,
   getApiBaseUrl,
   getApiToolErrorText,
   setApiBaseUrl,
@@ -45,6 +46,14 @@ type NetworkLookupToolProps = ToolComponentProps & {
   toolName: string;
   fields: NetworkField[];
   runLabel?: string;
+  renderResult?: (state: NetworkLookupResultState) => ReactNode;
+};
+
+export type NetworkLookupResultState = {
+  result: ApiToolResult | null;
+  resultText: string;
+  errorText: string | null;
+  loading: boolean;
 };
 
 const formatResult = (value: unknown): string => JSON.stringify(value, null, 2);
@@ -61,7 +70,8 @@ const toJsonValue = (field: NetworkField, value: string): JsonValue => {
 export default function NetworkLookupTool({
   toolName,
   fields,
-  runLabel
+  runLabel,
+  renderResult
 }: NetworkLookupToolProps) {
   const { t } = useTranslation('network');
   const [apiBaseUrl, setApiBaseUrlState] = useState(getApiBaseUrl());
@@ -71,6 +81,7 @@ export default function NetworkLookupTool({
     )
   );
   const [result, setResult] = useState('');
+  const [toolResult, setToolResult] = useState<ApiToolResult | null>(null);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<NetworkLookupHistoryEntry[]>(() =>
@@ -87,6 +98,7 @@ export default function NetworkLookupTool({
   const run = async () => {
     setLoading(true);
     setErrorText(null);
+    setToolResult(null);
     setApiBaseUrl(apiBaseUrl);
     setHistory(recordNetworkLookupHistory(toolName, fields, values));
 
@@ -100,6 +112,7 @@ export default function NetworkLookupTool({
 
     try {
       const response = await callApiTool(toolName, args, apiBaseUrl);
+      setToolResult(response);
       setErrorText(getApiToolErrorText(response));
       setResult(formatResult(response.ok ? response.result : response.error));
     } catch (error) {
@@ -108,6 +121,7 @@ export default function NetworkLookupTool({
         'Unable to reach local API',
         error
       );
+      setToolResult(errorResult);
       setErrorText(getApiToolErrorText(errorResult));
       setResult(formatResult(errorResult.error));
     } finally {
@@ -187,20 +201,31 @@ export default function NetworkLookupTool({
     </Box>
   );
 
+  const defaultResult = (
+    <Stack spacing={1.5}>
+      {errorText && <Alert severity={'error'}>{errorText}</Alert>}
+      <ToolTextResult
+        title={t('common.result')}
+        value={result}
+        extension={'json'}
+        keepSpecialCharacters
+        loading={loading}
+      />
+    </Stack>
+  );
+
   return (
     <ToolInputAndResult
       input={input}
       result={
-        <Stack spacing={1.5}>
-          {errorText && <Alert severity={'error'}>{errorText}</Alert>}
-          <ToolTextResult
-            title={t('common.result')}
-            value={result}
-            extension={'json'}
-            keepSpecialCharacters
-            loading={loading}
-          />
-        </Stack>
+        renderResult
+          ? renderResult({
+              result: toolResult,
+              resultText: result,
+              errorText,
+              loading
+            })
+          : defaultResult
       }
     />
   );

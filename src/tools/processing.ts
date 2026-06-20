@@ -138,7 +138,6 @@ const networkServerToolsByPath: Record<string, string[]> = {
   'network/rdap-lookup': ['rdap.lookup'],
   'network/dns-lookup': ['dns.lookup'],
   'network/ssl-inspect': ['ssl.inspect'],
-  'network/current-ip': ['ip.current'],
   'network/ip-lookup': ['ip.lookup']
 };
 

@@ -38,18 +38,40 @@
     "port": "端口",
     "serverName": "SNI 主机名"
   },
-  "ipCurrent": {
-    "title": "当前公网 IP",
-    "description": "查询 IPPure 当前出口 IP 卡片数据。",
-    "shortDescription": "查看当前出口 IP",
-    "runLabel": "检测当前 IP"
-  },
   "ipLookup": {
     "title": "IP 信息查询",
     "description": "通过 IPPure 查询流程查询公网 IP 信息。",
     "shortDescription": "查询公网 IP 信息",
     "ip": "IP 地址",
-    "ipPlaceholder": "8.8.8.8"
+    "ipPlaceholder": "8.8.8.8",
+    "panel": {
+      "copyIp": "复制 IP",
+      "asn": "ASN",
+      "asDomain": "AS 域名",
+      "route": "IP 范围",
+      "type": "类型",
+      "location": "位置",
+      "coordinates": "坐标",
+      "timezone": "时区",
+      "organization": "组织",
+      "org": "运营商",
+      "company": "公司",
+      "attributes": "IP 属性",
+      "privacy": "隐私",
+      "vpn": "VPN",
+      "proxy": "代理",
+      "tor": "Tor",
+      "relay": "Relay",
+      "hosting": "托管",
+      "anycast": "Anycast",
+      "mobile": "移动网络",
+      "anonymous": "匿名",
+      "satellite": "卫星网络",
+      "cleanNetwork": "未发现代理/托管特征",
+      "abuse": "滥用联系人",
+      "email": "邮箱",
+      "network": "网络"
+    }
   },
   "cidrCalculator": {
     "title": "CIDR 计算器",

@@ -1,5 +1,6 @@
 import { ToolComponentProps } from '@tools/defineTool';
 import { useTranslation } from 'react-i18next';
+import IpLookupResultPanel from './IpLookupResultPanel';
 import NetworkLookupTool from '../shared/NetworkLookupTool';
 
 export default function IpLookup(props: ToolComponentProps) {
@@ -9,6 +10,7 @@ export default function IpLookup(props: ToolComponentProps) {
     <NetworkLookupTool
       {...props}
       toolName={'ip.lookup'}
+      renderResult={(state) => <IpLookupResultPanel {...state} />}
       fields={[
         {
           name: 'ip',

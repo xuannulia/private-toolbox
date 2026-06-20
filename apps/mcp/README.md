@@ -120,7 +120,6 @@ Agent-curated default tools:
 - `rdap.lookup`
 - `dns.lookup`
 - `ssl.inspect`
-- `ip.current`
 - `ip.lookup`
 - `rsa.generate_keypair`
 - `rsa.encrypt`
@@ -274,7 +273,6 @@ Default-private exposed tools:
 - `rdap.lookup`
 - `dns.lookup`
 - `ssl.inspect`
-- `ip.current`
 - `ip.lookup`
 - `hash.file`
 - `image.to_base64`

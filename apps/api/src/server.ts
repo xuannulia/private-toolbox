@@ -158,9 +158,6 @@ const handleGet = async (
         serverName: url.searchParams.get('serverName') ?? null
       });
       return true;
-    case '/api/ip/current':
-      await callAndWrite(response, 'ip.current', {});
-      return true;
     case '/api/ip/lookup':
       await callAndWrite(response, 'ip.lookup', {
         ip: url.searchParams.get('ip') ?? ''

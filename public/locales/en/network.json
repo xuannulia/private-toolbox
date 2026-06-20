@@ -38,18 +38,40 @@
     "port": "Port",
     "serverName": "SNI server name"
   },
-  "ipCurrent": {
-    "title": "Current public IP",
-    "description": "Query IPPure current outbound IP card data.",
-    "shortDescription": "Show current outbound IP",
-    "runLabel": "Check current IP"
-  },
   "ipLookup": {
     "title": "IP information lookup",
     "description": "Lookup public IP information through the IPPure search flow.",
     "shortDescription": "Lookup public IP information",
     "ip": "IP address",
-    "ipPlaceholder": "8.8.8.8"
+    "ipPlaceholder": "8.8.8.8",
+    "panel": {
+      "copyIp": "Copy IP",
+      "asn": "ASN",
+      "asDomain": "AS domain",
+      "route": "IP range",
+      "type": "Type",
+      "location": "Location",
+      "coordinates": "Coordinates",
+      "timezone": "Timezone",
+      "organization": "Organization",
+      "org": "Carrier",
+      "company": "Company",
+      "attributes": "IP attributes",
+      "privacy": "Privacy",
+      "vpn": "VPN",
+      "proxy": "Proxy",
+      "tor": "Tor",
+      "relay": "Relay",
+      "hosting": "Hosting",
+      "anycast": "Anycast",
+      "mobile": "Mobile",
+      "anonymous": "Anonymous",
+      "satellite": "Satellite",
+      "cleanNetwork": "No proxy or hosting signals",
+      "abuse": "Abuse contact",
+      "email": "Email",
+      "network": "Network"
+    }
   },
   "cidrCalculator": {
     "title": "CIDR Calculator",

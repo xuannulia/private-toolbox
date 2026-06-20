@@ -12,7 +12,6 @@ export type NetworkToolConfig = {
   maxRedirects: number;
   userAgent: string;
   rdapBaseUrl: string;
-  ipPureCardUrl: string;
   ipPureLookupBaseUrl: string;
   dataSources: NetworkDataSourceConfig;
 };
@@ -118,7 +117,6 @@ export const defaultNetworkToolConfig: NetworkToolConfig = {
   userAgent:
     'PrivateToolbox/0.1 (+https://github.com/xuannulia/private-toolbox)',
   rdapBaseUrl: 'https://rdap.org',
-  ipPureCardUrl: 'https://my.ippure.com/v1/card',
   // Captured from IPPure's public IP search flow.
   ipPureLookupBaseUrl: 'https://ipinfo.io/widget/demo',
   dataSources: {
@@ -206,7 +204,6 @@ export const getDefaultServerRuntimeConfig = (): ServerRuntimeConfig => {
       dataSourceOverrides,
       toolDataSources: {
         'rdap.lookup': 'rdap',
-        'ip.current': 'ippure',
         'ip.lookup': 'ippure'
       },
       stateFilePath: process.env.PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_STATE_FILE
