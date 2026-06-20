@@ -97,6 +97,33 @@
     "date-to-unix": "Date → Unix",
     "unix-to-date": "Unix → Date"
   },
+  "timestampConverter": {
+    "currentLocalTime": "Current local time",
+    "currentMilliseconds": "Current milliseconds",
+    "currentSeconds": "Current seconds",
+    "dateInput": "Date and time",
+    "dateToTimestamp": "Date → Timestamp",
+    "description": "Convert between local time, Unix seconds, Unix milliseconds, and ISO 8601.",
+    "detectedUnit": "Detected unit",
+    "iso": "ISO 8601",
+    "localTime": "Local time",
+    "milliseconds": "Millisecond timestamp",
+    "mode": "Mode",
+    "resultTitle": "Timestamp Result",
+    "seconds": "Second timestamp",
+    "shortDescription": "Convert seconds, milliseconds, local time, and ISO 8601.",
+    "timestampInput": "Timestamp",
+    "timestampToDate": "Timestamp → Date",
+    "title": "Timestamp Converter",
+    "unit": "Unit",
+    "units": {
+      "auto": "Auto",
+      "milliseconds": "Milliseconds",
+      "seconds": "Seconds"
+    },
+    "useCurrentTime": "Use current time",
+    "utcTime": "UTC time"
+  },
   "crontabGuru": {
     "title": "Crontab Guru",
     "description": "Parse and explain cron expressions in plain English. Instantly understand what any cron schedule does, validate syntax, and process multiple expressions at once.",

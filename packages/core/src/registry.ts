@@ -29,6 +29,7 @@ import { romanTools } from './tools/roman.js';
 import { textTools } from './tools/text.js';
 import { seoTools } from './tools/seo.js';
 import { sqlTools } from './tools/sql.js';
+import { symmetricCryptoTools } from './tools/symmetricCrypto.js';
 import { timestampTools } from './tools/timestamp.js';
 import { unicodeTools } from './tools/unicode.js';
 import { unitTools } from './tools/unit.js';
@@ -71,6 +72,7 @@ export const coreTools: ToolboxTool[] = [
   ...regexTools,
   ...seoTools,
   ...sqlTools,
+  ...symmetricCryptoTools,
   ...textTools,
   ...listTools,
   ...jwtTools,

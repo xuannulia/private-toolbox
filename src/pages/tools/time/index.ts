@@ -1,5 +1,6 @@
 import { tool as timeConvertTimeToDecimal } from './convert-time-to-decimal/meta';
 import { tool as timeConvertUnixToDate } from './convert-unix-to-date/meta';
+import { tool as timeTimestampConverter } from './timestamp-converter/meta';
 import { tool as timeCrontabGuru } from './crontab-guru/meta';
 import { tool as timeBetweenDates } from './time-between-dates/meta';
 import { tool as daysDoHours } from './convert-days-to-hours/meta';
@@ -17,6 +18,7 @@ export const timeTools = [
   convertTimetoSeconds,
   truncateClockTime,
   timeBetweenDates,
+  timeTimestampConverter,
   timeCrontabGuru,
   checkLeapYear,
   timeConvertUnixToDate,

@@ -98,6 +98,33 @@
     "useLocalTimeDescription": "显示使用本地时区而非 UTC 转换的日期",
     "useUTC": "使用 UTC"
   },
+  "timestampConverter": {
+    "currentLocalTime": "当前本地时间",
+    "currentMilliseconds": "当前毫秒级时间戳",
+    "currentSeconds": "当前秒级时间戳",
+    "dateInput": "日期和时间",
+    "dateToTimestamp": "时间 → 时间戳",
+    "description": "在本地时间、秒级时间戳、毫秒级时间戳和 ISO 8601 之间转换。",
+    "detectedUnit": "识别单位",
+    "iso": "ISO 8601",
+    "localTime": "本地时间",
+    "milliseconds": "毫秒级时间戳",
+    "mode": "模式",
+    "resultTitle": "时间戳结果",
+    "seconds": "秒级时间戳",
+    "shortDescription": "秒、毫秒、本地时间和 ISO 8601 互转。",
+    "timestampInput": "时间戳",
+    "timestampToDate": "时间戳 → 时间",
+    "title": "时间戳转换",
+    "unit": "单位",
+    "units": {
+      "auto": "自动",
+      "milliseconds": "毫秒",
+      "seconds": "秒"
+    },
+    "useCurrentTime": "使用当前时间",
+    "utcTime": "UTC 时间"
+  },
   "crontabGuru": {
     "title": "Crontab Guru",
     "description": "用中文解析和解释 cron 表达式。即时了解任何 cron 计划的作用，验证语法，并一次处理多个表达式。",

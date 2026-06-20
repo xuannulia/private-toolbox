@@ -31,6 +31,7 @@ export * from './tools/roman.js';
 export * from './tools/rsa.js';
 export * from './tools/seo.js';
 export * from './tools/sql.js';
+export * from './tools/symmetricCrypto.js';
 export * from './tools/text.js';
 export * from './tools/timestamp.js';
 export * from './tools/unicode.js';

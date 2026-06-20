@@ -207,6 +207,27 @@
     "text": "Text",
     "title": "RSA Crypto"
   },
+  "symmetricCrypto": {
+    "algorithm": "Algorithm",
+    "ciphertext": "Ciphertext",
+    "description": "Encrypt or decrypt text locally with AES, DES, TripleDES, RC4, and Rabbit.",
+    "encodings": {
+      "base64": "Base64",
+      "hex": "Hex"
+    },
+    "inputEncoding": "Input encoding",
+    "key": "Key",
+    "operation": "Operation",
+    "operations": {
+      "decrypt": "Decrypt",
+      "encrypt": "Encrypt"
+    },
+    "outputEncoding": "Output encoding",
+    "plaintext": "Plaintext",
+    "resultTitle": "Crypto Result",
+    "shortDescription": "AES, DES, TripleDES, RC4, and Rabbit encryption.",
+    "title": "Symmetric Encrypt / Decrypt"
+  },
   "textHash": {
     "description": "Create local MD5 and SHA hashes for text input.",
     "inputTitle": "Input Text",

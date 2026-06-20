@@ -30,6 +30,7 @@ import { tool as stringPemInspector } from './pem-inspector/meta';
 import { tool as stringRsaKeyPair } from './rsa-keypair/meta';
 import { tool as stringRsaPrivateKey } from './rsa-private-key/meta';
 import { tool as stringRsaCrypto } from './rsa-crypto/meta';
+import { tool as stringSymmetricCrypto } from './symmetric-crypto/meta';
 import { tool as stringUuidGenerator } from './uuid-generator/meta';
 import { tool as stringEncodeUrl } from './url-encode/meta';
 import { tool as stringDecodeUrl } from './url-decode/meta';
@@ -64,6 +65,7 @@ export const stringTools = [
   stringPasswordGenerator,
   stringHtpasswdGenerator,
   stringPemInspector,
+  stringSymmetricCrypto,
   stringRsaKeyPair,
   stringRsaPrivateKey,
   stringRsaCrypto,
