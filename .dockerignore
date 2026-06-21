@@ -1,4 +1,10 @@
 node_modules
+.git
+.idea
+.playwright-cli
+.env
+.env.*
+output
 playwright-report
 coverage
 dist
