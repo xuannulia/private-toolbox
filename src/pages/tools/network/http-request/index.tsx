@@ -75,7 +75,7 @@ type KeyValueRow = {
 
 type RequestTab = 'params' | 'headers' | 'body' | 'settings';
 type ResponseTab = 'body' | 'headers' | 'redirects' | 'raw';
-type BodyType = 'none' | 'json' | 'text';
+type BodyType = 'none' | 'json' | 'text' | 'xml' | 'formUrlEncoded';
 
 type HttpRequestHistoryValues = {
   method: HttpMethod;
@@ -84,6 +84,7 @@ type HttpRequestHistoryValues = {
   headers: KeyValueRow[] | string;
   body: string;
   bodyType: BodyType;
+  formRows: KeyValueRow[];
   followRedirects: boolean;
   timeoutMs: number;
   maxResponseBytesKb: number;
@@ -119,6 +120,13 @@ const methods: HttpMethod[] = [
 ];
 
 const methodsWithBody: HttpMethod[] = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
+const bodyContentTypes: Partial<Record<BodyType, string>> = {
+  json: 'application/json',
+  text: 'text/plain; charset=utf-8',
+  xml: 'application/xml; charset=utf-8',
+  formUrlEncoded: 'application/x-www-form-urlencoded'
+};
 
 const createRow = (key = '', value = '', enabled = true): KeyValueRow => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -188,6 +196,15 @@ const rowsToRecord = (rows: KeyValueRow[]): Record<string, string> =>
       .filter((row) => row.enabled && row.key.trim())
       .map((row) => [row.key.trim(), row.value])
   );
+
+const rowsToUrlEncodedBody = (rows: KeyValueRow[]): string => {
+  const params = new URLSearchParams();
+  rows
+    .filter((row) => row.enabled && row.key.trim())
+    .forEach((row) => params.append(row.key.trim(), row.value));
+
+  return params.toString();
+};
 
 const hasHeader = (headers: Record<string, string>, name: string): boolean =>
   Object.keys(headers).some((key) => key.toLowerCase() === name.toLowerCase());
@@ -404,6 +421,7 @@ export default function HttpRequest() {
   );
   const [bodyType, setBodyType] = useState<BodyType>('json');
   const [body, setBody] = useState('');
+  const [formRows, setFormRows] = useState<KeyValueRow[]>(() => [createRow()]);
   const [followRedirects, setFollowRedirects] = useState(true);
   const [timeoutMs, setTimeoutMs] = useState(8000);
   const [maxResponseBytesKb, setMaxResponseBytesKb] = useState(1024);
@@ -433,6 +451,7 @@ export default function HttpRequest() {
     headers: compactRows(headers),
     body,
     bodyType,
+    formRows: compactRows(formRows),
     followRedirects,
     timeoutMs,
     maxResponseBytesKb
@@ -448,21 +467,18 @@ export default function HttpRequest() {
     try {
       const requestUrl = buildRequestUrl(url, params);
       const requestHeaders = rowsToRecord(headers);
+      const defaultContentType = bodyContentTypes[bodyType];
 
       if (
         canSendBody &&
-        bodyType === 'json' &&
+        defaultContentType &&
         !hasHeader(requestHeaders, 'content-type')
       ) {
-        requestHeaders['content-type'] = 'application/json';
+        requestHeaders['content-type'] = defaultContentType;
       }
-      if (
-        canSendBody &&
-        bodyType === 'text' &&
-        !hasHeader(requestHeaders, 'content-type')
-      ) {
-        requestHeaders['content-type'] = 'text/plain; charset=utf-8';
-      }
+
+      const requestBody =
+        bodyType === 'formUrlEncoded' ? rowsToUrlEncodedBody(formRows) : body;
 
       const args: Record<string, JsonValue> = {
         url: requestUrl,
@@ -473,8 +489,8 @@ export default function HttpRequest() {
         maxResponseBytes: Math.max(1, maxResponseBytesKb) * 1024
       };
 
-      if (canSendBody && bodyType !== 'none' && body.trim()) {
-        args.body = body;
+      if (canSendBody && bodyType !== 'none' && requestBody.trim()) {
+        args.body = requestBody;
       }
 
       setHistory(
@@ -518,6 +534,7 @@ export default function HttpRequest() {
     setHeaders(normalizeHistoryRows(entry.values.headers, defaultHeaders));
     setBody(entry.values.body);
     setBodyType(entry.values.bodyType ?? 'json');
+    setFormRows(normalizeHistoryRows(entry.values.formRows, []));
     setFollowRedirects(entry.values.followRedirects);
     setTimeoutMs(entry.values.timeoutMs ?? 8000);
     setMaxResponseBytesKb(entry.values.maxResponseBytesKb ?? 1024);
@@ -696,18 +713,39 @@ export default function HttpRequest() {
                     <MenuItem value={'text'}>
                       {t('httpRequest.bodyTypes.text')}
                     </MenuItem>
+                    <MenuItem value={'xml'}>
+                      {t('httpRequest.bodyTypes.xml')}
+                    </MenuItem>
+                    <MenuItem value={'formUrlEncoded'}>
+                      {t('httpRequest.bodyTypes.formUrlEncoded')}
+                    </MenuItem>
                   </Select>
                 </FormControl>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={9}
-                  label={t('httpRequest.body')}
-                  value={body}
-                  disabled={!canSendBody || bodyType === 'none'}
-                  onChange={(event) => setBody(event.target.value)}
-                  sx={{ backgroundColor: 'background.paper' }}
-                />
+                {bodyType === 'formUrlEncoded' ? (
+                  <Box
+                    sx={{
+                      opacity: canSendBody ? 1 : 0.5,
+                      pointerEvents: canSendBody ? 'auto' : 'none'
+                    }}
+                  >
+                    <KeyValueEditor
+                      rows={formRows}
+                      labels={keyValueLabels}
+                      onChange={setFormRows}
+                    />
+                  </Box>
+                ) : (
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={9}
+                    label={t('httpRequest.body')}
+                    value={body}
+                    disabled={!canSendBody || bodyType === 'none'}
+                    onChange={(event) => setBody(event.target.value)}
+                    sx={{ backgroundColor: 'background.paper' }}
+                  />
+                )}
               </Stack>
             ) : null}
             {requestTab === 'settings' ? (

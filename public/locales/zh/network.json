@@ -93,7 +93,9 @@
     "bodyTypes": {
       "none": "None",
       "json": "JSON",
-      "text": "Text"
+      "text": "Text",
+      "xml": "XML",
+      "formUrlEncoded": "Form URL Encoded"
     },
     "followRedirects": "跟随重定向",
     "timeoutMs": "超时 ms",
