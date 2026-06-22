@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { ToolboxError } from '@private-toolbox/core';
 
-export type NetworkDataSource = 'rdap' | 'ippure';
+export type NetworkDataSource = 'ippure';
 
 export type NetworkDataSourceConfig = Record<NetworkDataSource, boolean>;
 
@@ -11,7 +11,6 @@ export type NetworkToolConfig = {
   allowPrivateNetworks: boolean;
   maxRedirects: number;
   userAgent: string;
-  rdapBaseUrl: string;
   ipPureLookupBaseUrl: string;
   dataSources: NetworkDataSourceConfig;
 };
@@ -116,11 +115,9 @@ export const defaultNetworkToolConfig: NetworkToolConfig = {
   maxRedirects: 5,
   userAgent:
     'PrivateToolbox/0.1 (+https://github.com/xuannulia/private-toolbox)',
-  rdapBaseUrl: 'https://rdap.org',
   // Captured from IPPure's public IP search flow.
   ipPureLookupBaseUrl: 'https://ipinfo.io/widget/demo',
   dataSources: {
-    rdap: envBoolean(process.env.PRIVATE_TOOLBOX_RDAP_ENABLED, true),
     ippure: envBoolean(process.env.PRIVATE_TOOLBOX_IPPURE_ENABLED, true)
   }
 };
@@ -181,7 +178,7 @@ export const getDefaultServerRuntimeConfig = (): ServerRuntimeConfig => {
     Record<NetworkDataSource, ServerNetworkRateLimitRuleConfig>
   > = {};
 
-  for (const source of ['rdap', 'ippure'] as const) {
+  for (const source of ['ippure'] as const) {
     const envOverride = getSourceRateLimitOverride(source, baseRule);
     const jsonOverride = sourceJsonOverrides[source];
 
@@ -203,7 +200,6 @@ export const getDefaultServerRuntimeConfig = (): ServerRuntimeConfig => {
       ),
       dataSourceOverrides,
       toolDataSources: {
-        'rdap.lookup': 'rdap',
         'ip.lookup': 'ippure'
       },
       stateFilePath: process.env.PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_STATE_FILE

@@ -51,7 +51,7 @@
       "title": "Числовые инструменты"
     },
     "network": {
-      "description": "RDAP, DNS, SSL, IP, CIDR, and local API request tools.",
+      "description": "DNS, SSL, IP, CIDR, and local API request tools.",
       "title": "Network Tools"
     },
     "ops": {

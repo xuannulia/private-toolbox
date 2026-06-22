@@ -117,7 +117,6 @@ PRIVATE_TOOLBOX_MCP_CONFIG=/absolute/path/to/private-toolbox/config/mcp/agent-cu
 
 Agent-curated default tools:
 
-- `rdap.lookup`
 - `dns.lookup`
 - `ssl.inspect`
 - `ip.lookup`
@@ -270,7 +269,6 @@ Default-private exposed tools:
 - `uuid.generate`
 - `qrcode.generate`
 - `qrcode.decode`
-- `rdap.lookup`
 - `dns.lookup`
 - `ssl.inspect`
 - `ip.lookup`

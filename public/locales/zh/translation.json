@@ -51,7 +51,7 @@
       "title": "数字工具"
     },
     "network": {
-      "description": "RDAP、DNS、SSL、IP、CIDR 和本地 API 请求工具。",
+      "description": "DNS、SSL、IP、CIDR 和本地 API 请求工具。",
       "title": "网络工具"
     },
     "ops": {

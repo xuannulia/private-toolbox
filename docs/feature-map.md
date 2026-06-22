@@ -35,7 +35,6 @@ This document is the working feature and layout checklist for the private toolbo
 - HTTP online request: Web/API only, intentionally not exposed to MCP.
 - HTTP status checker.
 - CIDR calculator.
-- RDAP lookup for public IP/domain registration data.
 - DNS lookup.
 - SSL/TLS certificate inspection.
 - Current public IP through IPPure card data.
@@ -104,7 +103,7 @@ This document is the working feature and layout checklist for the private toolbo
 
 Agent-curated MCP keeps deterministic and high-value private tools enabled:
 
-- Network: `rdap.lookup`, `dns.lookup`, `ssl.inspect`, `ip.lookup`.
+- Network: `dns.lookup`, `ssl.inspect`, `ip.lookup`.
 - Crypto/secrets: `rsa.generate_keypair`, `rsa.encrypt`, `rsa.decrypt`, `rsa.sign`, `rsa.verify`, `password.generate`.
 - Files/images: `file.rename_batch`, `file.write_temp`, `hash.file`, `image.to_base64`, `image.exif`, `image.info`, `image.to_icon`, `qrcode.decode`.
 - Data/dev: `json.format`, `json.validate`, `json.to_types`, `json.to_excel`, `json_schema.validate`, `xpath.evaluate`.

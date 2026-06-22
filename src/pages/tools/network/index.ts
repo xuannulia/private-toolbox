@@ -1,4 +1,3 @@
-import { tool as rdapLookup } from './rdap/meta';
 import { tool as dnsLookup } from './dns/meta';
 import { tool as sslInspect } from './ssl/meta';
 import { tool as ipLookup } from './ip-lookup/meta';
@@ -10,7 +9,6 @@ export const networkTools = [
   httpRequest,
   httpStatus,
   cidrCalculator,
-  rdapLookup,
   dnsLookup,
   sslInspect,
   ipLookup

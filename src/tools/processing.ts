@@ -135,7 +135,6 @@ const coreSharedToolsByPath: Record<string, string[]> = {
 };
 
 const networkServerToolsByPath: Record<string, string[]> = {
-  'network/rdap-lookup': ['rdap.lookup'],
   'network/dns-lookup': ['dns.lookup'],
   'network/ssl-inspect': ['ssl.inspect'],
   'network/ip-lookup': ['ip.lookup']

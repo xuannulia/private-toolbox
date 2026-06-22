@@ -16,13 +16,11 @@ import { imageInfoTools } from './tools/imageInfo.js';
 import { ipTools } from './tools/ip.js';
 import { qrcodeDecodeTools } from './tools/qrcodeDecode.js';
 import { renameBatchTools } from './tools/renameBatch.js';
-import { rdapTools } from './tools/rdap.js';
 import { sslTools } from './tools/ssl.js';
 import { writeTempFileTools } from './tools/writeTempFile.js';
 import { checkServerToolRateLimit } from './runtime.js';
 
 export const serverTools: ToolboxTool[] = [
-  ...rdapTools,
   ...dnsTools,
   ...sslTools,
   ...ipTools,

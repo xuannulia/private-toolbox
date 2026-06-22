@@ -1,4 +1,4 @@
-export type HttpHistoryValue = string | boolean;
+export type HttpHistoryValue = string | number | boolean;
 
 export type HttpHistoryEntry<TValues extends Record<string, HttpHistoryValue>> =
   {

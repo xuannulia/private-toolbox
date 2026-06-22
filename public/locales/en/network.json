@@ -10,17 +10,6 @@
     "toolInfoTitle": "Local backend network query",
     "toolInfoDescription": "These tools call the Private Toolbox local API. Start the API server before using them."
   },
-  "rdap": {
-    "title": "RDAP lookup",
-    "description": "Lookup RDAP registration data for a public IP address or domain.",
-    "shortDescription": "Lookup domain or IP registration data",
-    "query": "Domain or IP",
-    "queryPlaceholder": "example.com or 8.8.8.8",
-    "kind": "Kind",
-    "auto": "Auto",
-    "domain": "Domain",
-    "ip": "IP"
-  },
   "dns": {
     "title": "DNS lookup",
     "description": "Resolve DNS records for a hostname.",
@@ -89,9 +78,16 @@
     "shortDescription": "Send HTTP requests from the local API",
     "method": "Method",
     "url": "URL",
-    "headers": "Headers JSON",
+    "headers": "Headers",
+    "headersPlaceholder": "accept: application/json\nauthorization: Bearer ...",
     "body": "Body",
     "followRedirects": "Follow redirects",
+    "timeoutMs": "Timeout ms",
+    "maxResponseKb": "Max response KB",
+    "responseBody": "Response body",
+    "responseHeaders": "Response headers",
+    "redirects": "Redirects",
+    "redirectChain": "Redirect chain",
     "send": "Send"
   },
   "httpStatus": {

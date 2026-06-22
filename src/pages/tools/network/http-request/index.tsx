@@ -2,6 +2,7 @@ import {
   Alert,
   Box,
   Checkbox,
+  Chip,
   FormControl,
   FormControlLabel,
   InputLabel,
@@ -41,6 +42,20 @@ type HttpMethod =
   | 'DELETE'
   | 'OPTIONS';
 
+type HttpRequestResult = {
+  url: string;
+  finalUrl: string;
+  method: HttpMethod;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  bodyText: string;
+  bodyBytes: number;
+  responseTimeMs?: number;
+  redirected: boolean;
+  redirects: string[];
+};
+
 const methods: HttpMethod[] = [
   'GET',
   'HEAD',
@@ -51,30 +66,75 @@ const methods: HttpMethod[] = [
   'OPTIONS'
 ];
 
+const methodsWithBody: HttpMethod[] = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
 type HttpRequestHistoryValues = {
   method: HttpMethod;
   url: string;
   headers: string;
   body: string;
   followRedirects: boolean;
+  timeoutMs: number;
+  maxResponseBytesKb: number;
 };
 
-const formatResult = (value: unknown): string => JSON.stringify(value, null, 2);
+const formatJson = (value: unknown): string => JSON.stringify(value, null, 2);
 
 const parseHeaders = (value: string): Record<string, string> => {
-  if (!value.trim()) return {};
+  const trimmed = value.trim();
+  if (!trimmed) return {};
 
-  const parsed = JSON.parse(value) as unknown;
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('Headers must be a JSON object');
+  if (trimmed.startsWith('{')) {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('Headers must be an object');
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed as Record<string, unknown>).map(([key, item]) => [
+        key,
+        String(item)
+      ])
+    );
   }
 
   return Object.fromEntries(
-    Object.entries(parsed as Record<string, unknown>).map(([key, item]) => [
-      key,
-      String(item)
-    ])
+    trimmed
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const separatorIndex = line.indexOf(':');
+        if (separatorIndex <= 0) {
+          throw new Error(`Invalid header line: ${line}`);
+        }
+
+        return [
+          line.slice(0, separatorIndex).trim(),
+          line.slice(separatorIndex + 1).trim()
+        ];
+      })
+      .filter(([key]) => key.length > 0)
   );
+};
+
+const getResponseSeverity = (
+  status: number
+): 'success' | 'warning' | 'error' =>
+  status >= 200 && status < 400
+    ? 'success'
+    : status >= 400
+      ? 'error'
+      : 'warning';
+
+const getBodyExtension = (headers: Record<string, string>): string => {
+  const contentType = headers['content-type']?.toLowerCase() ?? '';
+  if (contentType.includes('json')) return 'json';
+  if (contentType.includes('html')) return 'html';
+  if (contentType.includes('xml')) return 'xml';
+  if (contentType.includes('css')) return 'css';
+  if (contentType.includes('javascript')) return 'js';
+  return 'txt';
 };
 
 export default function HttpRequest({ title }: ToolComponentProps) {
@@ -83,28 +143,36 @@ export default function HttpRequest({ title }: ToolComponentProps) {
   const [url, setUrl] = useState('https://example.com');
   const [method, setMethod] = useState<HttpMethod>('GET');
   const [headers, setHeaders] = useState(
-    '{\n  "accept": "application/json, text/plain, */*"\n}'
+    'accept: application/json, text/plain, */*'
   );
   const [body, setBody] = useState('');
   const [followRedirects, setFollowRedirects] = useState(true);
-  const [result, setResult] = useState('');
+  const [timeoutMs, setTimeoutMs] = useState(8000);
+  const [maxResponseBytesKb, setMaxResponseBytesKb] = useState(1024);
+  const [result, setResult] = useState<HttpRequestResult | null>(null);
+  const [rawResult, setRawResult] = useState('');
   const [errorText, setErrorText] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<
     HttpHistoryEntry<HttpRequestHistoryValues>[]
   >(() => getHttpHistory<HttpRequestHistoryValues>('http.request'));
+  const canSendBody = methodsWithBody.includes(method);
 
   const getHistoryValues = (): HttpRequestHistoryValues => ({
     method,
     url,
     headers,
     body,
-    followRedirects
+    followRedirects,
+    timeoutMs,
+    maxResponseBytesKb
   });
 
   const run = async () => {
     setLoading(true);
     setErrorText(null);
+    setResult(null);
+    setRawResult('');
     setApiBaseUrl(apiBaseUrl);
 
     try {
@@ -112,10 +180,12 @@ export default function HttpRequest({ title }: ToolComponentProps) {
         url,
         method,
         headers: parseHeaders(headers),
-        followRedirects
+        followRedirects,
+        timeoutMs,
+        maxResponseBytes: Math.max(1, maxResponseBytesKb) * 1024
       };
 
-      if (body.trim()) {
+      if (canSendBody && body.trim()) {
         args.body = body;
       }
 
@@ -129,7 +199,14 @@ export default function HttpRequest({ title }: ToolComponentProps) {
 
       const response = await callApiTool('http.request', args, apiBaseUrl);
       setErrorText(getApiToolErrorText(response));
-      setResult(formatResult(response.ok ? response.result : response.error));
+
+      if (response.ok) {
+        const value = response.result as unknown as HttpRequestResult;
+        setResult(value);
+        setRawResult(formatJson(value));
+      } else {
+        setRawResult(formatJson(response.error));
+      }
     } catch (error) {
       const errorResult = toNetworkErrorResult(
         'HTTP_REQUEST_INPUT_ERROR',
@@ -137,7 +214,7 @@ export default function HttpRequest({ title }: ToolComponentProps) {
         error
       );
       setErrorText(getApiToolErrorText(errorResult));
-      setResult(formatResult(errorResult.error));
+      setRawResult(formatJson(errorResult.error));
     } finally {
       setLoading(false);
     }
@@ -149,6 +226,8 @@ export default function HttpRequest({ title }: ToolComponentProps) {
     setHeaders(entry.values.headers);
     setBody(entry.values.body);
     setFollowRedirects(entry.values.followRedirects);
+    setTimeoutMs(entry.values.timeoutMs ?? 8000);
+    setMaxResponseBytesKb(entry.values.maxResponseBytesKb ?? 1024);
   };
 
   const clearHistory = () => {
@@ -163,7 +242,7 @@ export default function HttpRequest({ title }: ToolComponentProps) {
           <FormControl
             fullWidth
             size={'small'}
-            sx={{ flex: { sm: '0 0 150px' } }}
+            sx={{ flex: { sm: '0 0 140px' } }}
           >
             <InputLabel>{t('httpRequest.method')}</InputLabel>
             <Select
@@ -193,28 +272,58 @@ export default function HttpRequest({ title }: ToolComponentProps) {
           multiline
           minRows={3}
           label={t('httpRequest.headers')}
+          placeholder={t('httpRequest.headersPlaceholder')}
           value={headers}
           onChange={(event) => setHeaders(event.target.value)}
           sx={{ backgroundColor: 'background.paper' }}
         />
-        <TextField
-          fullWidth
-          multiline
-          minRows={4}
-          label={t('httpRequest.body')}
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          sx={{ backgroundColor: 'background.paper' }}
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={followRedirects}
-              onChange={(event) => setFollowRedirects(event.target.checked)}
-            />
-          }
-          label={t('httpRequest.followRedirects')}
-        />
+        {canSendBody ? (
+          <TextField
+            fullWidth
+            multiline
+            minRows={5}
+            label={t('httpRequest.body')}
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            sx={{ backgroundColor: 'background.paper' }}
+          />
+        ) : null}
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+          <TextField
+            fullWidth
+            size={'small'}
+            type={'number'}
+            label={t('httpRequest.timeoutMs')}
+            value={timeoutMs}
+            onChange={(event) =>
+              setTimeoutMs(Math.max(100, Number(event.target.value) || 100))
+            }
+            sx={{ backgroundColor: 'background.paper' }}
+          />
+          <TextField
+            fullWidth
+            size={'small'}
+            type={'number'}
+            label={t('httpRequest.maxResponseKb')}
+            value={maxResponseBytesKb}
+            onChange={(event) =>
+              setMaxResponseBytesKb(
+                Math.max(1, Number(event.target.value) || 1)
+              )
+            }
+            sx={{ backgroundColor: 'background.paper' }}
+          />
+          <FormControlLabel
+            sx={{ flexShrink: 0 }}
+            control={
+              <Checkbox
+                checked={followRedirects}
+                onChange={(event) => setFollowRedirects(event.target.checked)}
+              />
+            }
+            label={t('httpRequest.followRedirects')}
+          />
+        </Stack>
         <NetworkActionBar
           apiBaseUrl={apiBaseUrl}
           apiBaseUrlLabel={t('common.apiBaseUrl')}
@@ -240,13 +349,62 @@ export default function HttpRequest({ title }: ToolComponentProps) {
       result={
         <Stack spacing={1.5}>
           {errorText && <Alert severity={'error'}>{errorText}</Alert>}
-          <ToolTextResult
-            title={t('common.result')}
-            value={result}
-            extension={'json'}
-            keepSpecialCharacters
-            loading={loading}
-          />
+          {result ? (
+            <>
+              <Alert severity={getResponseSeverity(result.status)}>
+                <Stack direction={'row'} spacing={1} flexWrap={'wrap'}>
+                  <Chip
+                    size={'small'}
+                    label={`${result.status} ${result.statusText}`.trim()}
+                  />
+                  <Chip size={'small'} label={result.method} />
+                  <Chip
+                    size={'small'}
+                    label={`${result.responseTimeMs ?? 0} ms`}
+                  />
+                  <Chip size={'small'} label={`${result.bodyBytes} bytes`} />
+                  {result.redirected ? (
+                    <Chip
+                      size={'small'}
+                      label={`${t('httpRequest.redirects')}: ${
+                        result.redirects.length
+                      }`}
+                    />
+                  ) : null}
+                </Stack>
+              </Alert>
+              <ToolTextResult
+                title={t('httpRequest.responseBody')}
+                value={result.bodyText}
+                extension={getBodyExtension(result.headers)}
+                keepSpecialCharacters
+                loading={loading}
+              />
+              <ToolTextResult
+                title={t('httpRequest.responseHeaders')}
+                value={formatJson(result.headers)}
+                extension={'json'}
+                keepSpecialCharacters
+                loading={loading}
+              />
+              {result.redirects.length ? (
+                <ToolTextResult
+                  title={t('httpRequest.redirectChain')}
+                  value={result.redirects.join('\n')}
+                  keepSpecialCharacters
+                  loading={loading}
+                />
+              ) : null}
+            </>
+          ) : (
+            <ToolTextResult
+              title={t('common.result')}
+              value={rawResult}
+              extension={'json'}
+              keepSpecialCharacters
+              loading={loading}
+            />
+          )}
         </Stack>
       }
     />

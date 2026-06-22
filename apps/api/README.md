@@ -45,10 +45,8 @@ See [../../.env.example](../../.env.example) for a ready-to-copy private deploym
 - `PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_WINDOW_MS`, default `60000`
 - `PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_TOOL_OVERRIDES`, JSON object keyed by tool name, for example `{"dns.lookup":{"maxCalls":120,"windowMs":60000}}`
 - `PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_DATA_SOURCE_OVERRIDES`, JSON object keyed by data source, for example `{"ippure":{"maxCalls":20,"windowMs":60000}}`
-- `PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_RDAP_MAX` / `PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_RDAP_WINDOW_MS`
 - `PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_IPPURE_MAX` / `PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_IPPURE_WINDOW_MS`
 - `PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_STATE_FILE`, optional JSON state file that keeps rate-limit buckets across API / MCP restarts
-- `PRIVATE_TOOLBOX_RDAP_ENABLED`, default `true`
 - `PRIVATE_TOOLBOX_IPPURE_ENABLED`, default `true`
 
 ## Endpoints
@@ -56,7 +54,6 @@ See [../../.env.example](../../.env.example) for a ready-to-copy private deploym
 - `GET /health`
 - `GET /api/tools`
 - `POST /api/tools/call`
-- `GET /api/rdap?query=example.com`
 - `GET /api/dns?name=example.com&type=A`
 - `GET /api/ssl?host=example.com&port=443`
 - `GET /api/ip/lookup?ip=8.8.8.8`

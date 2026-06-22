@@ -14,6 +14,5 @@ export * from './tools/imageInfo.js';
 export * from './tools/ip.js';
 export * from './tools/qrcodeDecode.js';
 export * from './tools/renameBatch.js';
-export * from './tools/rdap.js';
 export * from './tools/ssl.js';
 export * from './tools/writeTempFile.js';

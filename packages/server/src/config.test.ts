@@ -19,26 +19,23 @@ describe('server network config', () => {
   it('merges data source switches without dropping defaults', () => {
     const config = mergeNetworkToolConfig({
       dataSources: {
-        rdap: false,
-        ippure: true
+        ippure: false
       }
     });
 
     expect(config.dataSources).toMatchObject({
-      rdap: false,
-      ippure: true
+      ippure: false
     });
   });
 
   it('throws a structured error when a data source is disabled', () => {
     expect(() =>
-      assertNetworkDataSourceEnabled('rdap', {
+      assertNetworkDataSourceEnabled('ippure', {
         dataSources: {
-          rdap: false,
-          ippure: true
+          ippure: false
         }
       })
-    ).toThrow('Network data source is disabled: rdap');
+    ).toThrow('Network data source is disabled: ippure');
   });
 
   it('reads per-tool and per-data-source rate limit overrides from env', () => {
@@ -55,7 +52,7 @@ describe('server network config', () => {
       process.env.PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_TOOL_OVERRIDES =
         '{"dns.lookup":{"maxCalls":10,"windowMs":2000}}';
       process.env.PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_DATA_SOURCE_OVERRIDES =
-        '{"rdap":{"maxCalls":3,"windowMs":4000}}';
+        '{"ippure":{"maxCalls":3,"windowMs":4000}}';
       process.env.PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_IPPURE_MAX = '5';
       process.env.PRIVATE_TOOLBOX_NETWORK_RATE_LIMIT_STATE_FILE =
         './rate-limit-state.json';
@@ -66,13 +63,9 @@ describe('server network config', () => {
         maxCalls: 10,
         windowMs: 2000
       });
-      expect(config.networkRateLimit.dataSourceOverrides.rdap).toEqual({
+      expect(config.networkRateLimit.dataSourceOverrides.ippure).toEqual({
         maxCalls: 3,
         windowMs: 4000
-      });
-      expect(config.networkRateLimit.dataSourceOverrides.ippure).toEqual({
-        maxCalls: 5,
-        windowMs: 60_000
       });
       expect(config.networkRateLimit.toolDataSources['ip.lookup']).toBe(
         'ippure'

@@ -15,7 +15,7 @@ The project is optimized for private use:
 
 - `src/`: React web app.
 - `packages/core`: shared deterministic tools for Web / API / MCP.
-- `packages/server`: guarded server-side tools such as RDAP, DNS, SSL, IP lookup, file hash, image icon conversion, QR decode, batch rename, and temporary file writing.
+- `packages/server`: guarded server-side tools such as DNS, SSL, IP lookup, file hash, image icon conversion, QR decode, batch rename, and temporary file writing.
 - `apps/api`: local HTTP API for Web/server-assisted tools.
 - `apps/mcp`: stdio MCP server for personal agent clients.
 

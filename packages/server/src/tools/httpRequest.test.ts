@@ -41,6 +41,7 @@ describe('sendHttpRequest', () => {
       );
 
       expect(result.status).toBe(200);
+      expect(result.responseTimeMs).toBeGreaterThanOrEqual(0);
       expect(result.headers['content-type']).toContain('application/json');
       expect(JSON.parse(result.bodyText)).toEqual({
         method: 'GET',

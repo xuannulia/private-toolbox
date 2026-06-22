@@ -4,7 +4,6 @@
   "enableHttpTools": false,
   "allowedRisks": ["local", "network", "secret", "file-read", "file-write"],
   "enabledTools": [
-    "rdap.lookup",
     "dns.lookup",
     "ssl.inspect",
     "ip.lookup",

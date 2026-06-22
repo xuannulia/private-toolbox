@@ -5,7 +5,6 @@ import { getServerToolsByChannel } from '@private-toolbox/server';
 import { isMcpToolEnabled, loadMcpConfig, normalizeMcpConfig } from './config';
 
 const requiredAgentCuratedTools = [
-  'rdap.lookup',
   'dns.lookup',
   'ssl.inspect',
   'ip.lookup',

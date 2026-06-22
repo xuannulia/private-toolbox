@@ -139,12 +139,6 @@ const handleGet = async (
         }))
       });
       return true;
-    case '/api/rdap':
-      await callAndWrite(response, 'rdap.lookup', {
-        query: url.searchParams.get('query') ?? '',
-        kind: (url.searchParams.get('kind') as JsonValue) ?? null
-      });
-      return true;
     case '/api/dns':
       await callAndWrite(response, 'dns.lookup', {
         name: url.searchParams.get('name') ?? '',

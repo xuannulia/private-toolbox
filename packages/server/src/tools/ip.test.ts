@@ -75,7 +75,6 @@ describe('IP tools', () => {
         { ip: '8.8.8.8' },
         {
           dataSources: {
-            rdap: true,
             ippure: false
           }
         }

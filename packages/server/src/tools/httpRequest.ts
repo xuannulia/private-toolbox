@@ -39,6 +39,7 @@ export type HttpRequestOutput = {
   headers: Record<string, string>;
   bodyText: string;
   bodyBytes: number;
+  responseTimeMs: number;
   redirected: boolean;
   redirects: string[];
 };
@@ -326,6 +327,7 @@ export const sendHttpRequest = async (
   input: HttpRequestInput,
   override?: Partial<NetworkToolConfig>
 ): Promise<HttpRequestOutput> => {
+  const startedAt = Date.now();
   const method = normalizeMethod(input.method);
   const initialUrl = normalizeUrl(input.url);
   const config = mergeNetworkToolConfig({
@@ -389,6 +391,7 @@ export const sendHttpRequest = async (
       headers: response.headers,
       bodyText: response.bodyText,
       bodyBytes: response.bodyBytes,
+      responseTimeMs: Date.now() - startedAt,
       redirected: redirects.length > 0,
       redirects
     };
@@ -485,6 +488,7 @@ export const httpRequestTools: ToolboxTool[] = [
         'headers',
         'bodyText',
         'bodyBytes',
+        'responseTimeMs',
         'redirected',
         'redirects'
       ],
@@ -501,6 +505,7 @@ export const httpRequestTools: ToolboxTool[] = [
         },
         bodyText: { type: 'string' },
         bodyBytes: { type: 'integer' },
+        responseTimeMs: { type: 'integer' },
         redirected: { type: 'boolean' },
         redirects: {
           type: 'array',

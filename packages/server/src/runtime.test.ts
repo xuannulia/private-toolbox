@@ -30,7 +30,6 @@ const makeConfig = (
     toolOverrides: {},
     dataSourceOverrides: {},
     toolDataSources: {
-      'rdap.lookup': 'rdap',
       'ip.lookup': 'ippure'
     },
     stateFilePath: null,
@@ -89,37 +88,37 @@ describe('server runtime rate limits', () => {
   });
 
   it('limits tools that share the same network data source', () => {
-    const rdapDomainTool = makeTool('rdap.lookup', ['network']);
-    const rdapAliasTool = makeTool('rdap.alias', ['network']);
+    const ipLookupTool = makeTool('ip.lookup', ['network']);
+    const ipAliasTool = makeTool('ip.alias', ['network']);
     const state: ServerRateLimitState = new Map();
     const config = makeConfig({
       maxCalls: 10,
       dataSourceOverrides: {
-        rdap: {
+        ippure: {
           maxCalls: 2,
           windowMs: 1000
         }
       },
       toolDataSources: {
-        'rdap.lookup': 'rdap',
-        'rdap.alias': 'rdap'
+        'ip.lookup': 'ippure',
+        'ip.alias': 'ippure'
       }
     });
 
     expect(
-      checkServerToolRateLimit(rdapDomainTool, config, 10, state)
+      checkServerToolRateLimit(ipLookupTool, config, 10, state)
     ).toBeUndefined();
     expect(
-      checkServerToolRateLimit(rdapAliasTool, config, 20, state)
+      checkServerToolRateLimit(ipAliasTool, config, 20, state)
     ).toBeUndefined();
     expect(
-      checkServerToolRateLimit(rdapDomainTool, config, 30, state)
+      checkServerToolRateLimit(ipLookupTool, config, 30, state)
     ).toMatchObject({
       code: 'RATE_LIMITED',
       details: {
-        tool: 'rdap.lookup',
+        tool: 'ip.lookup',
         scope: 'data-source',
-        source: 'rdap',
+        source: 'ippure',
         maxCalls: 2,
         retryAfterMs: 980
       }
