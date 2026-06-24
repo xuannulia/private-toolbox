@@ -2,6 +2,10 @@
 
 Private Toolbox is a self-hosted private tools site based on OmniTools. It keeps the existing browser-side tools, adds backend-assisted tools, and exposes a curated MCP server for personal agents.
 
+Demo site: [https://tools.onlyav.cn/](https://tools.onlyav.cn/)
+
+![Private Toolbox preview](docs/assets/private-toolbox-preview.png)
+
 The project is optimized for private use:
 
 - Web tools stay fast and direct.
